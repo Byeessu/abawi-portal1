@@ -29,7 +29,11 @@ function resolveProvider(key) {
   }
 }
 
-const GROQ_BROWSER_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
+const GROQ_BROWSER_KEY = import.meta.env.VITE_GROQ_API_KEY || 
+               import.meta.env.GROQ_API_KEY || 
+               import.meta.env.VITE_GROK_LLAMA_API_KEY ||
+               import.meta.env.GROK_LLAMA_API_KEY || 
+               ''
 const { baseUrl: RESOLVED_BASE_URL, model: RESOLVED_MODEL } = resolveProvider(GROQ_BROWSER_KEY)
 
 function normalizeError(status, text = '') {
