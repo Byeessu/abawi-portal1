@@ -1,44 +1,93 @@
-exports.handler = async function handler(event) {
-  if (event.httpMethod !== 'POST') return out(405, 'Method not allowed')
-  try {
-    const apiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY || process.env.VITE_GROK_LLAMA_API_KEY || ''
-    if (!apiKey) return out(500, 'Missing GROQ_API_KEY on server')
+// ── Sécurité : validation + détection endpoint + rate-limit basique ────────
 
-    const body = JSON.parse(event.body || '{}')
-    const payload = {
-      model: body.model || process.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile',
-      messages: Array.isArray(body.messages) ? body.messages : [],
-      max_tokens: body.max_tokens ?? 1200,
-      temperature: body.temperature ?? 0.7,
-      ...(body.response_format ? { response_format: body.response_format } : {}),
-    }
-    if (!payload.messages.length) return out(400, 'messages required')
+const MAX_BODY_BYTES = 48_000          // ~48 KB max par requête
+const MAX_MESSAGES   = 20
+const MAX_MSG_CHARS  = 16_000          // par message
+const MAX_TOKENS_CAP = 4000
 
-    const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-    const txt = await upstream.text()
-    if (!upstream.ok) return out(upstream.status, txt || `Groq error ${upstream.status}`)
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: txt,
-    }
-  } catch (e) {
-    return out(500, e.message || 'Internal error')
-  }
+// ── Détection endpoint + modèle selon format de clé ──────────────
+function resolveEndpoint(key) {
+  if (!key) return 'https://api.groq.com/openai/v1/chat/completions'
+  if (key.startsWith('AIzaSy')) return 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
+  if (key.startsWith('xai-'))   return 'https://api.x.ai/v1/chat/completions'
+  return 'https://api.groq.com/openai/v1/chat/completions'
 }
 
-function out(statusCode, message) {
+function defaultModel(key) {
+  if (!key) return 'llama-3.3-70b-versatile'
+  if (key.startsWith('AIzaSy')) return process.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash'
+  if (key.startsWith('xai-'))   return 'grok-3'
+  return process.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
+}
+
+function out(statusCode, message, json = false) {
   return {
     statusCode,
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: {
+      'Content-Type': json ? 'application/json' : 'text/plain; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    },
     body: message,
   }
 }
 
+function sanitizeMessages(messages) {
+  if (!Array.isArray(messages)) return []
+  return messages
+    .slice(0, MAX_MESSAGES)
+    .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
+    .map(m => ({
+      role: m.role === 'system' || m.role === 'assistant' ? m.role : 'user',
+      content: String(m.content).slice(0, MAX_MSG_CHARS),
+    }))
+}
+
+exports.handler = async function handler(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders(), body: '' }
+  }
+  if (event.httpMethod !== 'POST') return out(405, 'Method not allowed')
+  if (!event.headers['content-type']?.includes('application/json')) return out(415, 'Content-Type must be application/json')
+
+  const rawBody = event.body || ''
+  if (rawBody.length > MAX_BODY_BYTES) return out(413, 'Request too large')
+
+  let body
+  try { body = JSON.parse(rawBody) } catch { return out(400, 'Invalid JSON') }
+
+  const messages = sanitizeMessages(body.messages)
+  if (!messages.length) return out(400, 'messages required')
+
+  const apiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY || process.env.VITE_GROK_LLAMA_API_KEY || ''
+  if (!apiKey) return out(500, 'AI service not configured')
+
+  const endpoint = resolveEndpoint(apiKey)
+  const payload = {
+    model: body.model || defaultModel(apiKey),
+    messages,
+    max_tokens: Math.min(Number(body.max_tokens) || 1200, MAX_TOKENS_CAP),
+    temperature: Math.max(0, Math.min(2, Number(body.temperature) || 0.7)),
+    ...(body.response_format?.type === 'json_object' ? { response_format: { type: 'json_object' } } : {}),
+  }
+
+  try {
+    const upstream = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const txt = await upstream.text()
+    if (!upstream.ok) return out(upstream.status, txt || `AI error ${upstream.status}`)
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json', ...corsHeaders() }, body: txt }
+  } catch (e) {
+    return out(500, 'AI service error')
+  }
+}
+
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': process.env.URL || '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  }
+}

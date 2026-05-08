@@ -1,4 +1,30 @@
-const callOpenAI = require('../src/lib/openaiClient')
+async function callOpenAI(prompt, options = {}) {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY || ''
+  if (!apiKey) throw new Error('OPENAI_API_KEY missing')
+
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: options.model || 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: options.maxTokens || 2000,
+      temperature: options.temperature ?? 0.7,
+      ...(options.responseFormat ? { response_format: options.responseFormat } : {}),
+    }),
+  })
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`OpenAI error ${res.status}: ${text.slice(0, 160)}`)
+  }
+
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content || ''
+}
 
 exports.handler = async (event, context) => {
   const headers = {

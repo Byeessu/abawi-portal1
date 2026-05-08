@@ -116,19 +116,24 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
     cacheMediaForConversation();
     const channel = supabase.channel('abavie-msgs-' + conversation.id)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'conversation_id=eq.' + conversation.id },
-        payload => {
+        async payload => {
           const msg = payload.new;
           // Detect incoming call messages
           if ((msg.type === 'audio_call' || msg.type === 'video_call') && msg.sender_id !== membre.id && msg.metadata?.status === 'ringing') {
             setIncomingCall({ type: msg.type === 'video_call' ? 'video' : 'audio', callerName: name, offerSdp: msg.metadata?.offerSdp });
           }
+          // E2E decrypt
+          const [decrypted] = await decryptE2EMessages([msg]);
           setMessages(prev => {
-            const exists = prev.find(m => m.id === msg.id);
-            return exists ? prev : [...prev, msg];
+            const exists = prev.find(m => m.id === decrypted.id);
+            return exists ? prev : [...prev, decrypted];
           });
         })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages', filter: 'conversation_id=eq.' + conversation.id },
-        payload => setMessages(prev => prev.map(m => m.id === payload.new.id ? payload.new : m)))
+        async payload => {
+          const [decrypted] = await decryptE2EMessages([payload.new]);
+          setMessages(prev => prev.map(m => m.id === decrypted.id ? decrypted : m));
+        })
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [conversation, membre]);
@@ -190,14 +195,30 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
   async function loadMessages() {
     // Try IndexedDB first for instant display
     const cached = await getCachedMessages(conversation.id)
-    if (cached.length > 0) setMessages(cached)
+    if (cached.length > 0) setMessages(await decryptE2EMessages(cached))
 
     const { data } = await supabase.from('messages').select('*').eq('conversation_id', conversation.id).order('created_at', { ascending: true });
     if (data) {
-      setMessages(data)
+      const decrypted = await decryptE2EMessages(data)
+      setMessages(decrypted)
       markAsRead(data)
-      cacheMessages(data)
+      cacheMessages(decrypted)
     }
+  }
+
+  // E2E decryption helper
+  async function decryptE2EMessages(msgs) {
+    try {
+      const { isE2EEnabled, decryptMessageContent } = await import('../../lib/abavieE2EIntegration');
+      if (!isE2EEnabled()) return msgs;
+      return Promise.all(msgs.map(async (m) => {
+        if (m.e2e_payload?.ciphertext) {
+          const decrypted = await decryptMessageContent(m.e2e_payload, m.sender_id);
+          if (decrypted) return { ...m, content: decrypted, _e2eDecrypted: true };
+        }
+        return m;
+      }));
+    } catch { return msgs; }
   }
 
   async function markAsRead(data) {
@@ -275,6 +296,20 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
       read: false,
       expires_at: expiresAt ? expiresAt.toISOString() : null,
     };
+
+    // E2E encryption
+    try {
+      const { isE2EEnabled, encryptMessageContent } = await import('../../lib/abavieE2EIntegration');
+      if (isE2EEnabled() && type === 'text' && text) {
+        const otherId = conversation.participant_1 === membre.id ? conversation.participant_2 : conversation.participant_1;
+        const e2ePayload = await encryptMessageContent(text, otherId);
+        if (e2ePayload) {
+          msg.e2e_payload = e2ePayload;
+          msg.e2e_recipient_key = otherId;
+          msg.content = '[Message chiffré 🔒]';
+        }
+      }
+    } catch { /* E2E non disponible */ }
 
     try {
       await supabase.from('messages').insert(msg);

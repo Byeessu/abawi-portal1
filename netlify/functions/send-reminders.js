@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js')
 
-const SUPABASE_URL = process.env.SUPABASE_URL || ''
-const SUPABASE_KEY = process.env.SUPABASE_KEY || ''
+const SUPABASE_URL = 'https://nqpfmnsecjhqxuvfkqhi.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno'
 const GROQ_KEY = process.env.GROQ_API_KEY || ''
 
 async function groqGenerate(prompt) {

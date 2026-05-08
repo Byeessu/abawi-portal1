@@ -1,14 +1,15 @@
+import { getProviderInfo } from './groqClient';
+
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || '';
-const GROQ_BASE_URL = import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
 
 async function groqChat(prompt, maxTokens = 1000) {
+  const { baseUrl, model } = getProviderInfo();
   try {
-    const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + GROQ_KEY },
       body: JSON.stringify({
-        model: GROQ_MODEL,
+        model,
         max_tokens: maxTokens,
         temperature: 0.7,
         messages: [{ role: 'user', content: prompt }],

@@ -1,11 +1,10 @@
 import { cleanIAText } from './cleanText';
-import { groqChatCompletion } from './groqClient';
-
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile';
+import { groqChatCompletion, getProviderInfo } from './groqClient';
 
 export async function callGroq(messages, maxTokens = 2000, jsonMode = false) {
+  const { model } = getProviderInfo();   // modèle auto-détecté selon la clé API
   const data = await groqChatCompletion({
-    model: GROQ_MODEL,
+    model,
     max_tokens: maxTokens,
     temperature: jsonMode ? 0.1 : 0.7,
     messages,

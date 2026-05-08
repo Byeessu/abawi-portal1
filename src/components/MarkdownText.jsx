@@ -1,6 +1,12 @@
 /* Rendu professionnel pour réponses IA — Style cabinet conseil avec cartes */
 import { cleanIAText } from '../lib/textCleaner'
 
+function isTitleCase(str) {
+  const words = str.split(' ')
+  if (words.length < 2) return false
+  return words.every(w => w.length === 0 || /^[A-ZÀÂÄÉÈÊËÎÏÔÙÛÜŸÇ]/.test(w))
+}
+
 export default function MarkdownText({ text, style = {}, compact = false, color }) {
   if (!text) return null
 

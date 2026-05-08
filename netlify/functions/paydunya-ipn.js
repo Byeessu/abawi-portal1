@@ -1,8 +1,8 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || ''
+  'https://nqpfmnsecjhqxuvfkqhi.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno'
 )
 
 const ABAWI_PLUS_IDS = ['aplus', 'aplus-mensuel', 'aplus-annuel', 'abawi-plus', 'abawi-plus-mensuel', 'abawi-plus-annuel']

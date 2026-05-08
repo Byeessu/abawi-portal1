@@ -9,34 +9,120 @@ import { trackError } from './observability'
 
 const HEALTH_CHECK_INTERVAL = 30000 // 30 secondes
 
+// ── Détection de l'endpoint IA actif (Groq ou Google AI Studio) ──────────
+function getLlamaEndpoint() {
+  const key = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
+  if (key.startsWith('AIzaSy')) return { url: 'https://generativelanguage.googleapis.com/v1beta/openai/models', key, label: 'Google AI Studio' }
+  return { url: 'https://api.groq.com/openai/v1/models', key, label: 'Groq Cloud' }
+}
+
 // Configuration des services à monitorer
 const SERVICES = {
   supabase: {
     name: 'Supabase',
     check: async () => {
       const start = performance.now()
-      const { data, error } = await supabase.from('articles').select('count', { count: 'exact', head: true })
-      const latency = performance.now() - start
-      return { healthy: !error, latency, error }
+      const { error } = await supabase.from('articles').select('count', { count: 'exact', head: true })
+      return { healthy: !error, latency: performance.now() - start, error: error?.message || null }
     },
     critical: true,
   },
-  groq: {
-    name: 'Groq API',
+  llama: {
+    name: 'LLM (Llama/Gemini)',
     check: async () => {
-      const apiKey = import.meta.env.VITE_GROQ_API_KEY
-      if (!apiKey) return { healthy: false, error: 'Clé API manquante', critical: false }
-      
+      const { url, key, label } = getLlamaEndpoint()
+      if (!key) return { healthy: false, error: 'Clé manquante — configurez VITE_GROQ_API_KEY' }
       const start = performance.now()
       try {
-        const response = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: { 'Authorization': `Bearer ${apiKey}` },
-          method: 'GET',
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${key}` } })
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? `${label} OK` : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
+      }
+    },
+    critical: false,
+  },
+  openai: {
+    name: 'OpenAI (GPT-4)',
+    check: async () => {
+      const start = performance.now()
+      try {
+        const r = await fetch('/.netlify/functions/openai-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [{ role: 'user', content: 'ping' }], options: { maxTokens: 1 } }),
         })
-        const latency = performance.now() - start
-        return { healthy: response.ok, latency, error: response.ok ? null : `HTTP ${response.status}` }
-      } catch (error) {
-        return { healthy: false, latency: performance.now() - start, error: error.message }
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? null : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
+      }
+    },
+    critical: false,
+  },
+  claude: {
+    name: 'Claude (Anthropic)',
+    check: async () => {
+      const start = performance.now()
+      try {
+        const r = await fetch('/.netlify/functions/claude-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: [{ role: 'user', content: 'ping' }], maxTokens: 1 }),
+        })
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? null : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
+      }
+    },
+    critical: false,
+  },
+  elevenlabs: {
+    name: 'ElevenLabs (TTS)',
+    check: async () => {
+      const key = import.meta.env.VITE_ELEVENLABS_API_KEY || import.meta.env.VITE_ELEVEN_KEY || ''
+      if (!key) return { healthy: false, error: 'Clé ElevenLabs manquante' }
+      const start = performance.now()
+      try {
+        const r = await fetch('https://api.elevenlabs.io/v1/voices', {
+          headers: { 'xi-api-key': key },
+        })
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? null : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
+      }
+    },
+    critical: false,
+  },
+  replicate: {
+    name: 'Replicate (Images IA)',
+    check: async () => {
+      const key = import.meta.env.VITE_REPLICATE_API_TOKEN || ''
+      if (!key) return { healthy: false, error: 'Token Replicate manquant' }
+      const start = performance.now()
+      try {
+        const r = await fetch('https://api.replicate.com/v1/models', {
+          headers: { Authorization: `Token ${key}` },
+        })
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? null : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
+      }
+    },
+    critical: false,
+  },
+  xai: {
+    name: 'xAI / Grok',
+    check: async () => {
+      const key = import.meta.env.VITE_XAI_API_KEY || ''
+      if (!key) return { healthy: false, error: 'Clé xAI manquante' }
+      const start = performance.now()
+      try {
+        const r = await fetch('https://api.x.ai/v1/models', {
+          headers: { Authorization: `Bearer ${key}` },
+        })
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? null : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
       }
     },
     critical: false,
@@ -46,11 +132,10 @@ const SERVICES = {
     check: async () => {
       const start = performance.now()
       try {
-        const response = await fetch('/.netlify/functions/health')
-        const latency = performance.now() - start
-        return { healthy: response.ok, latency, error: response.ok ? null : `HTTP ${response.status}` }
-      } catch (error) {
-        return { healthy: false, latency: performance.now() - start, error: error.message }
+        const r = await fetch('/.netlify/functions/health')
+        return { healthy: r.ok, latency: performance.now() - start, error: r.ok ? null : `HTTP ${r.status}` }
+      } catch (e) {
+        return { healthy: false, latency: performance.now() - start, error: e.message }
       }
     },
     critical: false,

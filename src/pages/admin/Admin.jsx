@@ -9,6 +9,7 @@ import { uploadFile, uploadAudioSummary, testUpload } from '../../lib/uploadFile
 import { generateSummaryText, generateMP3 } from '../../lib/generateAudio'
 import { testPaydunyaConnection } from '../../config/paydunya'
 import { cleanIATextLight } from '../../lib/cleanText'
+import { callGroq } from '../../lib/groqClient'
 import MarkdownText from '../../components/MarkdownText'
 import SocialShare from '../../components/SocialShare'
 import VoiceSelector from '../../components/VoiceSelector'
@@ -162,9 +163,6 @@ function BotPanel({ showToast }) {
   const [taskQueue, setTaskQueue] = useState([])
   const [taskInput, setTaskInput] = useState('')
   const messagesEndRef = useRef(null)
-  const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
-  const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
-
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   async function extractFileText(file) {
@@ -192,7 +190,6 @@ function BotPanel({ showToast }) {
 
   async function sendMessage() {
     if (!input.trim() && !sourceUrl && sourceFiles.length === 0) return
-    if (!GROQ_KEY) { showToast('Clé GROQ manquante — ajoutez GROQ_API_KEY dans .env', 'error'); return }
 
     let userContent = input.trim()
 
@@ -225,28 +222,17 @@ function BotPanel({ showToast }) {
     setLoading(true)
 
     try {
-      const groqUrl = (import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1') + '/chat/completions'
-      const res = await fetch(groqUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROQ_KEY}` },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          max_tokens: 3000,
-          temperature: 0.6,
-          messages: [
-            { role: 'system', content: BOT_SYSTEM_PROMPTS[mode] || BOT_SYSTEM_PROMPTS.assistant },
-            ...newMessages.slice(-12),
-          ],
-        }),
-      })
-      const text = await res.text()
-      if (!text) throw new Error('Réponse vide — vérifiez la clé GROQ')
-      const data = JSON.parse(text)
-      if (data?.error) throw new Error(data.error?.message || 'Erreur Groq API')
-      const reply = cleanIATextLight(data?.choices?.[0]?.message?.content || 'Aucune réponse reçue.')
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      const fullMessages = [
+        { role: 'system', content: BOT_SYSTEM_PROMPTS[mode] || BOT_SYSTEM_PROMPTS.assistant },
+        ...newMessages.slice(-12),
+      ]
+      const reply = await callGroq(fullMessages, { maxTokens: 3000, temperature: 0.6 })
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: cleanIATextLight(reply) || '(réponse vide — réessayez)',
+      }])
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `❌ Erreur: ${e.message}` }])
+      setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${e.message}` }])
     }
     setLoading(false)
   }

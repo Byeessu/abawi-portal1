@@ -16,6 +16,7 @@ export default function StatusCreator({ onClose, onPublished }) {
   const [bg, setBg] = useState(BG_COLORS[0]);
   const [media, setMedia] = useState(null);
   const [mediaPreview, setMediaPreview] = useState(null);
+  const [mediaBase64, setMediaBase64] = useState(null);   // fallback local si Supabase absent
   const [publishing, setPublishing] = useState(false);
   const [fileWarning, setFileWarning] = useState('');
   const fileRef = useRef(null);
@@ -26,61 +27,67 @@ export default function StatusCreator({ onClose, onPublished }) {
     if ((type === 'image' || type === 'video') && !media) return;
 
     setPublishing(true);
-    let mediaUrl = null;
 
-    // Build status object (defined early for catch-block fallback)
+    // ── 1. Préparer les métadonnées ──────────────────────────────────────
     const displayName = membre.nom || membre.prenom || membre.email || 'Utilisateur';
     const initials = displayName.split(' ').map(w => w[0] || '').join('').slice(0, 2).toUpperCase() || 'AB';
-    const statusObj = {
-      user_id: membre.id || 'local',
-      user_name: displayName,
-      user_initials: initials,
-      type,
-      content: text.trim() || null,
-      color: type === 'text' ? bg : null,
-      media_url: null,
-      created_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
+    const userId = membre.id || `local-${Date.now()}`;
 
-    function saveLocal(obj) {
-      try {
-        const key = 'abavie_statuses';
-        const arr = JSON.parse(localStorage.getItem(key) || '[]');
-        arr.unshift({ ...obj, id: `local-${Date.now()}` });
-        localStorage.setItem(key, JSON.stringify(arr.slice(0, 50)));
-      } catch { /* storage full — ignore */ }
-    }
-
-    try {
-      // Upload media if any
-      if (media) {
+    // ── 2. Résoudre l'URL média (fallback base64 si Supabase absent) ─────
+    let mediaUrl = null;
+    if (media) {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+      const bucketOk = supabaseUrl && !supabaseUrl.includes('votre-projet') && !supabaseUrl.includes('your-project')
+      if (bucketOk) {
         try {
           const safeName = media.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-          const fileName = `status_${membre.id}_${Date.now()}_${safeName}`;
+          const fileName = `status_${userId}_${Date.now()}_${safeName}`;
           const { error: uploadError } = await supabase.storage.from('status-media').upload(fileName, media);
           if (!uploadError) {
             const { data } = supabase.storage.from('status-media').getPublicUrl(fileName);
             mediaUrl = data?.publicUrl || null;
           }
-        } catch { /* media upload failed — continue without */ }
+        } catch { /* upload failed — fallback ci-dessous */ }
       }
-      statusObj.media_url = mediaUrl;
+      // Fallback local : base64 pour images ≤ 2 MB, objectURL pour vidéos (session)
+      if (!mediaUrl) {
+        mediaUrl = mediaBase64 || mediaPreview || null;
+      }
+    }
 
-      // Try Supabase insert
-      const { error } = await supabase.from('statuses').insert(statusObj);
-      // Always save locally too (backup / offline)
-      saveLocal(statusObj);
+    // ── 3. Construire l'objet statut ─────────────────────────────────────
+    const statusObj = {
+      id: `local-${Date.now()}`,
+      user_id: userId,
+      user_name: displayName,
+      user_initials: initials,
+      type,
+      content: text.trim() || null,
+      color: type === 'text' ? bg : null,
+      media_url: mediaUrl,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
+
+    // ── 4. Sauvegarder en local EN PREMIER → affichage immédiat ──────────
+    try {
+      const arr = JSON.parse(localStorage.getItem('abavie_statuses') || '[]');
+      arr.unshift(statusObj);
+      localStorage.setItem('abavie_statuses', JSON.stringify(arr.slice(0, 50)));
+    } catch { /* storage plein */ }
+
+    // Notifier la sidebar immédiatement (pas besoin d'attendre Supabase)
+    setPublishing(false);
+    onPublished?.();
+    onClose?.();
+
+    // ── 5. Supabase en arrière-plan (non-bloquant) ────────────────────────
+    try {
+      const { id: _localId, ...forSupabase } = statusObj; // supprimer id local artificiel
+      const { error } = await supabase.from('statuses').insert(forSupabase);
       if (error) console.warn('[StatusCreator] Supabase insert:', error.message);
     } catch (e) {
-      console.error('[StatusCreator] publish exception:', e);
-      // Last-resort localStorage save so the status isn't lost
-      saveLocal(statusObj);
-    } finally {
-      setPublishing(false);
-      // Always notify parent — status is either in Supabase or localStorage
-      onPublished?.();
-      onClose?.();
+      console.warn('[StatusCreator] Supabase non disponible (hors-ligne OK):', e.message);
     }
   }
 
@@ -94,10 +101,19 @@ export default function StatusCreator({ onClose, onPublished }) {
       e.target.value = '';
       return;
     }
+    const isVideo = f.type.startsWith('video');
     setMedia(f);
+    setMediaBase64(null);
     const url = URL.createObjectURL(f);
     setMediaPreview(url);
-    setType(f.type.startsWith('video') ? 'video' : 'image');
+    setType(isVideo ? 'video' : 'image');
+
+    // Fallback local : base64 pour images ≤ 2 MB (video trop lourd pour localStorage)
+    if (!isVideo && f.size <= 2 * 1024 * 1024) {
+      const reader = new FileReader();
+      reader.onload = ev => setMediaBase64(ev.target.result || null);
+      reader.readAsDataURL(f);
+    }
   }
 
   return (

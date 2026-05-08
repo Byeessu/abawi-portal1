@@ -1,83 +1,76 @@
-// Netlify function pour Claude Anthropic API
+// ── Claude Anthropic — sécurisé : validation + sanitisation ───────────────
 
-const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY || ''
+const MAX_BODY_BYTES = 48_000
+const MAX_MESSAGES   = 20
+const MAX_MSG_CHARS  = 16_000
+const MAX_TOKENS_CAP = 4000
 
-exports.handler = async (event, context) => {
-  // Enable CORS
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': process.env.URL || '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'X-Content-Type-Options': 'nosniff',
   }
+}
 
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers
-    }
-  }
+function sanitizeMessages(messages) {
+  if (!Array.isArray(messages)) return []
+  return messages
+    .slice(0, MAX_MESSAGES)
+    .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
+    .map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content).slice(0, MAX_MSG_CHARS),
+    }))
+}
 
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    }
-  }
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: corsHeaders(), body: '' }
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: corsHeaders(), body: JSON.stringify({ error: 'Method not allowed' }) }
+  if (!event.headers['content-type']?.includes('application/json')) return { statusCode: 415, headers: corsHeaders(), body: JSON.stringify({ error: 'Content-Type required' }) }
 
+  const rawBody = event.body || ''
+  if (rawBody.length > MAX_BODY_BYTES) return { statusCode: 413, headers: corsHeaders(), body: JSON.stringify({ error: 'Request too large' }) }
+
+  let body
+  try { body = JSON.parse(rawBody) } catch { return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Invalid JSON' }) } }
+
+  const CLAUDE_API_KEY = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || ''
+  if (!CLAUDE_API_KEY) return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Claude not configured' }) }
+
+  const messages = sanitizeMessages(body.messages)
+  if (!messages.length) return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'messages required' }) }
+
+  const options = body.options || {}
   try {
-    const { messages, options = {} } = JSON.parse(event.body)
-
-    if (!messages || !Array.isArray(messages)) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Messages array is required' })
-      }
-    }
-
-    // Appel à Claude API
-    const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: options.model || 'claude-3-sonnet-20240229',
-        max_tokens: options.maxTokens || 4000,
-        temperature: options.temperature || 0.9,
-        messages: messages
-      })
+        model: options.model || 'claude-3-5-sonnet-20241022',
+        max_tokens: Math.min(Number(options.maxTokens) || 2000, MAX_TOKENS_CAP),
+        temperature: Math.max(0, Math.min(1, Number(options.temperature) || 0.7)),
+        messages,
+      }),
     })
 
-    if (!claudeResponse.ok) {
-      const errorData = await claudeResponse.text()
-      console.error('Claude API error:', errorData)
-      throw new Error(`Claude API error: ${claudeResponse.status}`)
+    if (!r.ok) {
+      const err = await r.text().catch(() => '')
+      return { statusCode: r.status, headers: corsHeaders(), body: JSON.stringify({ error: `Claude error ${r.status}` }) }
     }
 
-    const claudeData = await claudeResponse.json()
-    
+    const data = await r.json()
     return {
       statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        success: true,
-        content: claudeData.content[0]?.text || '',
-        usage: claudeData.usage
-      })
+      headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+      body: JSON.stringify({ success: true, content: data.content?.[0]?.text || '', usage: data.usage }),
     }
-
-  } catch (error) {
-    console.error('Claude function error:', error)
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: error.message || 'Internal server error'
-      })
-    }
+  } catch (e) {
+    return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'Claude service error' }) }
   }
 }

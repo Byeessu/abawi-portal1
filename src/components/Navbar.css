@@ -432,7 +432,9 @@ html.light .nav-chip-pay.is-active {
   .nav-search-btn { padding: 0; width: 38px; gap: 0; }
 }
 
-/* === Profile avatar === */
+/* === Profile avatar ===
+   box-shadow avec var(--nav-bg) crée un anneau de séparation visible
+   sur n'importe quel fond, y compris fond or/jaune.              */
 .nav-profile {
   width: 38px;
   height: 38px;
@@ -442,49 +444,62 @@ html.light .nav-chip-pay.is-active {
   justify-content: center;
   font-weight: 900;
   font-size: 0.78rem;
+  letter-spacing: 0.5px;
   text-decoration: none;
-  border: 2px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
-  position: relative;
-  transition: all 0.2s ease;
-}
-.nav-profile::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
   border: 2px solid transparent;
-  background: conic-gradient(from 0deg, var(--gold), #8B5CF6, var(--green), var(--gold)) border-box;
-  -webkit-mask:
-    linear-gradient(#fff 0 0) padding-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
 }
-.nav-profile:hover {
-  transform: translateY(-1px) scale(1.04);
-}
-.nav-profile:hover::after { opacity: 1; }
-.nav-profile--admin { background: linear-gradient(135deg, var(--gold), var(--gold-hover)); color: #000; }
-.nav-profile--member { background: #8B5CF6; color: #fff; }
+.nav-profile:hover { transform: translateY(-1px) scale(1.05); }
 
+/* Admin — or fixe + texte noir garanti + anneau de séparation */
+.nav-profile--admin {
+  background: linear-gradient(135deg, #F0B429, #d99e10);
+  color: #0d0800;
+  box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 3px 10px rgba(0,0,0,0.35);
+  border-color: rgba(240,180,41,0.6);
+}
+.nav-profile--admin:hover {
+  box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 6px 16px rgba(240,180,41,0.45);
+}
+
+/* Member — violet + texte blanc + anneau de séparation */
+.nav-profile--member {
+  background: linear-gradient(135deg, #7C3AED, #6025C8);
+  color: #fff;
+  box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 3px 10px rgba(0,0,0,0.3);
+  border-color: rgba(124,58,237,0.5);
+}
+.nav-profile--member:hover {
+  box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 6px 16px rgba(124,58,237,0.4);
+}
+
+/* Bouton connexion — or fixe + texte très sombre + bordure visible
+   Indépendant de var(--gold) pour garantir la lisibilité sur thème or. */
 .nav-login {
-  padding: 9px 20px;
+  padding: 8px 18px;
   border-radius: 999px;
   font-weight: 800;
-  font-size: 0.85rem;
-  background: linear-gradient(135deg, var(--gold), var(--gold-hover));
-  color: #1a1a0a;
+  font-size: 0.84rem;
+  background: linear-gradient(135deg, #F0B429, #d99e10);
+  color: #0d0800;
   text-decoration: none;
-  border: 1px solid color-mix(in srgb, var(--gold) 80%, #fff);
-  box-shadow: 0 6px 20px -6px rgba(240, 180, 41, 0.6);
+  border: 1.5px solid rgba(240,180,41,0.7);
+  box-shadow:
+    0 0 0 2px var(--nav-bg, var(--bg-primary)),
+    0 6px 18px -4px rgba(200,130,0,0.55);
   transition: all 0.2s ease;
   letter-spacing: 0.3px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .nav-login:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 28px -8px rgba(240, 180, 41, 0.85);
+  box-shadow:
+    0 0 0 2px var(--nav-bg, var(--bg-primary)),
+    0 10px 24px -6px rgba(200,130,0,0.75);
+  background: linear-gradient(135deg, #FFCA40, #F0B429);
 }
 
 /* === Burger === */
@@ -523,8 +538,11 @@ html.light .nav-chip-pay.is-active {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* === Responsive / overflow === */
-@media (max-width: 1100px) {
+/* === Responsive / overflow ===
+   1. CSS media query : fallback garanti sous 1280px
+   2. .nav-overflow (JS) : se déclenche dès que le dernier lien
+      dépasse le bord droit du conteneur (détection via getBoundingClientRect)   */
+@media (max-width: 1280px) {
   .nav-burger { display: inline-flex; }
   .nav-links { display: none; }
 }

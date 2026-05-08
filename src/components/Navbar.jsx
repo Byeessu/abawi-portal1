@@ -182,11 +182,23 @@ export default function Navbar() {
   useEffect(() => {
     const el = navInnerRef.current
     if (!el) return
-    const check = () => setNavOverflows(el.scrollWidth > el.clientWidth + 2)
+    const check = () => {
+      // nav-links a flex:1 + overflow:hidden → son overflow interne ne remonte
+      // pas dans le scrollWidth du parent. On compare le bord droit du dernier
+      // enfant visible avec le bord droit du conteneur nav-links.
+      const links = el.querySelector('.nav-links')
+      if (!links) { setNavOverflows(false); return }
+      const items = [...links.children].filter(c => c.offsetParent !== null)
+      if (!items.length) { setNavOverflows(false); return }
+      const containerRight = links.getBoundingClientRect().right
+      const lastRight = items[items.length - 1].getBoundingClientRect().right
+      setNavOverflows(lastRight > containerRight + 1)
+    }
     check()
     const ro = new ResizeObserver(check)
     ro.observe(el)
-    return () => ro.disconnect()
+    window.addEventListener('resize', check, { passive: true })
+    return () => { ro.disconnect(); window.removeEventListener('resize', check) }
   }, [])
 
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync from external source (localStorage, props, async result) — refactor to derived state where feasible

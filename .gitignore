@@ -3,18 +3,6 @@ ABAWI DIGITAL/
 public/files/
 public/icons/*.png
 
-# Gros fichiers de dump
-code_complet.txt
-*.zip
-*.tar.gz
-
-# Scripts locaux contenant des secrets — ne pas versionner
-scripts/
-deploy-replicate-function.bat
-deploy-replicate-function.ps1
-grok_expert.py
-*.py
-
 # Logs
 logs
 *.log
@@ -50,3 +38,6 @@ test-results
 *.njsproj
 *.sln
 *.sw?
+
+# Local generated dumps
+code_complet.txt

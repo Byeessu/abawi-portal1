@@ -61,6 +61,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
   const [settings, setSettings] = useState(() => abavieSettings.get());
   const [statuses, setStatuses] = useState([]);
   const csvRef = useRef(null);
+  const backupFileRef = useRef(null);
 
   useEffect(() => {
     if (!membre) return;
@@ -135,11 +136,11 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
     const next = !e2eEnabled;
     setE2eEnabled(next);
     localStorage.setItem('abavie_e2e', JSON.stringify(next));
-    // Generate identity key if enabling
+    // Generate identity key and publish if enabling
     if (next) {
-      import('../../lib/abavieE2E').then(m => {
-        m.generateE2EIdentity().then(({ publicKey }) => {
-          localStorage.setItem('abavie_e2e_public', publicKey);
+      import('../../lib/abavieE2EIntegration').then(m => {
+        m.getOrCreateKeyPair().then(() => {
+          if (membre?.id) m.publishPublicKey(membre.id);
         }).catch(() => {});
       });
     }
@@ -147,27 +148,25 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
 
   // Push notifications subscription
   async function subscribePush() {
-    if (!('serviceWorker' in navigator)) return;
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(
-          'BEl62iSMgV_WEVJ9kLFfDyi3m5iQ0LzmLJQA3gXQRm8xV1q2E-7V2J1YQ5f6cR7s8tU9v0w1x2y3z4A5B6C7D8E9F0G1H2I3J4K5L6M7N8O9P0Q1R2S3T4U5V6W7X8Y9Z0'
-        ),
-      });
+      const { subscribePush: doSub, isPushConfigured, unsubscribePush, isPushEnabled: checkEnabled } =
+        await import('../../lib/abaviePush');
+      if (!isPushConfigured()) {
+        alert('Notifications push non configurées sur ce serveur (VAPID manquant).');
+        return;
+      }
+      const enabled = await checkEnabled();
+      if (enabled) {
+        await unsubscribePush(membre?.id);
+        setPushEnabled(false);
+        return;
+      }
+      await doSub(membre?.id);
       setPushEnabled(true);
-      localStorage.setItem('abavie_push', JSON.stringify(sub.toJSON()));
     } catch (e) {
       console.error('Push subscription failed', e);
+      alert(`Erreur notifications: ${e.message}`);
     }
-  }
-
-  function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-    const raw = window.atob(base64);
-    return Uint8Array.from([...raw].map(char => char.charCodeAt(0)));
   }
 
   async function loadConversations() {
@@ -623,6 +622,46 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
                 alert(`${removed} médias nettoyés — ${remaining} restants`);
               }}>🧹 Nettoyer le cache média</button>
               <button className="abv-profile-btn" onClick={() => { abavieSettings.reset(); setSettings(abavieSettings.get()); }}>🔄 Réinitialiser les paramètres</button>
+            </div>
+
+            {/* Backup */}
+            <div className="abv-settings-section">
+              <h5>📦 Sauvegarde</h5>
+              <button className="abv-profile-btn" onClick={async () => {
+                if (!membre?.id) { alert('Connecte-toi pour exporter'); return; }
+                try {
+                  const { exportAllConversations } = await import('../../lib/abavieBackup');
+                  const res = await exportAllConversations(membre.id);
+                  alert(`✅ Export réussi\n${res.conversationsCount} conversations\n${res.messagesCount} messages`);
+                } catch (e) {
+                  alert(`❌ Erreur export: ${e.message}`);
+                }
+              }}>⬇️ Exporter mes conversations</button>
+              <input
+                ref={backupFileRef}
+                type="file"
+                accept="application/json,.json"
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const { importBackup } = await import('../../lib/abavieBackup');
+                    const res = await importBackup(file, { membreId: membre?.id });
+                    alert(`✅ Import réussi\n${res.conversationsCount} conversations\n${res.messagesCount} messages restaurés en local`);
+                  } catch (err) {
+                    alert(`❌ Erreur import: ${err.message}`);
+                  } finally {
+                    e.target.value = '';
+                  }
+                }}
+              />
+              <button className="abv-profile-btn" onClick={() => backupFileRef.current?.click()}>
+                ⬆️ Importer une sauvegarde
+              </button>
+              <p className="abv-settings-hint" style={{ fontSize: 12, opacity: 0.7, margin: '8px 0 0' }}>
+                Les sauvegardes sont des fichiers JSON. L'import restaure dans le cache local.
+              </p>
             </div>
 
             {/* Appearance */}

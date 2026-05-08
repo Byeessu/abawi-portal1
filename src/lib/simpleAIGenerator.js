@@ -3,11 +3,11 @@
  * Solution directe et sans complexité pour la génération IA
  */
 
-// Configuration directe de l'API
+// Configuration via variables d'environnement — pas de clé hardcodée
 const API_CONFIG = {
-  key: import.meta.env.VITE_GROQ_API_KEY || '',
-  baseURL: 'https://api.groq.com/openai/v1',
-  model: 'llama-3.3-70b-versatile'
+  key: import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || '',
+  baseURL: import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1',
+  model: import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile',
 }
 
 /**
