@@ -1,0 +1,52 @@
+.promo-ticker {
+  position: relative;
+  z-index: 300;
+  background: var(--green);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.promo-ticker-track {
+  display: flex;
+  white-space: nowrap;
+  animation: ticker-scroll 30s linear infinite;
+}
+
+.promo-ticker-text {
+  flex-shrink: 0;
+  padding: 0 24px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.promo-ticker-link { color: #fff; text-decoration: none; transition: opacity 0.2s; }
+.promo-ticker-link:hover { opacity: 0.8; text-decoration: underline; }
+.promo-ticker-sep { color: rgba(255,255,255,0.5); }
+
+.promo-ticker-close {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.promo-ticker-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+}

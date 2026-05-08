@@ -1,0 +1,616 @@
+/* ============================================================
+   TOOL LAYOUT — Design System pour les outils ABAWI
+   Variables CSS du ThemeContext : --bg-primary, --bg-secondary,
+   --bg-card, --border, --text-primary, --text-secondary,
+   --text-muted, --accent, --accent2, --accent3
+   ============================================================ */
+
+/* Root container */
+.tool-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.tool-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 32px);
+}
+
+/* Hero Header */
+.tool-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 24px 32px;
+  margin-bottom: 24px;
+  text-align: center;
+  background: var(--gradient-hero);
+  border: 1px solid var(--border);
+}
+
+.tool-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top right, var(--accent3)15, transparent 60%);
+  pointer-events: none;
+}
+
+.tool-hero h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 8px;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tool-hero p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.tool-hero .badges {
+  position: relative;
+  z-index: 1;
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tool-badge {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+/* Cards / Panels */
+.tool-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.tool-card h2 {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Form elements */
+.tool-label {
+  display: block;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.tool-input,
+.tool-textarea,
+.tool-select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.tool-input:focus,
+.tool-textarea:focus,
+.tool-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent3)20;
+}
+
+.tool-input::placeholder,
+.tool-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.tool-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238B95A5' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Buttons */
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.tool-btn:active {
+  transform: scale(0.97);
+}
+
+.tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tool-btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent, #0A0A0A);
+  box-shadow: 0 4px 16px var(--accent)30;
+}
+
+.tool-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 24px var(--accent)40;
+  filter: brightness(1.08);
+}
+
+.tool-btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.tool-btn-secondary:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-card-hover);
+}
+
+.tool-btn-danger {
+  background: #EF444420;
+  color: #EF4444;
+  border: 1px solid #EF444440;
+}
+
+/* Progress */
+.tool-progress {
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tool-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+/* Spinner */
+.tool-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: toolSpin 0.9s linear infinite;
+}
+
+@keyframes toolSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error / Alert */
+.tool-error {
+  background: var(--error-bg, rgba(239, 68, 68, 0.08));
+  border: 1px solid var(--error-border, rgba(239, 68, 68, 0.25));
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--error-text, #EF4444);
+  font-size: 0.9rem;
+}
+
+.tool-success {
+  background: var(--success-bg, rgba(34, 197, 94, 0.08));
+  border: 1px solid var(--success-border, rgba(34, 197, 94, 0.25));
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--success-text, #22C55E);
+  font-size: 0.9rem;
+}
+
+/* Footer bar */
+.tool-footer-bar {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  padding: 16px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+}
+
+.tool-footer-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Grid */
+.tool-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.tool-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* Tabs */
+.tool-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tool-tab {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.tool-tab:hover {
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.tool-tab.active {
+  background: var(--accent3)15;
+  border-color: var(--accent3)40;
+  color: var(--accent3);
+}
+
+/* Upload area */
+.tool-upload {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: var(--bg-secondary);
+}
+
+.tool-upload:hover {
+  border-color: var(--accent);
+  background: var(--accent)05;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .tool-grid-2,
+  .tool-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-hero {
+    padding: 20px 16px;
+  }
+
+  .tool-hero h1 {
+    font-size: 1.4rem;
+  }
+}
+
+/* === ELITE PREMIUM COMPACT STYLES === */
+
+/* Elite Grid - Plus compact mais élégant */
+.elite-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 1200px) {
+  .elite-form-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1199px) {
+  .elite-form-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Elite Field Container */
+.elite-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Elite Label - plus compact et premium */
+.elite-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* Elite Input - design premium compact */
+.elite-input,
+.elite-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.elite-input:focus,
+.elite-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent)15, inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.elite-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Elite Select - flèche personnalisée */
+.elite-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+/* Elite Container */
+.elite-container {
+  max-width: min(1200px, 96vw);
+  margin: 0 auto;
+  padding: clamp(12px, 2vw, 20px);
+}
+
+/* Elite Header - plus compact */
+.elite-header {
+  background: linear-gradient(135deg, var(--accent, #3B82F6), var(--accent2, #2563EB));
+  padding: clamp(24px, 4vw, 36px);
+  border-radius: 16px;
+  margin-bottom: 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px var(--accent)25;
+}
+
+.elite-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.elite-header-title {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.5px;
+}
+
+.elite-header-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 16px 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Elite Badges */
+.elite-badges {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.elite-badge {
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Elite Navigation - compact premium */
+.elite-nav {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.elite-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.elite-nav-btn {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.elite-nav-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.elite-nav-btn.active {
+  background: var(--accent)15;
+  color: var(--accent);
+  box-shadow: 0 2px 8px var(--accent)20;
+}
+
+/* Elite Content Box */
+.elite-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: clamp(16px, 2.5vw, 24px);
+  min-height: 400px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.elite-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Elite Button */
+.elite-btn {
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.elite-btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: white;
+  box-shadow: 0 4px 14px var(--accent)35;
+}
+
+.elite-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--accent)45;
+}
+
+.elite-btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.elite-btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+/* Elite Card */
+.elite-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.elite-card:hover {
+  border-color: var(--accent)40;
+  box-shadow: 0 4px 16px var(--accent)10;
+}
+
+/* Elite Highlight Numbers */
+.elite-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.elite-value-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

@@ -1,0 +1,84 @@
+.merci-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.merci-card {
+  background: var(--bg-card);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius-xl);
+  padding: 48px 40px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  animation: fade-up 0.5s ease-out;
+}
+
+.merci-icon { margin-bottom: 20px; }
+
+.merci-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: 8px;
+}
+
+.merci-product {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.merci-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.merci-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.merci-btn {
+  display: block;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.merci-btn--wa {
+  background: var(--whatsapp);
+  color: #fff;
+}
+
+.merci-btn--wa:hover {
+  background: #20bd5a;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+}
+
+.merci-btn--back {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.merci-btn--back:hover {
+  color: var(--text-primary);
+  border-color: var(--green-border);
+}
+
+.merci-support {
+  margin-top: 20px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.merci-support a { color: var(--green); }

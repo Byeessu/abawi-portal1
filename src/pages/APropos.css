@@ -1,0 +1,251 @@
+/* =========================================================
+   A PROPOS — Responsive-first, typographie fluide
+   Breakpoints : 1280 / 1024 / 768 / 640 / 480 / 360
+   ========================================================= */
+
+.ap-about {
+  max-width: var(--max-width, 1200px);
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 40px) clamp(60px, 8vh, 100px);
+}
+
+/* ── Hero ── */
+.ap-about-hero {
+  text-align: center;
+  padding: clamp(40px, 7vw, 72px) 0 clamp(32px, 5vw, 56px);
+}
+
+.ap-about-title {
+  font-size: clamp(1.6rem, 5vw, 2.9rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ap-about-subtitle {
+  color: var(--text-secondary);
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  margin-top: 14px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* ── Sections ── */
+.ap-about-section {
+  padding: clamp(28px, 5vw, 48px) 0;
+  border-top: 1px solid var(--border);
+}
+
+.ap-about-h2 {
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-weight: 700;
+  margin-bottom: clamp(14px, 2.5vw, 24px);
+  line-height: 1.3;
+}
+
+.ap-about-text {
+  font-size: clamp(0.92rem, 1.8vw, 1rem);
+  color: var(--text-secondary);
+  line-height: 1.85;
+  max-width: 700px;
+}
+
+/* ── Section tag ── */
+.ap-about-section-tag {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 100px;
+  font-size: clamp(0.66rem, 1.4vw, 0.72rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: var(--green-glow);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  margin-bottom: 12px;
+}
+
+/* ── Stats ── */
+.ap-about-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: clamp(10px, 2vw, 18px);
+}
+
+.ap-about-stat {
+  text-align: center;
+  padding: clamp(16px, 3vw, 26px) clamp(8px, 1.5vw, 14px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.ap-about-stat-val {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+
+.ap-about-stat-label {
+  font-size: clamp(0.72rem, 1.5vw, 0.82rem);
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ── Brands ── */
+.ap-about-brands {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 2vw, 18px);
+}
+
+.ap-about-brand {
+  padding: clamp(16px, 3vw, 26px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: transform 0.25s, border-color 0.25s;
+}
+
+.ap-about-brand:hover { transform: translateY(-3px); }
+.ap-about-brand--gold:hover { border-color: var(--gold-border); }
+.ap-about-brand--green:hover { border-color: var(--green-border); }
+.ap-about-brand--blue:hover { border-color: rgba(59, 130, 246, 0.3); }
+
+.ap-about-brand h3 {
+  font-size: clamp(0.9rem, 1.8vw, 1rem);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.ap-about-brand--gold h3 { color: var(--gold); }
+.ap-about-brand--green h3 { color: var(--green); }
+.ap-about-brand--blue h3 { color: #3B82F6; }
+
+.ap-about-brand p {
+  font-size: clamp(0.8rem, 1.5vw, 0.86rem);
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ── Contact ── */
+.ap-about-contact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(12px, 2.5vw, 22px);
+}
+
+.ap-about-contact-item {
+  padding: clamp(14px, 2.5vw, 22px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: clamp(0.82rem, 1.6vw, 0.9rem);
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.ap-about-contact-item strong { color: var(--text-primary); }
+.ap-about-contact-item a { color: var(--green); }
+
+/* ── Valeurs ── */
+.ap-about-valeurs { display: flex; flex-direction: column; gap: clamp(12px, 2vw, 20px); }
+
+.ap-about-valeur {
+  display: flex;
+  gap: clamp(12px, 2vw, 18px);
+  padding: clamp(14px, 3vw, 22px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  align-items: flex-start;
+}
+
+.ap-about-valeur-icon {
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.ap-about-valeur-titre {
+  font-size: clamp(0.92rem, 1.8vw, 1rem);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.ap-about-valeur-texte {
+  font-size: clamp(0.82rem, 1.6vw, 0.88rem);
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+/* ── L'effet ABAWI ── */
+.ap-about-effet-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 2vw, 18px);
+  margin-top: 8px;
+}
+
+.ap-about-effet-card {
+  padding: clamp(16px, 3vw, 22px) clamp(16px, 3vw, 26px);
+  background: var(--bg-card);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--green);
+}
+
+.ap-about-effet-quote {
+  font-size: clamp(0.84rem, 1.6vw, 0.92rem);
+  color: var(--text-secondary);
+  line-height: 1.75;
+  font-style: italic;
+}
+
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================= */
+
+/* ── Tablet large (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .ap-about-stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Tablet (≤ 900px) ── */
+@media (max-width: 900px) {
+  .ap-about-brands { grid-template-columns: repeat(2, 1fr); }
+  .ap-about-contact { grid-template-columns: 1fr 1fr; }
+  .ap-about-effet-cards { grid-template-columns: 1fr; }
+}
+
+/* ── Tablet small / phablet (≤ 768px) ── */
+@media (max-width: 768px) {
+  .ap-about-stats { grid-template-columns: repeat(3, 1fr); }
+  .ap-about-contact { grid-template-columns: 1fr; }
+}
+
+/* ── Mobile large (≤ 640px) ── */
+@media (max-width: 640px) {
+  .ap-about-stats { grid-template-columns: repeat(2, 1fr); }
+  .ap-about-brands { grid-template-columns: 1fr; }
+  .ap-about-brand { display: flex; flex-direction: column; }
+}
+
+/* ── Mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  .ap-about-stats { grid-template-columns: repeat(2, 1fr); }
+  .ap-about-valeur { flex-direction: row; }
+  .ap-about-valeur-icon { font-size: 1.3rem; }
+}
+
+/* ── Small mobile (≤ 380px) ── */
+@media (max-width: 380px) {
+  .ap-about-stats { grid-template-columns: 1fr 1fr; }
+  .ap-about-title { font-size: 1.55rem; }
+}

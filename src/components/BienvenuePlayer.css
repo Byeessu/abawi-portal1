@@ -1,0 +1,64 @@
+/* === Bienvenue Player — uses --accent to match any theme === */
+.bv-player {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, var(--bg-card)), var(--bg-card));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.bv-player-header { padding: 28px 28px 16px; }
+.bv-player-badge { display: inline-block; padding: 4px 14px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); margin-bottom: 12px; }
+.bv-player-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+.bv-player-desc { font-size: 0.88rem; color: var(--text-secondary); }
+
+/* Chapters */
+.bv-chapters { display: flex; gap: 6px; padding: 0 28px 16px; overflow-x: auto; flex-wrap: wrap; }
+.bv-ch { padding: 5px 14px; border-radius: 100px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); background: color-mix(in srgb, var(--bg-card) 75%, var(--border)); border: 1px solid var(--border); transition: all 0.2s; white-space: nowrap; }
+.bv-ch:hover { color: var(--text-primary); }
+.bv-ch--active { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+.bv-ch--done { color: var(--accent2); border-color: color-mix(in srgb, var(--accent2) 30%, transparent); }
+
+/* Karaoke */
+.bv-text-area { padding: 0 28px 20px; max-height: 200px; overflow-y: auto; }
+.bv-ch-title { font-size: 0.9rem; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+.bv-karaoke { font-size: 0.92rem; line-height: 1.9; }
+.bv-sent { transition: all 0.3s; }
+.bv-sent--active { color: var(--text-primary); font-weight: 600; }
+.bv-sent--past { color: var(--text-muted); }
+.bv-sent--future { color: var(--text-secondary); opacity: 0.4; }
+.bv-sent--highlight { color: var(--accent); font-weight: 800; font-size: 1.05rem; }
+
+/* Controls */
+.bv-controls { border-top: 1px solid var(--border); }
+.bv-progress { height: 3px; background: color-mix(in srgb, var(--border) 58%, transparent); cursor: pointer; }
+.bv-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+.bv-ctrl-row { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 14px 28px; }
+.bv-ctrl-play { width: 48px; height: 48px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-on-accent, #070B0F); border: none; cursor: pointer; transition: all 0.2s; }
+.bv-ctrl-play:hover { background: color-mix(in srgb, var(--accent) 85%, black); transform: scale(1.05); }
+.bv-ctrl-btn { padding: 6px 16px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); background: color-mix(in srgb, var(--bg-card) 80%, var(--border)); border: none; cursor: pointer; transition: all 0.2s; }
+.bv-ctrl-btn:hover { color: var(--text-primary); }
+.bv-ctrl-btn:disabled { opacity: 0.3; }
+.bv-ctrl-info { font-size: 0.75rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* Compact variant */
+.bv-compact { display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: var(--bg-card); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: var(--radius-md); position: relative; overflow: hidden; }
+.bv-compact-info { flex: 1; }
+.bv-compact-badge { font-size: 0.65rem; font-weight: 700; color: var(--accent); }
+.bv-compact-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+.bv-compact-desc { font-size: 0.78rem; color: var(--text-muted); }
+.bv-compact-play { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--text-on-accent, #070B0F); border: none; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+.bv-compact-play:hover { background: color-mix(in srgb, var(--accent) 85%, black); transform: scale(1.1); }
+.bv-compact-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: color-mix(in srgb, var(--border) 58%, transparent); }
+.bv-compact-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+
+@media (max-width: 640px) {
+  .bv-player-header { padding: 20px 16px 12px; }
+  .bv-chapters { padding: 0 16px 12px; }
+  .bv-text-area { padding: 0 16px 16px; }
+  .bv-ctrl-row { padding: 12px 16px; }
+}
+
+.bv-loading-bar { height: 4px; background: color-mix(in srgb, var(--border) 58%, transparent); border-radius: 2px; margin-top: 16px; overflow: hidden; max-width: 200px; margin-left: auto; margin-right: auto; }
+.bv-loading-fill { height: 100%; width: 40%; background: var(--gold); border-radius: 2px; animation: bv-load 1.2s ease-in-out infinite; }
+@keyframes bv-load { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
+.bv-progress { cursor: pointer; }

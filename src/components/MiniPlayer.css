@@ -1,0 +1,33 @@
+.mp { position: fixed; bottom: 0; left: 0; right: 0; z-index: 9000; background: var(--nav-bg); backdrop-filter: blur(16px); border-top: 1px solid var(--border); }
+.mp-bar { height: 3px; background: color-mix(in srgb, var(--border) 55%, transparent); cursor: pointer; position: relative; }
+.mp-bar-fill { height: 100%; background: var(--green); position: absolute; top: 0; left: 0; transition: width 0.2s linear; }
+.mp-bar-limit { height: 100%; background: rgba(24,168,74,0.08); position: absolute; top: 0; left: 0; }
+.mp-inner { max-width: var(--max-width); margin: 0 auto; padding: 8px 20px; display: flex; align-items: center; gap: 14px; height: 60px; }
+.mp-info { flex: 1; min-width: 0; }
+.mp-title { display: block; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-serie { font-size: 0.7rem; color: var(--green); }
+.mp-controls { display: flex; align-items: center; gap: 10px; }
+.mp-play { width: 36px; height: 36px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #fff; border: none; cursor: pointer; transition: all 0.2s; }
+.mp-play:hover { background: #15943f; transform: scale(1.05); }
+.mp-time { font-size: 0.72rem; color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 70px; }
+.mp-cta { padding: 5px 14px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; background: var(--gold); color: #070B0F; transition: all 0.2s; flex-shrink: 0; }
+.mp-cta:hover { background: #e5a820; }
+.mp-collapse, .mp-stop { background: none; border: none; color: var(--text-muted); font-size: 1rem; cursor: pointer; padding: 4px; transition: color 0.2s; }
+.mp-collapse:hover { color: var(--text-primary); }
+.mp-stop:hover { color: #ef4444; }
+
+/* FAB collapsed */
+.mp-fab {
+  position: fixed; bottom: 20px; right: 80px; z-index: 9000;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--nav-bg); backdrop-filter: blur(12px);
+  border: 1px solid var(--green-border); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.4); transition: all 0.2s;
+}
+.mp-fab:hover { transform: scale(1.1); border-color: var(--green); }
+
+@media (max-width: 640px) {
+  .mp-inner { padding: 6px 12px; height: 52px; gap: 10px; }
+  .mp-time { display: none; }
+  .mp-fab { right: 72px; bottom: 16px; width: 44px; height: 44px; }
+}

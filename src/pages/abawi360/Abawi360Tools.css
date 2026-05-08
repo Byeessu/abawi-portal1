@@ -1,0 +1,745 @@
+/* ========================================
+   ABAWI 360 Tools — Styles avec support thème
+   ======================================== */
+
+/* Variables pour le thème sombre (par défaut) */
+.tools360-page {
+  --t360-bg-page: transparent;
+  --t360-bg-card: var(--bg-card, #0D1117);
+  --t360-bg-card-hover: var(--bg-card-hover, #131A23);
+  --t360-bg-input: #070B0F;
+  --t360-bg-button: rgba(255, 255, 255, 0.06);
+  --t360-bg-button-hover: rgba(255, 255, 255, 0.1);
+  --t360-bg-badge: rgba(255, 255, 255, 0.08);
+  --t360-bg-tag: rgba(255, 255, 255, 0.04);
+  
+  --t360-border: var(--border, #1A2332);
+  --t360-border-input: #1A2332;
+  --t360-border-focus: var(--accent, #3B82F6);
+  
+  --t360-text-primary: var(--text-primary, #F0F2F5);
+  --t360-text-secondary: var(--text-secondary, #8B95A5);
+  --t360-text-muted: var(--text-muted, #4A5568);
+  --t360-text-inverse: #fff;
+  
+  --t360-accent-primary: var(--accent, #3B82F6);
+  --t360-accent-success: #18A84A;
+  --t360-accent-purple: #8B5CF6;
+  --t360-accent-gold: #F0B429;
+  --t360-accent-danger: #ef4444;
+}
+
+/* Variables pour le thème clair */
+[data-mode="light"] .tools360-page,
+html.light .tools360-page {
+  --t360-bg-page: transparent;
+  --t360-bg-card: var(--bg-card, #FFFFFF);
+  --t360-bg-card-hover: var(--bg-card-hover, #F8FAFC);
+  --t360-bg-input: var(--bg-secondary, #F1F5F9);
+  --t360-bg-button: rgba(0, 0, 0, 0.04);
+  --t360-bg-button-hover: rgba(0, 0, 0, 0.08);
+  --t360-bg-badge: rgba(139, 92, 246, 0.08);
+  --t360-bg-tag: rgba(139, 92, 246, 0.06);
+  
+  --t360-border: var(--border, #E5E7EB);
+  --t360-border-input: #D1D5DB;
+  --t360-border-focus: var(--accent, #3B82F6);
+  
+  --t360-text-primary: var(--text-primary, #111827);
+  --t360-text-secondary: var(--text-secondary, #4B5563);
+  --t360-text-muted: var(--text-muted, #9CA3AF);
+  --t360-text-inverse: #fff;
+}
+
+/* Layout */
+.tools360-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  background: var(--t360-bg-page);
+  min-height: 100vh;
+}
+
+/* Header */
+.tools360-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tools360-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--t360-text-primary);
+  margin: 0;
+}
+
+.tools360-subtitle {
+  color: var(--t360-text-secondary);
+  font-size: 0.85rem;
+  margin: 4px 0 0;
+}
+
+/* Cards */
+.tools360-card {
+  background: var(--t360-bg-card);
+  border: 1px solid var(--t360-border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: all 0.2s;
+}
+
+.tools360-card-hover:hover {
+  border-color: var(--t360-border-focus);
+  transform: translateY(-2px);
+}
+
+/* Footer & About Link */
+.tools360-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--t360-border);
+  text-align: center;
+}
+
+.tools360-about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: #C4B5FD;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.tools360-about-link:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+[data-mode="light"] .tools360-about-link,
+html.light .tools360-about-link {
+  background: rgba(139, 92, 246, 0.06);
+  border-color: rgba(139, 92, 246, 0.15);
+  color: #7C3AED;
+}
+
+[data-mode="light"] .tools360-about-link:hover,
+html.light .tools360-about-link:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* Stats card */
+.tools360-stat-card {
+  background: var(--t360-bg-card);
+  border: 1px solid var(--t360-border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.tools360-stat-value {
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.tools360-stat-label {
+  font-size: 0.78rem;
+  color: var(--t360-text-secondary);
+}
+
+/* Inputs */
+.tools360-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--t360-bg-input);
+  border: 1px solid var(--t360-border-input);
+  color: var(--t360-text-primary);
+  font-size: 0.85rem;
+  outline: none;
+  font-family: 'Outfit', sans-serif;
+  transition: border-color 0.2s;
+}
+
+.tools360-input:focus {
+  border-color: var(--t360-border-focus);
+}
+
+.tools360-label {
+  font-size: 0.72rem;
+  color: var(--t360-text-secondary);
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* Buttons */
+.tools360-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: var(--t360-bg-button);
+  border: 1px solid var(--t360-border);
+  color: var(--t360-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tools360-btn:hover {
+  background: var(--t360-bg-button-hover);
+}
+
+.tools360-btn-primary {
+  background: linear-gradient(135deg, var(--t360-accent-primary), var(--t360-accent-primary));
+  color: var(--t360-text-inverse);
+  border-color: transparent;
+}
+
+.tools360-btn-success {
+  background: linear-gradient(135deg, var(--t360-accent-success), #15903f);
+  color: var(--t360-text-inverse);
+  border-color: transparent;
+}
+
+.tools360-btn-icon {
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--t360-bg-button);
+  border: 1px solid var(--t360-border);
+  color: var(--t360-text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tabs */
+.tools360-tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: var(--t360-bg-tag);
+  border: 1px solid var(--t360-border);
+  color: var(--t360-text-secondary);
+  cursor: pointer;
+  font-weight: 400;
+  font-size: 0.82rem;
+  transition: all 0.2s;
+}
+
+.tools360-tab-active {
+  background: var(--t360-accent-success);
+  border-color: var(--t360-accent-success);
+  color: var(--t360-text-inverse);
+  font-weight: 700;
+}
+
+/* Badges & Tags */
+.tools360-badge {
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--t360-bg-badge);
+  color: var(--t360-text-secondary);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.tools360-tag {
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: var(--t360-bg-tag);
+  border: 1px solid var(--t360-border);
+  color: var(--t360-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* Modal */
+.tools360-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.tools360-modal {
+  background: var(--t360-bg-card);
+  border: 1px solid var(--t360-border);
+  border-radius: 20px;
+}
+
+/* ============================================
+   ANIMATIONS & MICRO-INTERACTIONS
+   ============================================ */
+
+/* ─── Fade In Up ─── */
+@keyframes t360-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.t360-animate-fade-in-up {
+  animation: t360-fade-in-up 0.5s ease-out forwards;
+}
+
+/* ─── Scale In ─── */
+@keyframes t360-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.t360-animate-scale-in {
+  animation: t360-scale-in 0.3s ease-out forwards;
+}
+
+/* ─── Slide In Right ─── */
+@keyframes t360-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.t360-animate-slide-in-right {
+  animation: t360-slide-in-right 0.4s ease-out forwards;
+}
+
+/* ─── Slide In Left ─── */
+@keyframes t360-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.t360-animate-slide-in-left {
+  animation: t360-slide-in-left 0.4s ease-out forwards;
+}
+
+/* ─── Bounce In ─── */
+@keyframes t360-bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.t360-animate-bounce-in {
+  animation: t360-bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* ─── Pulse Glow ─── */
+@keyframes t360-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.2);
+  }
+}
+
+.t360-pulse-glow {
+  animation: t360-pulse-glow 2s infinite;
+}
+
+/* ─── Shimmer Loading ─── */
+@keyframes t360-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.t360-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--t360-bg-card) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    var(--t360-bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: t360-shimmer 1.5s infinite;
+}
+
+/* ─── Hover Lift ─── */
+.t360-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.t360-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Hover Scale ─── */
+.t360-hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.t360-hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* ─── Hover Glow ─── */
+.t360-hover-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.t360-hover-glow:hover {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+/* ─── Ripple Effect ─── */
+.t360-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.t360-ripple::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.t360-ripple:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* ─── Rotate On Hover ─── */
+.t360-hover-rotate {
+  transition: transform 0.3s ease;
+}
+
+.t360-hover-rotate:hover {
+  transform: rotate(5deg);
+}
+
+/* ─── Focus Ring ─── */
+.t360-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+}
+
+/* ─── Stagger Animation Delays ─── */
+.t360-stagger-1 { animation-delay: 0.1s; }
+.t360-stagger-2 { animation-delay: 0.2s; }
+.t360-stagger-3 { animation-delay: 0.3s; }
+.t360-stagger-4 { animation-delay: 0.4s; }
+.t360-stagger-5 { animation-delay: 0.5s; }
+
+/* ─── Loading Spinner ─── */
+@keyframes t360-spin {
+  to { transform: rotate(360deg); }
+}
+
+.t360-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--t360-border);
+  border-top-color: var(--t360-accent-success);
+  border-radius: 50%;
+  animation: t360-spin 0.8s linear infinite;
+}
+
+.t360-spinner--sm {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+.t360-spinner--lg {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+/* ─── Skeleton Loading ─── */
+.t360-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--t360-bg-card) 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    var(--t360-bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: t360-shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ─── Smooth Scroll ─── */
+.t360-smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* ─── Tab Transition ─── */
+.t360-tab-content {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.t360-tab-content--entering {
+  opacity: 0;
+  transform: translateX(10px);
+}
+
+.t360-tab-content--active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Notification Badge Pulse ─── */
+@keyframes t360-badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.t360-badge-pulse {
+  animation: t360-badge-pulse 0.5s ease-in-out;
+}
+
+/* ─── Button Press Effect ─── */
+.t360-btn-press {
+  transition: transform 0.1s ease;
+}
+
+.t360-btn-press:active {
+  transform: scale(0.95);
+}
+
+/* ─── Card Reveal ─── */
+@keyframes t360-card-reveal {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(-10deg) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(1000px) rotateX(0) translateY(0);
+  }
+}
+
+.t360-card-reveal {
+  animation: t360-card-reveal 0.5s ease-out forwards;
+}
+
+/* ─── Success Check Animation ─── */
+@keyframes t360-checkmark {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.t360-checkmark path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: t360-checkmark 0.6s ease-out forwards;
+}
+
+/* ─── Number Count Up ─── */
+.t360-count-up {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Glass Shimmer ─── */
+@keyframes t360-glass-shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.t360-glass-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.t360-glass-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  background-size: 50% 100%;
+  animation: t360-glass-shimmer 2s infinite;
+  pointer-events: none;
+}
+
+.tools360-modal {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+}
+
+.tools360-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.tools360-modal-title {
+  color: var(--t360-text-primary);
+  font-weight: 800;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.tools360-modal-close {
+  background: var(--t360-bg-button);
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  color: var(--t360-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+/* Loading & Empty states */
+.tools360-loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--t360-text-secondary);
+}
+
+.tools360-empty {
+  text-align: center;
+  padding: 60px;
+  color: var(--t360-text-secondary);
+}
+
+/* Grid layouts */
+.tools360-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.tools360-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+/* AI Box */
+.tools360-ai-box {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(24, 168, 74, 0.06);
+  border: 1px solid rgba(24, 168, 74, 0.2);
+  margin-bottom: 20px;
+}
+
+[data-mode="light"] .tools360-ai-box,
+html.light .tools360-ai-box {
+  background: rgba(24, 168, 74, 0.04);
+  border-color: rgba(24, 168, 74, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tools360-container {
+    padding: 24px 16px 60px;
+  }
+  
+  .tools360-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .tools360-title {
+    font-size: 1.5rem;
+  }
+  
+  .tools360-grid {
+    grid-template-columns: 1fr;
+  }
+}

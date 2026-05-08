@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Zones privées
+Disallow: /admin
+Disallow: /news/admin
+Disallow: /api/
+Disallow: /.netlify/
+
+# Sitemap
+Sitemap: https://abawi-portal.netlify.app/sitemap.xml

@@ -1,0 +1,715 @@
+/* === Reset & Design System === */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #070B0F;
+  --bg-card: #0D1117;
+  --bg-card-hover: #131A23;
+  --green: #18A84A;
+  --green-glow: rgba(24, 168, 74, 0.15);
+  --green-border: rgba(24, 168, 74, 0.25);
+  --gold: #F0B429;
+  --gold-hover: #e5a820;
+  --gold-glow: rgba(240, 180, 41, 0.15);
+  --gold-border: rgba(240, 180, 41, 0.25);
+  --red: #EF4444;
+  --whatsapp: #25D366;
+  --whatsapp-hover: #20bd5a;
+  --whatsapp-glow: rgba(37, 211, 102, 0.15);
+  --text-primary: #F0F2F5;
+  --text-secondary: #9BAAB8;
+  --text-muted: #6B7280;
+  --text-on-accent: #0A0A0A;
+  --text-on-gold: #070B0F;
+  --text-on-whatsapp: #FFFFFF;
+  --border: #1A2332;
+  --nav-bg: rgba(7, 11, 15, 0.6);
+  --nav-bg-scrolled: rgba(7, 11, 15, 0.92);
+  --accent: #8b5cf6;
+  --accent2: #7c3aed;
+  --accent3: rgba(139, 92, 246, 0.3);
+  --error-bg: rgba(239, 68, 68, 0.08);
+  --error-border: rgba(239, 68, 68, 0.25);
+  --error-text: #EF4444;
+  --success-bg: rgba(34, 197, 94, 0.08);
+  --success-border: rgba(34, 197, 94, 0.25);
+  --success-text: #22C55E;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --max-width: 1200px;
+}
+
+/* === Light Theme === */
+html.light {
+  --bg-primary: #F5F7FA;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F0F1F4;
+  --text-primary: #1A1A2E;
+  --text-secondary: #555770;
+  --text-muted: #8E90A6;
+  --text-on-accent: #FFFFFF;
+  --text-on-gold: #070B0F;
+  --text-on-whatsapp: #FFFFFF;
+  --border: #E2E4EA;
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --nav-bg-scrolled: rgba(255, 255, 255, 0.98);
+  --green-glow: rgba(24, 168, 74, 0.1);
+  --green-border: rgba(24, 168, 74, 0.3);
+  --gold-glow: rgba(240, 180, 41, 0.1);
+  --gold-border: rgba(240, 180, 41, 0.3);
+  --error-bg: rgba(239, 68, 68, 0.05);
+  --error-border: rgba(239, 68, 68, 0.2);
+  --error-text: #DC2626;
+  --success-bg: rgba(34, 197, 94, 0.05);
+  --success-border: rgba(34, 197, 94, 0.2);
+  --success-text: #16A34A;
+}
+
+/* === Data-theme variants === */
+[data-theme="light"] { --bg-primary: #F8FAFC; --bg-secondary: #FFFFFF; --bg-card: #FFFFFF; --border: #E2E8F0; --text-primary: #0F172A; --text-secondary: #475569; --accent: #D4A017; --accent2: #15803D; --nav-bg: rgba(248,250,252,0.96); }
+[data-theme="galaxy"] { --bg-primary: #03001C; --bg-secondary: #07023A; --bg-card: #0A0550; --border: #1E1B5E; --text-primary: #E8E8FF; --text-secondary: #9D9DD4; --accent: #9B59B6; --accent2: #3498DB; --nav-bg: rgba(3,0,28,0.94); }
+[data-theme="gold"] { --bg-primary: #0A0800; --bg-secondary: #1A1400; --bg-card: #221B00; --border: #3D3000; --text-primary: #FFF8E7; --text-secondary: #C9A84C; --accent: #FFD700; --accent2: #FFA500; --nav-bg: rgba(10,8,0,0.95); }
+[data-theme="deep"] { --bg-primary: #000814; --bg-secondary: #001D3D; --bg-card: #003566; --border: #0077B6; --text-primary: #CAF0F8; --text-secondary: #48CAE4; --accent: #00B4D8; --accent2: #90E0EF; --nav-bg: rgba(0,8,20,0.97); }
+[data-theme="nature"] { --bg-primary: #0A1A0A; --bg-secondary: #0F220F; --bg-card: #152815; --border: #1E3C1E; --text-primary: #E8F5E8; --text-secondary: #78A878; --accent: #4CAF50; --accent2: #8BC34A; --nav-bg: rgba(10,26,10,0.95); }
+[data-theme="luxe"] { --bg-primary: #0A0A0A; --bg-secondary: #111111; --bg-card: #1A1A1A; --border: #333333; --text-primary: #F5F5F5; --text-secondary: #AAAAAA; --accent: #C9A84C; --accent2: #E8C97A; --nav-bg: rgba(10,10,10,0.97); }
+[data-theme="premium"] { --bg-primary: #0C0A14; --bg-secondary: #14102A; --bg-card: #1C1640; --border: #2E2860; --text-primary: #F0EEFF; --text-secondary: #9080CC; --accent: #7C3AED; --accent2: #A855F7; --nav-bg: rgba(12,10,20,0.97); }
+[data-theme="aero"] { --bg-primary: #F0F4F8; --bg-secondary: #E8EEF4; --bg-card: #FFFFFF; --border: #CBD5E0; --text-primary: #2D3748; --text-secondary: #718096; --accent: #667EEA; --accent2: #764BA2; --nav-bg: rgba(240,244,248,0.96); }
+[data-theme="ice"] { --bg-primary: #F8FBFF; --bg-secondary: #EEF4FF; --bg-card: #FFFFFF; --border: #C8DEFF; --text-primary: #1A2A4A; --text-secondary: #5A7AB0; --accent: #2196F3; --accent2: #03A9F4; --nav-bg: rgba(248,251,255,0.97); }
+[data-theme="intellect"] { --bg-primary: #0F0A1E; --bg-secondary: #1A1030; --bg-card: #241840; --border: #3D2870; --text-primary: #EDE8FF; --text-secondary: #9D88CC; --accent: #9B59B6; --accent2: #8E44AD; --nav-bg: rgba(15,10,30,0.96); }
+[data-theme="forest"] { --bg-primary: #0D1B0D; --bg-secondary: #142814; --bg-card: #1A321A; --border: #2A4A2A; --text-primary: #E8F5E0; --text-secondary: #90B890; --accent: #56AB2F; --accent2: #A8E063; --nav-bg: rgba(13,27,13,0.95); }
+[data-theme="ultime"] { --bg-primary: #000000; --bg-secondary: #0A0A0A; --bg-card: #111111; --border: #FF4500; --text-primary: #FFFFFF; --text-secondary: #999999; --accent: #FF4500; --accent2: #FFD700; --nav-bg: rgba(0,0,0,0.98); }
+[data-theme="diamant"] { --bg-primary: #050A1A; --bg-secondary: #0A1428; --bg-card: #0F1E38; --border: #1E3050; --text-primary: #E0EEFF; --text-secondary: #7090CC; --accent: #58A6FF; --accent2: #79C0FF; --nav-bg: rgba(5,10,26,0.97); }
+[data-theme="urbain"] { --bg-primary: #1A1A1A; --bg-secondary: #242424; --bg-card: #2E2E2E; --border: #3E3E3E; --text-primary: #F0F0F0; --text-secondary: #A0A0A0; --accent: #FF4500; --accent2: #FFB000; --nav-bg: rgba(26,26,26,0.97); }
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+img { max-width: 100%; display: block; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+/* === Utility === */
+.text-green { color: var(--green); }
+.text-gold { color: var(--gold); }
+
+/* === Animations === */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(37, 211, 102, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(37, 211, 102, 0.5); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes particle-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
+  50% { transform: translateY(-20px) scale(1.3); opacity: 0.8; }
+}
+
+/* === Transition for theme switch === */
+.app, .navbar, .footer, .dg-card, .ac-card, .pod-card, .article-card,
+.dg-pack, .ac-pack, .proof-item, .section-card, .promo-inner {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* === Page transition === */
+.page-content { animation: fade-up 0.4s ease-out; }
+
+/* === Card hover premium === */
+.dg-card:hover, .ac-card:hover, .pod-card:hover, .st-card:hover, .news-card:hover {
+  transform: translateY(-8px);
+}
+
+/* === CoverImage hover === */
+.dg-card:hover .cover, .ac-card:hover .cover, .pod-card:hover .cover {
+  filter: brightness(1.08);
+  transform: scale(1.02);
+  transition: all 0.3s ease;
+}
+
+/* === Skeleton loading === */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* === Will-change for animated elements === */
+.cover, .dg-card, .ac-card, .pod-card, .st-card { will-change: transform; }
+
+/* === Gradient buttons === */
+.btn--gold { background: linear-gradient(135deg, #F0B429, #e5a820); }
+.btn--green { background: linear-gradient(135deg, #18A84A, #15943f); }
+.btn--whatsapp { background: linear-gradient(135deg, #25D366, #20bd5a); }
+
+/* === Bottom padding for mini player === */
+body.has-miniplayer .footer { padding-bottom: 72px; }
+body.has-miniplayer .whatsapp-fab { bottom: 80px; }
+
+
+/* === Favorite button === */
+.fav-btn { background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--text-muted); transition: all 0.2s; padding: 2px 4px; margin-left: auto; }
+.fav-btn:hover { transform: scale(1.2); }
+.fav-btn--active { color: #ef4444; animation: fav-pop 0.3s ease; }
+@keyframes fav-pop { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+
+.dg-card-top-row { display: flex; align-items: center; justify-content: space-between; }
+
+/* ===== RESPONSIVE GLOBAL ===== */
+@media (max-width: 768px) {
+  :root { --max-width: 100%; }
+  h1 { font-size: clamp(1.4rem, 5vw, 2rem) !important; }
+}
+
+/* ===== RESPONSIVE ADMIN ===== */
+@media (max-width: 768px) {
+  /* Admin sidebar hidden on mobile — toggled via transform */
+  .admin-sidebar {
+    position: fixed !important;
+    top: 0; left: 0; bottom: 0;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    width: 260px !important;
+  }
+  .admin-sidebar.open { transform: translateX(0); }
+
+  /* Admin main content full width */
+  .admin-main { padding: 16px 12px !important; }
+  .admin-header { padding: 10px 14px !important; }
+  .admin-menu-btn { display: flex !important; }
+
+  /* Tables scroll horizontally */
+  .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Modal full screen on mobile */
+  .admin-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+  }
+}
+
+/* ===== RESPONSIVE MODALS ===== */
+@media (max-width: 600px) {
+  /* Payment modal */
+  .payment-modal-inner {
+    padding: 20px 16px !important;
+    border-radius: 16px !important;
+  }
+  /* Grid 2-col → 1-col for payment methods */
+  .payment-methods-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== RESPONSIVE GRIDS ===== */
+@media (max-width: 640px) {
+  /* Any 2+ col grid → single col */
+  .grid-auto { grid-template-columns: 1fr !important; }
+  /* Guide/podcast/store cards grid */
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  /* News grid */
+  .news-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 900px) {
+  /* 3-col grids → 2 col */
+  .cards-grid-3 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (max-width: 560px) {
+  .cards-grid-3 { grid-template-columns: 1fr !important; }
+}
+
+/* ===== RESPONSIVE TYPOGRAPHY ===== */
+@media (max-width: 480px) {
+  h2 { font-size: clamp(1.1rem, 4.5vw, 1.5rem) !important; }
+  h3 { font-size: clamp(1rem, 4vw, 1.3rem) !important; }
+  .section-subtitle { font-size: 0.85rem !important; }
+}
+
+/* ===== RESPONSIVE UTILS ===== */
+@media (max-width: 480px) {
+  .hide-mobile { display: none !important; }
+  .full-mobile { width: 100% !important; }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+  .admin-menu-btn { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.4rem !important; }
+  h2 { font-size: 1.1rem !important; }
+  .hero { padding: 40px 0 32px !important; min-height: auto !important; }
+  .hero-subtitle { font-size: 0.9rem !important; }
+  .hero-actions { flex-direction: column !important; }
+  .hero-actions .btn { width: 100% !important; justify-content: center; }
+  .sections-grid { gap: 12px !important; }
+  .proof-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .proof-value { font-size: 1.3rem !important; }
+  .promo-inner { flex-direction: column !important; text-align: center !important; padding: 20px 16px !important; }
+  .promo-title { font-size: 1.2rem !important; }
+}
+
+@media (max-width: 360px) {
+  body { font-size: 14px; }
+  .home { padding: 0 12px !important; }
+  .dg-page, .ac-page, .pod-page, .st-page, .news-page { padding: 0 12px 60px !important; }
+  .detail { padding: 0 12px 60px !important; }
+  .detail-hero { grid-template-columns: 1fr !important; gap: 16px !important; }
+}
+
+/* Modal fullscreen on mobile */
+@media (max-width: 640px) {
+  .par-modal, .pay-modal, .vg-modal { max-width: 100% !important; max-height: 100vh !important; border-radius: 0 !important; }
+  .par-overlay, .pay-modal-overlay, .vg-overlay { padding: 0 !important; }
+  .uv-viewer { max-width: 100% !important; }
+}
+
+/* Ensure nothing overflows */
+.dg-grid, .ac-grid, .st-grid, .news-grid, .pod-grid, .sections-grid, .proof-grid { overflow: hidden; }
+
+/* ===== CONTRASTE & HARMONISATION THÈME ===== */
+/* Texte sur zones claires : assure lisibilité en mode clair */
+html[data-mode="light"] .card-on-light,
+html.light .card-on-light {
+  color: var(--text-primary) !important;
+}
+
+/* Inputs & selects : harmonisent avec le thème actif */
+input, select, textarea {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* Placeholder color selon mode */
+::placeholder { color: var(--text-muted); opacity: 1; }
+
+/* Préservation du contraste : les couleurs sont gérées via CSS variables */
+
+/* Harmonisation des scrollbars avec le thème */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ===== TEXTE DANS LES CARTES: ANTI-OVERFLOW ===== */
+.news-card-title-elite,
+.news-featured-title,
+.news-card-excerpt-elite,
+.news-featured-excerpt {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+/* ===== NAVBAR RESPONSIVE — rouler/dérouler ===== */
+/* Les éléments de bureau restent toujours présents, cachés dans le drawer mobile */
+@media (max-width: 1100px) {
+  .nav-links-desktop { display: none !important; }
+  .nav-burger-btn { display: inline-flex !important; }
+}
+
+/* ===== UPLOAD ZONE VISUELLE ===== */
+.upload-drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.upload-drop-zone:hover,
+.upload-drop-zone.dragover {
+  border-color: var(--gold);
+  background: var(--gold-glow);
+  color: var(--gold);
+}
+
+/* ============================================================================
+   GARANTIE DE VISIBILITÉ UNIVERSELLE - MODE CLAIR/SOMBRE
+   Ces règles assurent que tous les textes sont lisibles
+   ============================================================================ */
+
+/* --- OVERRIDE GLOBAL --- */
+* {
+  /* S'assurer que les couleurs sont cohérentes */
+  color-scheme: light dark;
+}
+
+/* --- MODE SOMBRE (par défaut) --- */
+:root {
+  --text-readable: #F0F2F5;
+  --text-readable-secondary: #8B95A5;
+  --bg-readable: #070B0F;
+  --bg-readable-card: #0D1117;
+  --border-readable: #1A2332;
+}
+
+/* --- MODE CLAIR --- */
+[data-theme="light"],
+.light-mode,
+html.light,
+body.light {
+  --text-readable: #0F172A;
+  --text-readable-secondary: #475569;
+  --bg-readable: #F8FAFC;
+  --bg-readable-card: #FFFFFF;
+  --border-readable: #E2E8F0;
+}
+
+/* --- GARANTIE DE LISIBILITÉ ---
+   :where() réduit la spécificité à 0 → toute règle de classe CSS gagne.
+   Sans :where(), element selector (h1/span/p) écrasait les couleurs héritées
+   ce qui rendait le texte sombre sur fonds sombres en mode clair. */
+:where(h1, h2, h3, h4, h5, h6, p, label, li, td, th) {
+  color: var(--text-primary);
+}
+
+/* Les spans héritent de leur parent — ne pas forcer --text-primary dessus.
+   Cela permet aux sections toujours-sombres (hero, banners) de propager
+   leur couleur blanche aux spans enfants sans override. */
+:where(.text, .description, .content, .title, .subtitle, .caption) {
+  color: var(--text-primary);
+}
+
+/* Exceptions pour les éléments avec classes spécifiques */
+.text-muted, .muted, .disabled {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* Sections toujours-sombres : les enfants sans classe héritent du blanc */
+.ap-hero, .st-hero-dark, .surface-dark {
+  color: rgba(255, 255, 255, 0.92);
+}
+.ap-hero :where(span, p, div) { color: inherit; }
+
+/* --- CARTES ET CONTAINERS --- */
+.card, .panel, .box, .container,
+.module-card, .tool-card, .info-box,
+section, article, aside {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* --- FORMULAIRES --- */
+input, textarea, select,
+.form-control, .input-field {
+  background-color: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* --- BOUTONS --- */
+.btn, button, .button {
+  color: var(--text-primary);
+}
+
+.btn-primary, .button-primary,
+[type="submit"] {
+  color: #FFFFFF;
+  background-color: var(--accent);
+}
+
+/* --- TABLES --- */
+table, .table,
+th, .table-header,
+td, .table-cell {
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* --- NAVIGATION --- */
+.nav, .navbar, .sidebar, .menu,
+.nav-item, .nav-link, .menu-item {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- MODALS --- */
+.modal, .modal-content, .dialog,
+.overlay-content {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- OVERRIDE DES COULEURS HARDCODÉES --- */
+
+/* Adapter les couleurs hardcodées selon le mode actif */
+[data-theme="light"] [style*="color: #F0F2F5"],
+.light-mode [style*="color: #F0F2F5"],
+html.light [style*="color: #F0F2F5"] {
+  color: var(--text-primary) !important;
+}
+
+[data-mode="light"] [style*="color: #8B95A5"],
+[data-theme="light"] [style*="color: #8B95A5"] {
+  color: var(--text-secondary) !important;
+}
+
+/* Adapter les backgrounds hardcodés selon le mode */
+[data-mode="light"] [style*="background-color: #0D1117"],
+[data-theme="light"] [style*="background-color: #0D1117"] {
+  background-color: var(--bg-card) !important;
+}
+
+[data-mode="light"] [style*="background: #0D1117"],
+[data-theme="light"] [style*="background: #0D1117"] {
+  background: var(--bg-card) !important;
+}
+
+[data-mode="light"] [style*="background-color: #070B0F"],
+[data-theme="light"] [style*="background-color: #070B0F"] {
+  background-color: var(--bg-primary) !important;
+}
+
+/* --- CORRECTIONS SPÉCIFIQUES MARKETING --- */
+.marketing-container,
+.marketing-dashboard,
+.campaign-card,
+.calendar-event,
+.metric-box,
+.marketing-panel {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- CORRECTIONS SPÉCIFIQUES DISSECTEUR --- */
+.dissecteur-panel,
+.analysis-result,
+.section-content,
+.kpi-card,
+.result-panel,
+.analysis-container {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- CORRECTIONS SPÉCIFIQUES MAXAVIS --- */
+.survey-card,
+.question-box,
+.response-item,
+.stat-box,
+.maxavis-container {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- CORRECTIONS SPÉCIFIQUES TONTINE --- */
+.tontine-container,
+.member-card,
+.payment-row,
+.tontine-stats {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- CORRECTIONS SPÉCIFIQUES STUDIO PRO --- */
+.studio-panel,
+.audio-track,
+.image-preview,
+.recording-item,
+.studio-container {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* --- CORRECTIONS SPÉCIFIQUES CRM --- */
+.contact-card,
+.client-row,
+.crm-stats,
+.pipeline-item,
+.crm-container {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* ================================================================
+   AUTO-CONTRAST SYSTEM
+   Toute zone avec fond sombre forcé reçoit la classe .surface-dark
+   (ou .surface-light pour fond clair forcé). Les variables --text-*
+   sont remappées localement pour garantir la lisibilité quelle que
+   soit la valeur globale du thème.
+   ================================================================ */
+
+/* Zone toujours sombre (cartes bancaires, bandeaux premium, hero sombres…) */
+.surface-dark {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.92);
+  --text-primary:   rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-muted:     rgba(255, 255, 255, 0.45);
+  --text-on-accent: #0a0a0a;
+  --border:         rgba(255, 255, 255, 0.12);
+  --bg-card:        rgba(255, 255, 255, 0.06);
+  --bg-secondary:   rgba(255, 255, 255, 0.04);
+}
+
+/* Zone toujours claire (documents A4, formulaires papier…) */
+.surface-light {
+  color-scheme: light;
+  color: #1a1a1a;
+  --text-primary:   #111111;
+  --text-secondary: #444444;
+  --text-muted:     #888888;
+  --border:         #e2e8f0;
+  --bg-card:        #ffffff;
+  --bg-secondary:   #f8fafc;
+}
+
+/* Héritage : les enfants héritent la couleur du container */
+.surface-dark * { color: inherit; }
+.surface-light * { color: inherit; }
+
+/* ── En mode CLAIR, .surface-dark doit forcer blanc avec haute spécificité ──
+   ThemeContext injecte --text-primary sombre via inline style sur <html>,
+   ce qui peut contourner les overrides de classe. On utilise !important
+   uniquement sur les zones INTENTIONNELLEMENT sombres en mode clair.       */
+[data-mode="light"] .surface-dark,
+html.light .surface-dark {
+  color: rgba(255, 255, 255, 0.92) !important;
+  --text-primary:   rgba(255, 255, 255, 0.95) !important;
+  --text-secondary: rgba(255, 255, 255, 0.70) !important;
+  --text-muted:     rgba(255, 255, 255, 0.45) !important;
+}
+[data-mode="light"] .surface-dark *,
+html.light .surface-dark * {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+/* Préserver les couleurs sémantiques enfants (boutons accent, liens, badges) */
+[data-mode="light"] .surface-dark .btn-accent,
+[data-mode="light"] .surface-dark a[href],
+[data-mode="light"] .surface-dark .abv-tab--active,
+html.light .surface-dark .btn-accent,
+html.light .surface-dark a[href],
+html.light .surface-dark .abv-tab--active {
+  color: var(--accent) !important;
+}
+
+/* ── En mode SOMBRE, .surface-light doit forcer texte sombre ── */
+[data-mode="dark"] .surface-light,
+html:not(.light) .surface-light {
+  color: #111111 !important;
+  --text-primary:   #111111 !important;
+  --text-secondary: #444444 !important;
+  --text-muted:     #888888 !important;
+}
+[data-mode="dark"] .surface-light *,
+html:not(.light) .surface-light * {
+  color: #111111 !important;
+}
+
+/* Exceptions : zones imbriquées inversées */
+.surface-dark .surface-light,
+.surface-light .surface-dark {
+  color: revert !important;
+}
+
+/* --- LIENS --- */
+a, .link {
+  color: var(--accent);
+}
+
+/* --- ALERTES --- */
+.alert, .message, .toast,
+.notification {
+  color: var(--text-primary);
+}
+
+/* --- FOCUS VISIBLE --- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* --- SÉLECTION --- */
+::selection {
+  background-color: var(--accent);
+  color: #FFFFFF;
+}

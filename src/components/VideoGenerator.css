@@ -1,0 +1,29 @@
+.vg-overlay { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; padding: 24px; }
+
+.vg-modal { background: #111; border: 1px solid var(--border); border-radius: var(--radius-xl); max-width: 700px; width: 100%; overflow: hidden; }
+
+.vg-header { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.vg-badge { padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; background: var(--gold); color: #070B0F; }
+.vg-title { flex: 1; font-size: 0.9rem; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vg-header-btns { display: flex; gap: 8px; align-items: center; }
+.vg-voice-select { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--border); }
+.vg-close { font-size: 1.4rem; color: var(--text-muted); background: none; border: none; cursor: pointer; }
+.vg-close:hover { color: #ef4444; }
+
+.vg-start, .vg-loading { padding: 48px 24px; text-align: center; color: var(--text-secondary); }
+.vg-gen-btn { margin-top: 16px; padding: 14px 32px; border-radius: var(--radius-sm); font-size: 1rem; font-weight: 700; background: var(--gold); color: #070B0F; border: none; cursor: pointer; transition: all 0.2s; }
+.vg-gen-btn:hover { background: #e5a820; }
+
+.vg-progress { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 16px; overflow: hidden; }
+.vg-progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.5s; }
+
+.vg-canvas { display: block; width: 100%; aspect-ratio: 16/9; background: #000; }
+
+.vg-controls { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--border); }
+.vg-ctrl-play { width: 36px; height: 36px; border-radius: 50%; background: var(--green); display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #fff; border: none; cursor: pointer; }
+.vg-ctrl-play:hover { background: #15943f; }
+.vg-slide-num { font-size: 0.78rem; color: var(--text-muted); min-width: 70px; }
+.vg-ctrl-progress { flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.vg-ctrl-fill { height: 100%; background: var(--green); transition: width 0.3s; }
+.vg-ctrl-btn { padding: 6px 14px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: rgba(255,255,255,0.08); color: var(--text-secondary); border: none; cursor: pointer; transition: all 0.2s; }
+.vg-ctrl-btn:hover { color: #fff; background: rgba(255,255,255,0.15); }

@@ -1,0 +1,249 @@
+/* =========================================================
+   FULLSCREEN BUTTON — Trigger
+   ========================================================= */
+.fullscreen-btn {
+  position: fixed;
+  z-index: 999;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(240,180,41,0.2);
+  background: rgba(10,10,18,0.75);
+  color: rgba(255,255,255,0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 0 1px rgba(240,180,41,0.06);
+  opacity: 0.65;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s, width 0.25s, border-radius 0.25s, gap 0.25s, padding 0.25s, background 0.2s;
+}
+
+.fullscreen-btn:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 6px 28px rgba(240,180,41,0.3), 0 0 0 1px rgba(240,180,41,0.35);
+  background: rgba(20,16,10,0.9);
+}
+
+/* Variante pill — sur les pages outils */
+.fullscreen-btn--pill {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 14px 0 10px;
+  gap: 8px;
+  opacity: 0.8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(240,180,41,0.3);
+  background: rgba(14,11,6,0.82);
+}
+
+.fullscreen-btn--pill:hover {
+  opacity: 1;
+  border-color: rgba(240,180,41,0.55);
+  background: rgba(24,18,8,0.92);
+  transform: scale(1.02);
+}
+
+.fullscreen-btn__label {
+  white-space: nowrap;
+}
+
+/* =========================================================
+   FULLSCREEN DOCK — Barre de navigation en mode plein écran
+   ========================================================= */
+.fullscreen-dock {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  /* translateX(-50%) est combiné avec translateY() dans le style inline */
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(8, 8, 14, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(240,180,41,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+  user-select: none;
+}
+
+/* Boutons nav génériques */
+.dock-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.15s, background 0.2s, color 0.2s;
+}
+
+.dock-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+/* Séparateur vertical */
+.dock-sep {
+  width: 1px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+
+/* Nom de l'outil actif */
+.dock-tool-name {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 0 6px;
+  white-space: nowrap;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bouton de sortie — bien visible, labelisé */
+.dock-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px 0 10px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(240,180,41,0.4);
+  background: linear-gradient(135deg, #F0B429, #E8A020);
+  color: #0A0800;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+  box-shadow: 0 2px 12px rgba(240,180,41,0.35);
+}
+
+.dock-exit-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(240,180,41,0.5);
+  background: linear-gradient(135deg, #FFD060, #F0B429);
+}
+
+/* =========================================================
+   FULLSCREEN SYSTEM — Masquer Navbar/Footer/etc
+   ========================================================= */
+:fullscreen .app > *:not(.page-content):not(.fullscreen-dock) {
+  display: none !important;
+}
+:-webkit-full-screen .app > *:not(.page-content):not(.fullscreen-dock) {
+  display: none !important;
+}
+:-moz-full-screen .app > *:not(.page-content):not(.fullscreen-dock) {
+  display: none !important;
+}
+
+/* S'assurer que page-content prend tout l'espace en fullscreen */
+:fullscreen .page-content {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  overflow: auto;
+}
+:-webkit-full-screen .page-content {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  overflow: auto;
+}
+
+/* Scroll en fullscreen */
+:fullscreen {
+  overflow: auto;
+}
+:-webkit-full-screen {
+  overflow: auto;
+}
+
+/* =========================================================
+   RESPONSIVE — Tablette & Mobile
+   Priorité accessibilité : touch targets ≥ 44×44px
+   ========================================================= */
+
+/* Assurer touch target min 44px sur tous les boutons du dock */
+.dock-btn, .dock-exit-btn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Réduire légèrement le dock sur tablette */
+@media (max-width: 900px) {
+  .fullscreen-dock { gap: 3px; padding: 5px 10px; }
+  .dock-tool-name { max-width: 130px; }
+}
+
+/* Mobile ≤ 640px */
+@media (max-width: 640px) {
+  .fullscreen-btn--pill .fullscreen-btn__label {
+    display: none;
+  }
+  .fullscreen-btn--pill {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    padding: 0;
+    gap: 0;
+  }
+
+  .dock-tool-name { display: none; }
+
+  .fullscreen-dock {
+    gap: 2px;
+    padding: 4px 8px;
+    max-width: calc(100vw - 32px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .fullscreen-dock::-webkit-scrollbar { display: none; }
+
+  .dock-exit-btn span { display: none; }
+  .dock-exit-btn {
+    padding: 0;
+    width: 44px;
+    border-radius: 50%;
+    justify-content: center;
+  }
+}
+
+/* Petit mobile ≤ 380px */
+@media (max-width: 380px) {
+  .fullscreen-dock { top: 10px; }
+  .dock-btn { width: 38px; height: 38px; min-width: 38px; min-height: 38px; }
+}

@@ -1,0 +1,541 @@
+/* ============================================
+   THEME UNIVERSAL - Classes utilitaires thème
+   Importez ce fichier dans les composants JSX
+   ============================================ */
+
+/* Container thème-aware */
+.thm-container {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.thm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.thm-card-hover:hover {
+  background: var(--bg-card-hover);
+}
+
+/* Textes */
+.thm-text-primary {
+  color: var(--text-primary);
+}
+
+.thm-text-secondary {
+  color: var(--text-secondary);
+}
+
+.thm-text-muted {
+  color: var(--text-muted);
+}
+
+/* Inputs */
+.thm-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.thm-input:focus {
+  border-color: var(--accent);
+}
+
+.thm-input::placeholder {
+  color: var(--text-muted);
+}
+
+.thm-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.thm-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+}
+
+/* Sections / Panels */
+.thm-section {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.thm-section-header {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.thm-placeholder-box {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* Boutons */
+.thm-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.thm-btn-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.thm-btn-primary:hover {
+  background: var(--accent2);
+}
+
+.thm-btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.thm-btn-outline:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--text-muted);
+}
+
+.thm-btn-gold {
+  background: rgba(240, 180, 41, 0.12);
+  border: 1px solid rgba(240, 180, 41, 0.35);
+  color: var(--gold);
+}
+
+.thm-btn-green {
+  background: rgba(24, 168, 74, 0.12);
+  border: 1px solid rgba(24, 168, 74, 0.35);
+  color: var(--green);
+}
+
+.thm-btn-red {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: var(--red);
+}
+
+.thm-btn-sm {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+/* Badges */
+.thm-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.thm-badge-gray {
+  background: var(--bg-primary);
+  color: var(--text-muted);
+}
+
+.thm-badge-green {
+  background: var(--green-glow);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+
+.thm-badge-gold {
+  background: var(--gold-glow);
+  color: var(--gold);
+  border: 1px solid var(--gold-border);
+}
+
+.thm-badge-red {
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+}
+
+/* Bordures */
+.thm-border {
+  border: 1px solid var(--border);
+}
+
+.thm-border-b {
+  border-bottom: 1px solid var(--border);
+}
+
+.thm-border-t {
+  border-top: 1px solid var(--border);
+}
+
+/* Grille */
+.thm-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.thm-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.thm-grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* Flex */
+.thm-flex {
+  display: flex;
+}
+
+.thm-flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.thm-flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.thm-flex-wrap {
+  flex-wrap: wrap;
+}
+
+.thm-gap-2 {
+  gap: 8px;
+}
+
+.thm-gap-3 {
+  gap: 12px;
+}
+
+.thm-gap-4 {
+  gap: 16px;
+}
+
+/* Espacements */
+.thm-p-3 {
+  padding: 12px;
+}
+
+.thm-p-4 {
+  padding: 16px;
+}
+
+.thm-py-3 {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.thm-px-4 {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* Info / Alert boxes */
+.thm-info-box {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.thm-success-box {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
+  color: var(--success-text);
+}
+
+.thm-error-box {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+}
+
+/* Labels */
+.thm-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.thm-label-sm {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.thm-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Stats / Métriques */
+.thm-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.thm-stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.thm-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Loading / Skeleton */
+.thm-loading {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 40px;
+}
+
+/* Table */
+.thm-table-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.thm-table-header {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.thm-table-row {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.thm-table-row:last-child {
+  border-bottom: none;
+}
+
+/* Navigation tabs */
+.thm-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px;
+  background: var(--bg-primary);
+  border-radius: 12px;
+}
+
+.thm-tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.thm-tab-active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px var(--gold-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODE CLAIR - Overrides spécifiques pour la lisibilité
+   ═══════════════════════════════════════════════════════════════ */
+html.light .thm-tab-active,
+[data-mode="light"] .thm-tab-active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+html.light .thm-info-box,
+[data-mode="light"] .thm-info-box {
+  background: rgba(14, 165, 233, 0.06);
+  border-color: rgba(14, 165, 233, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITAIRES ADDITIONNELS - Pour compatibilité tous modes
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Textes garantis lisibles */
+.thm-text-guaranteed {
+  color: var(--text-primary) !important;
+}
+
+.thm-text-guaranteed-secondary {
+  color: var(--text-secondary) !important;
+}
+
+/* Backgrounds adaptatifs */
+.thm-bg-guaranteed {
+  background: var(--bg-primary) !important;
+}
+
+.thm-bg-card-guaranteed {
+  background: var(--bg-card) !important;
+}
+
+/* Bordures adaptatives */
+.thm-border-guaranteed {
+  border-color: var(--border) !important;
+}
+
+/* Inputs garantis */
+.thm-input-guaranteed {
+  background: var(--bg-primary) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+.thm-input-guaranteed::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Mode sombre - defaults */
+:root {
+  /* S'assurer que les variables sont définies */
+  --thm-guarantee-bg: var(--bg-primary);
+  --thm-guarantee-text: var(--text-primary);
+  --thm-guarantee-border: var(--border);
+}
+
+/* Mode clair - overrides */
+html.light,
+[data-mode="light"] {
+  --thm-guarantee-bg: var(--bg-primary);
+  --thm-guarantee-text: var(--text-primary);
+  --thm-guarantee-border: var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CORRECTIONS DE CONTRASTE - Éléments problématiques communs
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Textes sur fonds colorés */
+.thm-text-on-dark {
+  color: #F0F2F5;
+}
+
+html.light .thm-text-on-dark,
+[data-mode="light"] .thm-text-on-dark {
+  color: #1A1A2E;
+}
+
+/* Badges et tags */
+.thm-tag-neutral {
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Cartes avec header */
+.thm-card-header {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+}
+
+.thm-card-body {
+  padding: 20px;
+  background: var(--bg-card);
+}
+
+/* Modal amélioré */
+.thm-modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+html.light .thm-modal-overlay,
+[data-mode="light"] .thm-modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.thm-modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .thm-grid-2,
+  .thm-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .thm-section {
+    padding: 16px;
+  }
+}

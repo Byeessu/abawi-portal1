@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ABAWI NEWS — Robot V4 ULTRA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}body{background:#0A0A0A;color:#FFF;font-family:'DM Sans',sans-serif;padding:20px}
+.ctn{max-width:1000px;margin:0 auto}
+h1{font-size:22px;font-weight:900;letter-spacing:2px;margin-bottom:4px}h1 span{color:#34D399}
+.sub{color:#D4A843;font-size:9px;letter-spacing:3px;font-weight:700}
+.card{background:#1A1A1A;border:1px solid #222;border-radius:10px;padding:16px;margin-bottom:12px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:8px}
+.btn{padding:10px 18px;border-radius:8px;border:none;font-weight:700;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-g{background:#047857;color:#FFF}.btn-gd{background:#D4A843;color:#0A0A0A}.btn-r{background:#7f1d1d;color:#FFF}.btn-gr{background:#2D2D2D;color:#9CA3AF}
+.btn-blue{background:#1e3a5f;color:#60a5fa}
+.inp{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #2D2D2D;background:#222;color:#FFF;font-size:13px;outline:none;margin-bottom:8px;font-family:inherit}
+textarea.inp{resize:vertical;min-height:60px}
+.lb{color:#D4A843;font-size:11px;font-weight:700;margin-bottom:4px;display:block}
+.st{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.st-on{background:#34D399;animation:pu 2s infinite}.st-off{background:#ef4444}.st-w{background:#f59e0b;animation:pu 1s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:0.4}}
+.log{background:#111;border:1px solid #222;border-radius:8px;padding:12px;max-height:400px;overflow-y:auto;font-size:11px;font-family:monospace;line-height:1.8}
+.log-info{color:#34D399}.log-warn{color:#f59e0b}.log-err{color:#ef4444}.log-pub{color:#D4A843}.log-ai{color:#818cf8}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.si{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#222;border-radius:6px;margin-bottom:6px;gap:8px}
+.si-name{font-weight:600;color:#FFF;font-size:12px}
+.si-url{font-size:9px;color:#9CA3AF;word-break:break-all}
+.si-cat{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:700}
+.tag-on{background:#065F46;color:#34D399;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer}
+.tag-off{background:#2D2D2D;color:#9CA3AF;display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer}
+.qi{padding:10px;background:#1A1A1A;border:1px solid #222;border-radius:8px;margin-bottom:8px}
+.qi h4{font-size:13px;font-weight:700;color:#FFF;margin-bottom:4px}
+.qi p{font-size:11px;color:#9CA3AF;line-height:1.5}
+.fx{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fb{display:flex;justify-content:space-between;align-items:center}
+.cat-eco{background:#065F46;color:#34D399}
+.cat-tech{background:#1e1b4b;color:#818cf8}
+.cat-mat{background:#78350f;color:#fbbf24}
+.cat-geo{background:#7f1d1d;color:#fca5a5}
+.cat-auto{background:#1e3a5f;color:#60a5fa}
+.cat-ai{background:#4c1d95;color:#c4b5fd}
+.cat-tel{background:#134e4a;color:#5eead4}
+.cat-div{background:#2D2D2D;color:#9CA3AF}
+.badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700;display:inline-block}
+.stat-box{text-align:center;padding:12px;background:#111;border-radius:8px}
+.stat-num{font-size:32px;font-weight:900}
+.stat-label{font-size:10px;color:#9CA3AF;margin-top:4px}
+/* Progress bar */
+.progress-wrap{background:#222;border-radius:6px;height:22px;overflow:hidden;position:relative;margin:8px 0}
+.progress-fill{background:#34D399;height:100%;border-radius:6px;transition:width 0.3s ease}
+.progress-text{position:absolute;top:0;left:0;right:0;height:100%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#FFF}
+/* Quota bar */
+.quota-wrap{background:#222;border-radius:6px;height:16px;overflow:hidden;margin:4px 0}
+.quota-fill{height:100%;border-radius:6px;transition:width 0.3s ease}
+.quota-green{background:#34D399}.quota-yellow{background:#f59e0b}.quota-red{background:#ef4444}
+/* Stars */
+.stars{color:#D4A843;font-size:12px;letter-spacing:1px}
+/* Health dots */
+.health-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
+.health-green{background:#34D399}.health-yellow{background:#f59e0b}.health-red{background:#ef4444}
+/* Chart */
+.chart-wrap{display:flex;align-items:flex-end;gap:6px;height:100px;margin-top:12px}
+.chart-bar{background:#34D399;border-radius:4px 4px 0 0;min-width:30px;flex:1;transition:height 0.3s ease}
+.chart-label{font-size:9px;color:#9CA3AF;text-align:center;margin-top:4px}
+.chart-col{display:flex;flex-direction:column;align-items:center;flex:1}
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:center;justify-content:center}
+.modal-card{background:#1A1A1A;border:1px solid #333;border-radius:12px;padding:24px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto}
+.modal-card h2{font-size:18px;margin-bottom:8px;color:#34D399}
+.modal-card .tag-badge{display:inline-block;background:#065F46;color:#34D399;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-right:6px;margin-bottom:8px}
+.modal-card .quote{border-left:3px solid #D4A843;padding:8px 12px;margin:8px 0;background:#111;border-radius:0 6px 6px 0;font-style:italic;color:#d1d5db}
+.modal-card .quote-src{color:#D4A843;font-size:10px;margin-top:4px}
+.modal-card table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+.modal-card table th{background:#222;color:#D4A843;padding:6px 8px;text-align:left;font-size:11px}
+.modal-card table td{padding:6px 8px;border-bottom:1px solid #222;color:#d1d5db}
+.modal-card .verdict{background:#111;border:1px solid #D4A843;border-radius:8px;padding:10px;margin:8px 0;color:#D4A843;font-weight:600;font-size:12px}
+.modal-close{background:#7f1d1d;color:#FFF;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:700;margin-top:12px}
+.mode-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+.mode-day{background:#065F46;color:#34D399}.mode-night{background:#1e1b4b;color:#818cf8}
+</style>
+</head>
+<body>
+<div class="ctn">
+<div class="fb" style="margin-bottom:8px">
+  <div><h1>ABAWI <span>NEWS</span></h1><div class="sub">ROBOT V4 — ULTRA MODE — 30+ SOURCES</div></div>
+  <div class="fx"><span class="st st-off" id="sDot"></span><span style="color:#9CA3AF;font-size:11px" id="sTxt">Arrete</span></div>
+</div>
+
+<!-- TOP COUNTERS -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+  <div class="stat-box"><div class="stat-num" style="color:#34D399" id="stPubToday">0</div><div class="stat-label">Publies aujourd'hui</div></div>
+  <div class="stat-box"><div class="stat-num" style="color:#f59e0b" id="stPending">0</div><div class="stat-label">En attente</div></div>
+  <div class="stat-box"><div class="stat-num" style="color:#818cf8" id="stEnrichi">0</div><div class="stat-label">Enrichis</div></div>
+  <div class="stat-box"><div class="stat-num" style="color:#ef4444" id="stErrors">0</div><div class="stat-label">Erreurs</div></div>
+</div>
+
+<!-- QUOTA + TOKENS -->
+<div class="card" style="padding:10px 16px">
+  <div class="fb">
+    <span style="font-size:11px;color:#9CA3AF">Tokens estimes : <strong id="tokenDisplay">0 / 100 000 TPD</strong></span>
+    <span style="font-size:11px" id="quotaStatus"></span>
+  </div>
+  <div class="quota-wrap"><div class="quota-fill quota-green" id="quotaBar" style="width:0%"></div></div>
+  <div class="fb" style="margin-top:4px">
+    <span id="scheduleMode" class="mode-badge mode-day">Jour (15 min)</span>
+    <span style="font-size:10px;color:#9CA3AF" id="quotaPausedMsg"></span>
+  </div>
+</div>
+
+<div class="card">
+  <h3>1. Configuration</h3>
+  <div class="g2">
+    <div><label class="lb">Supabase URL</label><input class="inp" id="supaUrl" value="https://nqpfmnsecjhqxuvfkqhi.supabase.co"/></div>
+    <div><label class="lb">Supabase Anon Key</label><input class="inp" id="supaKey" value="sb_publishable_RdJisscgTn12bUdNf7dArw_pFOiDXRD"/></div>
+  </div>
+  <label class="lb">Cles API IA (separees par virgule : AIzaSy...,gsk_...,sk-ant-...)</label>
+  <input class="inp" id="claudeKey" value="AIzaSyCmgKQie6wZ2W2NHpq46Y-ycMrdKxF4cjU" placeholder="AIzaSy...,gsk_...,sk-ant-..."/>
+  <label class="lb">Fournisseur IA principal</label>
+  <select class="inp" id="iaProvider" style="margin-bottom:8px"><option value="gemini" selected>Google Gemini 2.5 Flash (GRATUIT)</option><option value="claude">Anthropic Claude Sonnet</option><option value="groq">Groq Llama 3.3 (GRATUIT)</option></select>
+  <label class="lb">Mot de passe admin site</label>
+  <input class="inp" id="adminPwd" value="abawi2026"/>
+  <div class="fx"><button class="btn btn-g" onclick="connectAll()">Connecter</button><button class="btn btn-gr" onclick="saveConfig()">Sauvegarder</button></div>
+</div>
+
+<div class="card">
+  <div class="fb" style="margin-bottom:8px">
+    <h3>2. Sources RSS — <span id="srcCount">0</span> actives</h3>
+    <div class="fx"><button class="btn btn-gr" onclick="addSource()" style="font-size:11px;padding:6px 12px">+ Ajouter</button>
+    <button class="btn btn-gr" onclick="toggleAll(true)" style="font-size:11px;padding:6px 12px">Tout activer</button>
+    <button class="btn btn-gr" onclick="toggleAll(false)" style="font-size:11px;padding:6px 12px">Tout pauser</button></div>
+  </div>
+  <div class="fx" style="margin-bottom:8px">
+    <button class="btn btn-gr" onclick="filterCat('all')" style="font-size:10px;padding:4px 10px">Toutes</button>
+    <button class="btn btn-gr" onclick="filterCat('eco')" style="font-size:10px;padding:4px 10px">Economie</button>
+    <button class="btn btn-gr" onclick="filterCat('tech')" style="font-size:10px;padding:4px 10px">Tech/IA</button>
+    <button class="btn btn-gr" onclick="filterCat('mat')" style="font-size:10px;padding:4px 10px">Matieres</button>
+    <button class="btn btn-gr" onclick="filterCat('auto')" style="font-size:10px;padding:4px 10px">Auto</button>
+    <button class="btn btn-gr" onclick="filterCat('tel')" style="font-size:10px;padding:4px 10px">Telecom</button>
+    <button class="btn btn-gr" onclick="filterCat('geo')" style="font-size:10px;padding:4px 10px">Geopolitique</button>
+  </div>
+  <div id="srcList" style="max-height:400px;overflow-y:auto"></div>
+</div>
+
+<div class="card">
+  <div class="fb" style="margin-bottom:8px"><h3>3. Robot</h3><span style="color:#9CA3AF;font-size:11px" id="nextRun">--</span></div>
+  <div id="enrichProgress" style="display:none">
+    <div class="progress-wrap"><div class="progress-fill" id="enrichBar" style="width:0%"></div><div class="progress-text" id="enrichText">0/0 (0%)</div></div>
+    <div style="font-size:10px;color:#9CA3AF;margin-bottom:8px" id="enrichETA">Temps restant : --</div>
+  </div>
+  <div class="fx">
+    <button class="btn btn-g" id="btnOn" onclick="startBot()">Demarrer</button>
+    <button class="btn btn-r" id="btnOff" onclick="stopBot()" style="display:none">Arreter</button>
+    <button class="btn btn-gd" onclick="runOnce()">Scanner maintenant</button>
+    <button class="btn btn-blue" onclick="enrichNext50()">Enrichir les 50 suivants</button>
+    <span style="color:#818cf8;font-size:10px;font-weight:600">Auto-enrichissement IA actif</span>
+    <select class="inp" id="intv" style="width:auto;margin:0"><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 heure</option></select>
+    <label class="fx" style="gap:4px"><input type="checkbox" id="autoP" checked/><span style="color:#9CA3AF;font-size:11px">Auto-publier</span></label>
+  </div>
+</div>
+
+<div class="card">
+  <div class="fb" style="margin-bottom:8px"><h3>4. File (<span id="qCnt">0</span>)</h3>
+  <div class="fx"><button class="btn btn-g" onclick="pubAll()" style="font-size:11px;padding:6px 12px">Publier tout</button><button class="btn btn-gd" onclick="pubAllBrut()" style="font-size:11px;padding:6px 12px">Publier en brut</button><button class="btn btn-gr" onclick="clrQ()" style="font-size:11px;padding:6px 12px">Vider</button></div></div>
+  <div id="qList"><p style="color:#9CA3AF;font-size:12px">Aucun article.</p></div>
+</div>
+
+<div class="card">
+  <div class="fb" style="margin-bottom:8px"><h3>5. Journal</h3><button class="btn btn-gr" onclick="document.getElementById('logBox').innerHTML=''" style="font-size:11px;padding:6px 12px">Effacer</button></div>
+  <div class="log" id="logBox"></div>
+</div>
+
+<div class="card">
+  <div class="fb" style="margin-bottom:8px">
+    <h3>Stats du jour</h3>
+    <button class="btn btn-gr" onclick="exportCSV()" style="font-size:11px;padding:6px 12px">Exporter CSV</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+    <div class="stat-box"><div class="stat-num" style="color:#34D399" id="stP">0</div><div class="stat-label">Publies</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#D4A843" id="stS">0</div><div class="stat-label">Scans</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#818cf8" id="stAI">0</div><div class="stat-label">IA reecritures</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#60a5fa" id="stSrc">0</div><div class="stat-label">Sources OK</div></div>
+  </div>
+  <h3 style="margin-top:16px;font-size:12px">Publications 7 derniers jours</h3>
+  <div class="chart-wrap" id="chartWrap"></div>
+  <div style="display:flex;gap:6px;justify-content:space-around" id="chartLabels"></div>
+</div>
+</div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-card" id="previewContent"></div>
+</div>
+
+<script>
+let sb=null,claudeKey="",timer=null,queue=[],nScan=0,nPub=0,nAI=0,nSrcOk=0,nErrors=0;
+let publishedTitles=new Set();
+let catFilter="all";
+
+// Anti-quota-waste
+let err429Count=0;
+let quotaPaused=false;
+let quotaResumeTimer=null;
+let tokensUsed=0;
+const TOKEN_LIMIT=100000;
+
+// Source health tracking
+let sourceHealth={};
+
+// AI keys parsed
+let aiKeys={gemini:"",claude:"",groq:""};
+
+// ===== 32 SOURCES =====
+let sources=[
+  {name:"Google News - Economie Senegal",url:"https://news.google.com/rss/search?q=economie+senegal+2026&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+  {name:"Google News - Senegal Finance Dette",url:"https://news.google.com/rss/search?q=senegal+finance+dette+budget&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+  {name:"Google News - BRVM Bourse Afrique",url:"https://news.google.com/rss/search?q=BRVM+bourse+afrique+UEMOA&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+  {name:"Google News - BCEAO Politique Monetaire",url:"https://news.google.com/rss/search?q=BCEAO+taux+politique+monetaire&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+  {name:"Google News - Senegal Investissement",url:"https://news.google.com/rss/search?q=senegal+investissement+entreprise&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+  {name:"Agence Ecofin - Finance",url:"https://www.agenceecofin.com/finances-publiques/feed",on:true,cat:"eco"},
+  {name:"Agence Ecofin - Gestion publique",url:"https://www.agenceecofin.com/gestion-publique/feed",on:true,cat:"eco"},
+  {name:"Agence Ecofin - Banques",url:"https://www.agenceecofin.com/banques/feed",on:true,cat:"eco"},
+  {name:"Google News - IA Intelligence Artificielle",url:"https://news.google.com/rss/search?q=intelligence+artificielle+IA+2026&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"ai"},
+  {name:"Google News - IA Afrique",url:"https://news.google.com/rss/search?q=intelligence+artificielle+afrique+senegal&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"ai"},
+  {name:"Google News - OpenAI ChatGPT Claude",url:"https://news.google.com/rss/search?q=OpenAI+ChatGPT+Claude+Anthropic+2026&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"ai"},
+  {name:"Google News - Tech Afrique Startup",url:"https://news.google.com/rss/search?q=tech+afrique+startup+fintech&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"tech"},
+  {name:"Google News - Tech Mondiale",url:"https://news.google.com/rss/search?q=technologie+innovation+mondiale+2026&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"tech"},
+  {name:"Agence Ecofin - Telecom",url:"https://www.agenceecofin.com/telecom/feed",on:true,cat:"tel"},
+  {name:"Google News - Telecom Senegal Orange Free",url:"https://news.google.com/rss/search?q=telecom+senegal+orange+free+starlink&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"tel"},
+  {name:"Google News - Mobile Money Afrique",url:"https://news.google.com/rss/search?q=mobile+money+wave+orange+money+afrique&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"tel"},
+  {name:"Google News - 5G Afrique Telecom",url:"https://news.google.com/rss/search?q=5G+telecom+afrique+reseau&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"tel"},
+  {name:"Google News - Cours Or Gold",url:"https://news.google.com/rss/search?q=cours+or+gold+prix+once&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"mat"},
+  {name:"Google News - Or Mine Afrique Senegal",url:"https://news.google.com/rss/search?q=or+mine+afrique+senegal+kedougou&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"mat"},
+  {name:"Google News - Petrole Gaz Brent",url:"https://news.google.com/rss/search?q=petrole+gaz+brent+cours+2026&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"mat"},
+  {name:"Google News - Cacao Cafe Matieres",url:"https://news.google.com/rss/search?q=cacao+cafe+matieres+premieres+afrique&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"mat"},
+  {name:"Google News - Phosphates Engrais Senegal",url:"https://news.google.com/rss/search?q=phosphates+engrais+senegal+ICS&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"mat"},
+  {name:"Google News - Automobile Afrique",url:"https://news.google.com/rss/search?q=automobile+afrique+voiture+electrique&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"auto"},
+  {name:"Google News - Vehicule Electrique Tesla",url:"https://news.google.com/rss/search?q=vehicule+electrique+tesla+BYD+2026&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"auto"},
+  {name:"Google News - Automobile Senegal Import",url:"https://news.google.com/rss/search?q=automobile+senegal+import+vehicule&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"auto"},
+  {name:"Google News - Geopolitique Afrique",url:"https://news.google.com/rss/search?q=geopolitique+afrique+CEDEAO+UEMOA&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"geo"},
+  {name:"Google News - Guerre Moyen Orient Iran",url:"https://news.google.com/rss/search?q=guerre+moyen+orient+iran+israel&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"geo"},
+  {name:"Google News - Chine Afrique Commerce",url:"https://news.google.com/rss/search?q=chine+afrique+commerce+cooperation&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"geo"},
+  {name:"Google News - USA Trump Afrique",url:"https://news.google.com/rss/search?q=USA+trump+afrique+commerce+tarifs&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"geo"},
+  {name:"Google News - FMI Banque Mondiale Afrique",url:"https://news.google.com/rss/search?q=FMI+banque+mondiale+afrique+2026&hl=fr&gl=FR&ceid=FR:fr",on:true,cat:"geo"},
+  {name:"Google News - Diomaye Faye Sonko",url:"https://news.google.com/rss/search?q=diomaye+faye+sonko+senegal+2026&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+  {name:"Google News - Senegal Agriculture Export",url:"https://news.google.com/rss/search?q=senegal+agriculture+arachide+export&hl=fr&gl=SN&ceid=SN:fr",on:true,cat:"eco"},
+];
+
+const CATS={eco:"Economie",tech:"Tech",ai:"IA",mat:"Matieres",auto:"Automobile",tel:"Telecom",geo:"Geopolitique",div:"Divers"};
+const CAT_CSS={eco:"cat-eco",tech:"cat-tech",ai:"cat-ai",mat:"cat-mat",auto:"cat-auto",tel:"cat-tel",geo:"cat-geo",div:"cat-div"};
+
+// ===== SECTION DETECTION (improved) =====
+const SEC_RULES=[
+  {keys:["dette","budget","deficit","fmi","banque mondiale","fiscal","impot","tresor","eurobond","obligation","emprunt","inflation","pib","croissance"],sec:"ma"},
+  {keys:["bceao","monetaire","taux directeur","liquidite","reserve"],sec:"ma"},
+  {keys:["brvm","bourse","action","indice","capitalisation","cour","dividende","obligation","marche financier"],sec:"mk"},
+  {keys:["petrole","gaz","sangomar","yakaar","raffin","hydrocarbure","brent","barrel"],sec:"se"},
+  {keys:["mine","or ","gold","kedougou","saraya","orpaillage","once"],sec:"se"},
+  {keys:["phosphate","ics","engrais","chimie"],sec:"se"},
+  {keys:["transport","greve","route","autoroute","btp","ciment","fer ","infrastructure","chantier","ter "],sec:"se"},
+  {keys:["agriculture","arachide","peche","halieutique","elevage","riz ","mil ","fonio","karite","cacao","cafe"],sec:"se"},
+  {keys:["energie","solaire","eolien","electri","renouvelable","senelec"],sec:"se"},
+  {keys:["tech","startup","fintech","digital","numerique","innovation","app ","plateforme"],sec:"en"},
+  {keys:["telecom","orange","free ","starlink","5g","4g","mobile money","wave","fibre"],sec:"en"},
+  {keys:["intelligence artificielle","ia ","chatgpt","openai","claude","anthropic","machine learning","deepfake","llm"],sec:"en"},
+  {keys:["automobile","voiture","vehicule","tesla","byd","electrique","moto"],sec:"en"},
+  {keys:["entrepreneur","pme","startup","incubateur","accelerateur","diaspora","formation"],sec:"en"},
+  {keys:["guerre","conflit","iran","israel","golfe","armee","missile","frappe","geopolitique"],sec:"wo"},
+  {keys:["chine","usa","trump","europe","russie","onu","otan","cedeao","ua ","union africaine"],sec:"wo"},
+  {keys:["export","import","commerce","douane","tarif","balance commerciale"],sec:"ma"},
+];
+
+const SCENE_RULES=[
+  {keys:["dette","fmi","eurobond","emprunt","tresor","deficit"],sc:"debt"},
+  {keys:["petrole","gaz","sangomar","brent","barrel","hydrocarbure"],sc:"brvm"},
+  {keys:["brvm","bourse","action","indice","capitalisation"],sc:"brvm"},
+  {keys:["chine","china","beijing","pekin","focac"],sc:"china"},
+  {keys:["guerre","iran","israel","conflit","missile","frappe"],sc:"war"},
+  {keys:["transport","greve","paralysie","arret"],sc:"strike"},
+  {keys:["export","import","commerce","balance","douane"],sc:"exp"},
+  {keys:["tech","startup","digital","starlink","5g","telecom","ia ","intelligence artificielle"],sc:"star"},
+  {keys:["europe","wallonie","ue ","france","espagne"],sc:"wallonie"},
+  {keys:["or ","gold","mine","once","kedougou"],sc:"label"},
+  {keys:["agriculture","arachide","karite","fonio","peche"],sc:"label"},
+  {keys:["bceao","monetaire","taux directeur"],sc:"bceao"},
+  {keys:["automobile","voiture","tesla","vehicule"],sc:"star"},
+];
+
+function guessSec(ti,su){
+  var c=(ti+" "+(su||"")).toLowerCase();
+  for(var i=0;i<SEC_RULES.length;i++){
+    for(var j=0;j<SEC_RULES[i].keys.length;j++){
+      if(c.indexOf(SEC_RULES[i].keys[j])>=0) return SEC_RULES[i].sec;
+    }
+  }
+  return "ma";
+}
+
+function guessSc(ti,su){
+  var c=(ti+" "+(su||"")).toLowerCase();
+  for(var i=0;i<SCENE_RULES.length;i++){
+    for(var j=0;j<SCENE_RULES[i].keys.length;j++){
+      if(c.indexOf(SCENE_RULES[i].keys[j])>=0) return SCENE_RULES[i].sc;
+    }
+  }
+  return "def";
+}
+
+function guessTag(ti){
+  var t=ti.toLowerCase();
+  if(t.indexOf("dette")>=0||t.indexOf("budget")>=0||t.indexOf("fmi")>=0)return"DETTE & FINANCES";
+  if(t.indexOf("brvm")>=0||t.indexOf("bourse")>=0)return"BRVM & MARCHES";
+  if(t.indexOf("petrole")>=0||t.indexOf("gaz")>=0||t.indexOf("brent")>=0)return"ENERGIE";
+  if(t.indexOf("or ")>=0||t.indexOf("gold")>=0||t.indexOf("mine")>=0)return"OR & MINES";
+  if(t.indexOf("banque")>=0||t.indexOf("bceao")>=0)return"BANQUE & CREDIT";
+  if(t.indexOf("export")>=0||t.indexOf("import")>=0||t.indexOf("commerce")>=0)return"COMMERCE";
+  if(t.indexOf("chine")>=0||t.indexOf("china")>=0)return"CHINE-AFRIQUE";
+  if(t.indexOf("guerre")>=0||t.indexOf("iran")>=0||t.indexOf("israel")>=0)return"GEOPOLITIQUE";
+  if(t.indexOf("telecom")>=0||t.indexOf("orange")>=0||t.indexOf("starlink")>=0||t.indexOf("5g")>=0)return"TELECOM";
+  if(t.indexOf("ia ")>=0||t.indexOf("intelligence artificielle")>=0||t.indexOf("chatgpt")>=0||t.indexOf("openai")>=0)return"IA & TECH";
+  if(t.indexOf("tech")>=0||t.indexOf("digital")>=0||t.indexOf("startup")>=0||t.indexOf("fintech")>=0)return"TECH & STARTUP";
+  if(t.indexOf("automobile")>=0||t.indexOf("voiture")>=0||t.indexOf("tesla")>=0||t.indexOf("vehicule")>=0)return"AUTOMOBILE";
+  if(t.indexOf("cacao")>=0||t.indexOf("cafe")>=0||t.indexOf("phosphate")>=0)return"MATIERES PREMIERES";
+  if(t.indexOf("agriculture")>=0||t.indexOf("arachide")>=0||t.indexOf("peche")>=0)return"AGRICULTURE";
+  if(t.indexOf("diaspora")>=0)return"DIASPORA";
+  if(t.indexOf("faye")>=0||t.indexOf("sonko")>=0)return"POLITIQUE ECONOMIQUE";
+  return"ECONOMIE";
+}
+
+// ===== UTILS =====
+function log(m,c){var b=document.getElementById("logBox");var t=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});b.innerHTML='<div class="log-'+(c||"info")+'">['+t+'] '+m+'</div>'+b.innerHTML}
+function setSt(s){var d=document.getElementById("sDot"),t=document.getElementById("sTxt");if(s==="on"){d.className="st st-on";t.textContent="Robot actif"}else if(s==="wait"){d.className="st st-w";t.textContent="Scan..."}else{d.className="st st-off";t.textContent="Arrete"}}
+
+// ===== LEVENSHTEIN DEDUP =====
+function levenshtein(a,b){
+  a=a.toLowerCase();b=b.toLowerCase();
+  if(a===b)return 1;
+  var la=a.length,lb=b.length;
+  if(!la||!lb)return 0;
+  var mx=Math.max(la,lb);
+  var matrix=[];
+  for(var i=0;i<=la;i++){matrix[i]=[i]}
+  for(var j=0;j<=lb;j++){matrix[0][j]=j}
+  for(var i=1;i<=la;i++){
+    for(var j=1;j<=lb;j++){
+      var cost=a[i-1]===b[j-1]?0:1;
+      matrix[i][j]=Math.min(matrix[i-1][j]+1,matrix[i][j-1]+1,matrix[i-1][j-1]+cost);
+    }
+  }
+  return 1-(matrix[la][lb]/mx);
+}
+
+function isDuplicate(title){
+  var tLow=title.toLowerCase();
+  for(var existing of publishedTitles){
+    if(levenshtein(tLow,existing)>0.8)return true;
+  }
+  return false;
+}
+
+// ===== QUALITY SCORE (1-5 stars) =====
+function qualityScore(bd,fullText){
+  var score=0;
+  var totalChars=(fullText||"").length;
+  if(totalChars>2000)score++;
+  var pCount=Array.isArray(bd)?bd.length:0;
+  if(pCount>5)score++;
+  var hasTable=Array.isArray(bd)&&bd.some(function(b){return b.t==="d"});
+  if(hasTable)score++;
+  var hasQuote=Array.isArray(bd)&&bd.some(function(b){return b.t==="q"});
+  if(hasQuote)score++;
+  var hasNumbers=fullText&&/\d+[\s,.]?\d*\s*(%|FCFA|USD|EUR|milliard|million)/i.test(fullText);
+  if(hasNumbers)score++;
+  return Math.max(1,Math.min(5,score));
+}
+
+function starsHTML(n){
+  var s="";
+  for(var i=0;i<5;i++)s+=(i<n?"\u2605":"\u2606");
+  return '<span class="stars">'+s+'</span>';
+}
+
+// ===== QUALITY VALIDATION =====
+function validateQuality(bd){
+  if(!Array.isArray(bd))return false;
+  var totalChars=bd.reduce(function(s,b){return s+(b.v||"").length},0);
+  if(totalChars<800)return false;
+  if(bd.length<4)return false;
+  var lastBlock=bd[bd.length-1];
+  if(lastBlock&&lastBlock.v&&lastBlock.v.trim().endsWith("..."))return false;
+  return true;
+}
+
+// ===== AUTO-GENERATE TAGS =====
+function generateKeywords(title,content){
+  var text=(title+" "+(content||"")).toLowerCase();
+  var kwMap={
+    "senegal":0,"afrique":0,"economie":0,"finance":0,"dette":0,"brvm":0,"bourse":0,
+    "petrole":0,"gaz":0,"or":0,"mine":0,"bceao":0,"telecom":0,"orange":0,"ia":0,
+    "technologie":0,"startup":0,"automobile":0,"tesla":0,"agriculture":0,"commerce":0,
+    "chine":0,"geopolitique":0,"fmi":0,"investissement":0,"numerique":0,"mobile":0,
+    "energie":0,"phosphate":0,"cacao":0
+  };
+  var found=[];
+  for(var kw in kwMap){
+    if(text.indexOf(kw)>=0)found.push(kw);
+  }
+  return found.slice(0,5);
+}
+
+// ===== SMART SCHEDULING =====
+function getScheduleMode(){
+  var h=new Date().getHours();
+  return(h>=6&&h<22)?"day":"night";
+}
+
+function getSmartInterval(){
+  return getScheduleMode()==="day"?15:60;
+}
+
+function updateScheduleDisplay(){
+  var mode=getScheduleMode();
+  var el=document.getElementById("scheduleMode");
+  if(mode==="day"){
+    el.className="mode-badge mode-day";el.textContent="Jour (15 min)";
+  }else{
+    el.className="mode-badge mode-night";el.textContent="Nuit (60 min)";
+  }
+}
+
+// ===== QUOTA MANAGEMENT =====
+function updateQuotaDisplay(){
+  var pct=Math.min(100,Math.round(tokensUsed/TOKEN_LIMIT*100));
+  document.getElementById("tokenDisplay").textContent=tokensUsed.toLocaleString("fr-FR")+" / 100 000 TPD";
+  var bar=document.getElementById("quotaBar");
+  bar.style.width=pct+"%";
+  bar.className="quota-fill "+(pct<50?"quota-green":pct<80?"quota-yellow":"quota-red");
+  var status=document.getElementById("quotaStatus");
+  if(quotaPaused){
+    status.innerHTML='<span style="color:#ef4444;font-weight:700">QUOTA PAUSE</span>';
+  }else if(pct>=80){
+    status.innerHTML='<span style="color:#ef4444">'+pct+'%</span>';
+  }else if(pct>=50){
+    status.innerHTML='<span style="color:#f59e0b">'+pct+'%</span>';
+  }else{
+    status.innerHTML='<span style="color:#34D399">'+pct+'%</span>';
+  }
+  document.getElementById("quotaPausedMsg").textContent=quotaPaused?"Reprise automatique dans < 1h":"";
+}
+
+function pauseQuota(){
+  quotaPaused=true;
+  log("\u26a0\ufe0f Quota epuise, reprise dans 1h","warn");
+  updateQuotaDisplay();
+  if(quotaResumeTimer)clearTimeout(quotaResumeTimer);
+  quotaResumeTimer=setTimeout(function(){
+    quotaPaused=false;
+    err429Count=0;
+    log("Quota repris - enrichissement reactiv\u00e9","info");
+    updateQuotaDisplay();
+  },60*60*1000);
+}
+
+// ===== PROGRESS BAR =====
+function showProgress(current,total,startTime){
+  var el=document.getElementById("enrichProgress");
+  el.style.display="block";
+  var pct=total>0?Math.round(current/total*100):0;
+  document.getElementById("enrichBar").style.width=pct+"%";
+  document.getElementById("enrichText").textContent=current+"/"+total+" ("+pct+"%)";
+  if(current>0&&startTime){
+    var elapsed=Date.now()-startTime;
+    var perItem=elapsed/current;
+    var remaining=Math.round(perItem*(total-current)/1000);
+    var min=Math.floor(remaining/60);var sec=remaining%60;
+    document.getElementById("enrichETA").textContent="Temps restant : "+min+"m "+sec+"s";
+  }
+}
+
+function hideProgress(){document.getElementById("enrichProgress").style.display="none"}
+
+// ===== PARSE AI KEYS =====
+function parseAIKeys(raw){
+  aiKeys={gemini:"",claude:"",groq:""};
+  var parts=raw.split(",").map(function(s){return s.trim()}).filter(function(s){return s.length>5});
+  parts.forEach(function(k){
+    if(k.startsWith("AIza"))aiKeys.gemini=k;
+    else if(k.startsWith("sk-ant"))aiKeys.claude=k;
+    else if(k.startsWith("gsk_"))aiKeys.groq=k;
+    else{
+      // Unknown format, assign to first empty
+      if(!aiKeys.gemini&&k.length>20)aiKeys.gemini=k;
+    }
+  });
+  // If only one key, also set it as the detected type
+  if(parts.length===1){
+    var k=parts[0];
+    if(k.startsWith("AIza"))aiKeys.gemini=k;
+    else if(k.startsWith("sk-ant"))aiKeys.claude=k;
+    else if(k.startsWith("gsk_"))aiKeys.groq=k;
+    else aiKeys.gemini=k;
+  }
+}
+
+function getKeyForProvider(provider){
+  if(provider==="gemini")return aiKeys.gemini||"";
+  if(provider==="claude")return aiKeys.claude||"";
+  if(provider==="groq")return aiKeys.groq||"";
+  return"";
+}
+
+function getNextProvider(current){
+  var cycle=["groq","gemini","claude"];
+  var idx=cycle.indexOf(current);
+  return cycle[(idx+1)%cycle.length];
+}
+
+// ===== CONFIG =====
+function saveConfig(){localStorage.setItem("aw3_su",document.getElementById("supaUrl").value);localStorage.setItem("aw3_sk",document.getElementById("supaKey").value);localStorage.setItem("aw3_ck",document.getElementById("claudeKey").value);localStorage.setItem("aw3_iap",document.getElementById("iaProvider").value);localStorage.setItem("aw3_src",JSON.stringify(sources));localStorage.setItem("aw3_pub",JSON.stringify([...publishedTitles]));localStorage.setItem("aw3_health",JSON.stringify(sourceHealth));log("Config sauvegardee")}
+
+function loadConfig(){
+  var u=localStorage.getItem("aw3_su");if(u)document.getElementById("supaUrl").value=u;
+  var k=localStorage.getItem("aw3_sk");if(k)document.getElementById("supaKey").value=k;
+  var c=localStorage.getItem("aw3_ck");if(c)document.getElementById("claudeKey").value=c;
+  var iap=localStorage.getItem("aw3_iap");if(iap)document.getElementById("iaProvider").value=iap;
+  var s=localStorage.getItem("aw3_src");if(s)try{sources=JSON.parse(s)}catch(e){}
+  var p=localStorage.getItem("aw3_pub");if(p)try{JSON.parse(p).forEach(function(t){publishedTitles.add(t)})}catch(e){}
+  var h=localStorage.getItem("aw3_health");if(h)try{sourceHealth=JSON.parse(h)}catch(e){}
+  renderSrc();
+}
+
+async function connectAll(){
+  var url=document.getElementById("supaUrl").value.trim();
+  var key=document.getElementById("supaKey").value.trim();
+  claudeKey=document.getElementById("claudeKey").value.trim();
+  parseAIKeys(claudeKey);
+
+  if(url&&key){
+    try{
+      sb=supabase.createClient(url,key);log("Supabase OK : "+url);
+      sb.from("articles").select("ti").then(function(r){if(r.data)r.data.forEach(function(a){publishedTitles.add(a.ti.substring(0,40).toLowerCase())});log("Anti-doublon : "+publishedTitles.size+" titres connus")});
+      // Fetch top counters
+      fetchDashboardCounters();
+      // Fetch 7-day chart
+      fetch7DayChart();
+    }catch(e){log("Erreur Supabase : "+e.message,"err")}
+  }else{log("Supabase non configure","warn")}
+
+  var prov=document.getElementById("iaProvider").value;
+  if(claudeKey){
+    var detected=[];
+    if(aiKeys.gemini)detected.push("Gemini");
+    if(aiKeys.claude)detected.push("Claude");
+    if(aiKeys.groq)detected.push("Groq");
+    log("IA "+prov.toUpperCase()+" principal - cles detectees : "+(detected.join(", ")||"aucune"),"ai");
+  }else{log("Pas de cle IA - publication brute","warn")}
+  saveConfig();
+  updateScheduleDisplay();
+  updateQuotaDisplay();
+}
+
+// ===== DASHBOARD COUNTERS =====
+async function fetchDashboardCounters(){
+  if(!sb)return;
+  try{
+    var today=new Date().toISOString().split("T")[0];
+    // Published today
+    var r1=await sb.from("articles").select("id",{count:"exact",head:true}).gte("created_at",today+"T00:00:00");
+    document.getElementById("stPubToday").textContent=(r1.count||0);
+    // Pending (status != enrichi or no status)
+    var r2=await sb.from("articles").select("id",{count:"exact",head:true}).neq("status","enrichi");
+    document.getElementById("stPending").textContent=(r2.count||0);
+    // Enrichi
+    var r3=await sb.from("articles").select("id",{count:"exact",head:true}).eq("status","enrichi");
+    document.getElementById("stEnrichi").textContent=(r3.count||0);
+  }catch(e){}
+}
+
+// ===== 7-DAY CHART =====
+async function fetch7DayChart(){
+  if(!sb)return;
+  try{
+    var days=[];
+    for(var i=6;i>=0;i--){
+      var d=new Date();d.setDate(d.getDate()-i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    var counts=[];var maxCount=1;
+    for(var j=0;j<days.length;j++){
+      var r=await sb.from("articles").select("id",{count:"exact",head:true}).gte("created_at",days[j]+"T00:00:00").lt("created_at",days[j]+"T23:59:59");
+      var c=r.count||0;counts.push(c);if(c>maxCount)maxCount=c;
+    }
+    var chartHTML="";var labelsHTML="";
+    for(var k=0;k<days.length;k++){
+      var h=Math.max(4,Math.round(counts[k]/maxCount*90));
+      var dayLabel=days[k].substring(5);
+      chartHTML+='<div class="chart-col"><div class="chart-bar" style="height:'+h+'px"></div></div>';
+      labelsHTML+='<div class="chart-label">'+dayLabel+'<br><strong style="color:#34D399">'+counts[k]+'</strong></div>';
+    }
+    document.getElementById("chartWrap").innerHTML=chartHTML;
+    document.getElementById("chartLabels").innerHTML=labelsHTML;
+  }catch(e){}
+}
+
+// ===== EXPORT CSV =====
+async function exportCSV(){
+  if(!sb){log("Supabase requis pour export","err");return}
+  log("Export CSV en cours...","info");
+  var r=await sb.from("articles").select("ti,tag,au,created_at,status").order("created_at",{ascending:false}).limit(500);
+  if(!r.data||r.data.length===0){log("Aucun article a exporter","warn");return}
+  var csv="Date,Titre,Tag,Source,Statut\n";
+  r.data.forEach(function(a){
+    var dt=(a.created_at||"").substring(0,10);
+    var ti=(a.ti||"").replace(/"/g,'""');
+    csv+='"'+dt+'","'+ti+'","'+(a.tag||"")+'","'+(a.au||"")+'","'+(a.status||"brut")+'"\n';
+  });
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  var link=document.createElement("a");
+  link.href=URL.createObjectURL(blob);
+  link.download="abawi_export_"+new Date().toISOString().split("T")[0]+".csv";
+  link.click();
+  log("CSV exporte : "+r.data.length+" articles","pub");
+}
+
+// ===== SOURCES UI =====
+function getHealthDot(sourceName){
+  var h=sourceHealth[sourceName];
+  if(!h||!h.lastSuccess)return '<span class="health-dot health-red"></span>';
+  var now=Date.now();
+  var diff=now-h.lastSuccess;
+  if(diff<24*60*60*1000)return '<span class="health-dot health-green"></span>';
+  if(diff<48*60*60*1000)return '<span class="health-dot health-yellow"></span>';
+  return '<span class="health-dot health-red"></span>';
+}
+
+function renderSrc(){
+  var shown=catFilter==="all"?sources:sources.filter(function(s){return s.cat===catFilter});
+  document.getElementById("srcCount").textContent=sources.filter(function(s){return s.on}).length;
+  document.getElementById("srcList").innerHTML=shown.map(function(s,i){
+    var realIdx=sources.indexOf(s);
+    var failInfo=sourceHealth[s.name]?"("+((sourceHealth[s.name].failCount||0))+" echecs)":"";
+    return'<div class="si"><div style="flex:1;min-width:0"><div class="fx" style="gap:6px;margin-bottom:2px">'+getHealthDot(s.name)+'<span class="si-name">'+s.name+'</span><span class="si-cat badge '+(CAT_CSS[s.cat]||"cat-div")+'">'+(CATS[s.cat]||s.cat)+'</span><span style="font-size:9px;color:#666">'+failInfo+'</span></div><div class="si-url">'+s.url+'</div></div><div class="fx" style="flex-shrink:0"><button class="btn btn-gr" onclick="testSource('+realIdx+')" style="font-size:10px;padding:3px 6px">Tester</button><span class="'+(s.on?"tag-on":"tag-off")+'" onclick="togSrc('+realIdx+')">'+(s.on?"ON":"OFF")+'</span><button class="btn btn-gr" onclick="rmSrc('+realIdx+')" style="font-size:10px;padding:3px 6px">X</button></div></div>'
+  }).join("");
+}
+
+function togSrc(i){sources[i].on=!sources[i].on;renderSrc();saveConfig()}
+function rmSrc(i){sources.splice(i,1);renderSrc();saveConfig()}
+function toggleAll(v){sources.forEach(function(s){s.on=v});renderSrc();saveConfig()}
+function filterCat(c){catFilter=c;renderSrc()}
+function addSource(){var n=prompt("Nom :");if(!n)return;var u=prompt("URL RSS :");if(!u)return;var c=prompt("Categorie (eco/tech/ai/mat/auto/tel/geo) :")||"div";sources.push({name:n,url:u,on:true,cat:c});renderSrc();saveConfig()}
+
+// ===== TEST SOURCE =====
+async function testSource(idx){
+  var s=sources[idx];
+  log("Test source : "+s.name+"...","info");
+  try{
+    var items=await fetchRSS(s);
+    alert(s.name+"\n\nResultat : "+items.length+" articles trouves"+(items.length>0?"\n\nPremier : "+items[0].title:""));
+    log("Test "+s.name+" : "+items.length+" articles","info");
+  }catch(e){
+    alert("Erreur : "+e.message);
+    log("Test "+s.name+" echoue : "+e.message,"err");
+  }
+}
+
+// ===== RSS FETCH =====
+async function fetchRSS(source){
+  var proxies=[
+    function(u){return"https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(u)},
+    function(u){return"https://corsproxy.io/?"+encodeURIComponent(u)},
+    function(u){return"https://api.allorigins.win/get?url="+encodeURIComponent(u)},
+  ];
+  for(var p=0;p<proxies.length;p++){
+    try{
+      var res=await fetch(proxies[p](source.url));var data=await res.json();
+      if(data.items&&data.items.length>0){
+        return data.items.slice(0,5).map(function(item){
+          var desc=(item.description||"").replace(/<[^>]*>/g,"").replace(/&[^;]+;/g," ").trim().substring(0,1500);
+          return{title:item.title||"",desc:desc,link:item.link||"",source:source.name,cat:source.cat};
+        }).filter(function(i){return i.title.length>10});
+      }
+      if(data.contents){
+        var parser=new DOMParser();var xml=parser.parseFromString(data.contents,"text/xml");var items=xml.querySelectorAll("item");var results=[];
+        items.forEach(function(item,idx){if(idx>=5)return;var ti=(item.querySelector("title")||{}).textContent||"";var desc=((item.querySelector("description")||{}).textContent||"").replace(/<[^>]*>/g,"").trim().substring(0,1500);var link=(item.querySelector("link")||{}).textContent||"";if(ti.length>10)results.push({title:ti.trim(),desc:desc,link:link.trim(),source:source.name,cat:source.cat})});
+        if(results.length>0)return results;
+      }
+    }catch(e){}
+  }
+  return[];
+}
+
+// ===== FETCH FULL ARTICLE + OG IMAGE =====
+async function fetchFullArticle(url){
+  if(!url)return{text:"",image:""};
+  var proxies=[
+    function(u){return"https://api.allorigins.win/get?url="+encodeURIComponent(u)},
+    function(u){return"https://corsproxy.io/?"+encodeURIComponent(u)},
+    function(u){return"https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(u)},
+  ];
+  for(var p=0;p<proxies.length;p++){
+    try{
+      var res=await fetch(proxies[p](url),{signal:AbortSignal.timeout(8000)});
+      var data;
+      var ct=res.headers.get("content-type")||"";
+      if(ct.includes("json")){data=await res.json();data=data.contents||data.body||JSON.stringify(data)}
+      else{data=await res.text()}
+      if(typeof data!=="string"||data.length<100)continue;
+
+      // Extract OG image
+      var ogImage="";
+      var ogMatch=data.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+      if(ogMatch)ogImage=ogMatch[1];
+      if(!ogImage){ogMatch=data.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);if(ogMatch)ogImage=ogMatch[1]}
+
+      // Clean HTML
+      data=data.replace(/<script[\s\S]*?<\/script>/gi,"").replace(/<style[\s\S]*?<\/style>/gi,"").replace(/<nav[\s\S]*?<\/nav>/gi,"").replace(/<footer[\s\S]*?<\/footer>/gi,"").replace(/<header[\s\S]*?<\/header>/gi,"").replace(/<aside[\s\S]*?<\/aside>/gi,"");
+      var paras=[];
+      var m,rx=/<p[^>]*>(.*?)<\/p>/gis;
+      while((m=rx.exec(data))!==null){var t=m[1].replace(/<[^>]*>/g,"").replace(/&[^;]+;/g," ").trim();if(t.length>40)paras.push(t)}
+      if(paras.length<3){var artM=data.match(/<article[^>]*>(.*?)<\/article>/is);if(artM){var artText=artM[1].replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();if(artText.length>200)paras=artText.match(/[^.!?]+[.!?]+/g)||paras}}
+      if(paras.length<3){var divM=data.match(/class=["'][^"']*(?:content|article|body|text|entry)[^"']*["'][^>]*>(.*?)(?:<\/div>)/is);if(divM){var divText=divM[1].replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();if(divText.length>200){var sentences=divText.match(/[^.!?]+[.!?]+/g);if(sentences)paras=[...paras,...sentences.filter(function(s){return s.trim().length>40})]}}}
+      if(paras.length>=2){
+        var fullText=paras.slice(0,20).join("\n\n");
+        log("Source recuperee ("+paras.length+" blocs, "+fullText.length+" car)","info");
+        return{text:fullText.substring(0,4000),image:ogImage};
+      }
+      if(ogImage)return{text:"",image:ogImage};
+    }catch(e){}
+  }
+  return{text:"",image:""};
+}
+
+// ===== MULTI-SOURCE RESEARCH =====
+async function searchMoreSources(title,cat){
+  var results=[];
+  var keywords=title.replace(/[^a-zA-Z\u00C0-\u024F\s]/g,"").split(" ").filter(function(w){return w.length>3}).slice(0,5);
+  var queries=[
+    keywords.slice(0,4).join("+"),
+    keywords.slice(0,3).join("+")+"+senegal",
+    keywords.slice(0,3).join("+")+"+afrique+economie",
+  ];
+  for(var q=0;q<queries.length;q++){
+    try{
+      var res=await fetch("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent("https://news.google.com/rss/search?q="+queries[q]+"&hl=fr&gl=SN&ceid=SN:fr"),{signal:AbortSignal.timeout(6000)});
+      var data=await res.json();
+      if(data.items){
+        data.items.slice(0,2).forEach(function(it){
+          var desc=(it.description||"").replace(/<[^>]*>/g,"").trim();
+          if(desc.length>30)results.push(it.title+" : "+desc.substring(0,300));
+        });
+      }
+    }catch(e){}
+  }
+  try{
+    var bingQ=keywords.slice(0,4).join("+");
+    var bRes=await fetch("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent("https://www.bing.com/news/search?q="+bingQ+"&format=rss&mkt=fr-FR"),{signal:AbortSignal.timeout(6000)});
+    var bData=await bRes.json();
+    if(bData.items){bData.items.slice(0,2).forEach(function(it){var d=(it.description||"").replace(/<[^>]*>/g,"").trim();if(d.length>30)results.push(it.title+" : "+d.substring(0,300))})}
+  }catch(e){}
+  if(results.length>0)log("Recherche multi-sources : "+results.length+" resultats complementaires","info");
+  return results.slice(0,6).join("\n\n");
+}
+
+// ===== MULTI-AI CALL WITH FALLBACK =====
+async function callAI(prompt,preferredProvider){
+  if(quotaPaused){throw new Error("QUOTA_PAUSED")}
+
+  var providerOrder=[preferredProvider];
+  var next=getNextProvider(preferredProvider);
+  if(next!==preferredProvider)providerOrder.push(next);
+  var third=getNextProvider(next);
+  if(third!==preferredProvider&&third!==next)providerOrder.push(third);
+
+  for(var pi=0;pi<providerOrder.length;pi++){
+    var provider=providerOrder[pi];
+    var key=getKeyForProvider(provider);
+    if(!key)continue;
+
+    try{
+      var apiRes,d,txt;
+      if(provider==="gemini"){
+        apiRes=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+key,{
+          method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:2500,temperature:0.7}})
+        });
+      }else if(provider==="groq"){
+        apiRes=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+          method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+          body:JSON.stringify({model:"llama-3.3-70b-versatile",max_tokens:2500,temperature:0.7,messages:[{role:"user",content:prompt}]})
+        });
+      }else{
+        apiRes=await fetch("https://api.anthropic.com/v1/messages",{
+          method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+          body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2500,messages:[{role:"user",content:prompt}]})
+        });
+      }
+
+      if(apiRes.status===429){
+        err429Count++;
+        log("IA ["+provider.toUpperCase()+"] 429 ("+err429Count+"/3)"+(pi<providerOrder.length-1?" -> bascule "+providerOrder[pi+1].toUpperCase():""),"warn");
+        if(err429Count>=3){
+          pauseQuota();
+          throw new Error("QUOTA_PAUSED");
+        }
+        continue;
+      }
+
+      if(!apiRes.ok){
+        var errText=await apiRes.text();
+        log(provider.toUpperCase()+" HTTP "+apiRes.status+" : "+errText.substring(0,150),"err");
+        continue;
+      }
+
+      d=await apiRes.json();
+      if(provider==="gemini"){
+        txt=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||"";
+      }else if(provider==="groq"){
+        txt=(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||"";
+      }else{
+        txt=(d.content&&d.content[0]&&d.content[0].text)||"";
+      }
+
+      if(!txt)continue;
+
+      // Success - reset 429 counter
+      err429Count=0;
+      tokensUsed+=2000;
+      updateQuotaDisplay();
+      nAI++;document.getElementById("stAI").textContent=nAI;
+
+      return{text:txt,provider:provider};
+    }catch(e){
+      if(e.message==="QUOTA_PAUSED")throw e;
+      log("IA ["+provider.toUpperCase()+"] erreur : "+e.message,"err");
+    }
+  }
+  throw new Error("Tous les fournisseurs IA ont echoue");
+}
+
+// ===== ADVANCED AI REWRITER =====
+async function rewrite(item){
+  console.log("[REWRITE] ÉTAPE 1 : Article scanné :",item.title);
+  log("📝 Réécriture : "+item.title.substring(0,50)+"...","ai");
+
+  var fetched=await fetchFullArticle(item.link);
+  var fullContent=fetched.text;
+  var ogImage=fetched.image||"";
+
+  var articleText=[fullContent,item.desc].filter(function(s){return s&&s.length>10}).join("\n\n");
+  if(!articleText||articleText.length<50)articleText=item.title+" "+(item.desc||"");
+
+  // No API key → publish brut immediately
+  if(!claudeKey||quotaPaused){
+    console.log("[REWRITE] Pas de clé IA ou quota pause → brut");
+    var desc=articleText;
+    var paras=desc.split(/[.!?]\s+|\n\n/).filter(function(s){return s.trim().length>30});
+    var bd=[];
+    if(paras.length>=3){
+      bd.push({t:"p",v:paras.slice(0,2).join(". ")+"."});
+      bd.push({t:"p",v:paras.slice(2,4).join(". ")+"."});
+      if(paras.length>4)bd.push({t:"p",v:paras.slice(4).join(". ")+"."});
+    }else{
+      bd.push({t:"p",v:desc.substring(0,2000)});
+    }
+    bd.push({t:"v",v:"Suivez ABAWI NEWS pour l'analyse complète."});
+    return{ti:item.title,su:desc.substring(0,200),tag:guessTag(item.title),bd:bd,au:item.source,image_url:ogImage,_status:"brut"};
+  }
+
+  try{
+    console.log("[REWRITE] ÉTAPE 2 : Envoi à Groq...");
+
+    // PROMPT SIMPLIFIÉ — texte brut, PAS de JSON complexe
+    var prompt=`Réécris cet article en français professionnel pour ABAWI NEWS, le média économique du Sénégal.
+
+RÈGLES :
+- Titre accrocheur (max 80 caractères)
+- Résumé en 1 phrase (max 150 caractères)
+- 4-5 paragraphes de contenu enrichi avec chiffres et contexte
+- Impact sur le Sénégal et l'Afrique de l'Ouest
+- Style journalistique, factuel, engageant
+
+Réponds en JSON SIMPLE (pas de backticks) :
+{"ti":"Titre","su":"Résumé","tag":"TAG","bd":[{"t":"p","v":"Paragraphe 1"},{"t":"p","v":"Paragraphe 2"},{"t":"p","v":"Paragraphe 3"},{"t":"p","v":"Paragraphe 4"}]}
+
+SOURCE: ${item.source}
+TITRE: ${item.title}
+CONTENU:\n${articleText.substring(0,3000)}`;
+
+    var provider=document.getElementById("iaProvider").value;
+    var result=await callAI(prompt,provider);
+    var txt=result.text;
+    var usedProvider=result.provider;
+    console.log("[REWRITE] ÉTAPE 3 : Réponse reçue ("+txt.length+" car) :",txt.substring(0,100));
+
+    // Parse — with robust fallback
+    console.log("[REWRITE] ÉTAPE 4 : Parsing...");
+    var clean=txt.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+    var parsed;
+    try{
+      parsed=JSON.parse(clean);
+      parsed._status="enrichi";
+      console.log("[REWRITE] JSON parsé OK :",parsed.ti);
+    }catch(jsonErr){
+      console.log("[REWRITE] JSON INVALIDE, fallback texte brut. Début :",clean.substring(0,200));
+      log("⚠️ JSON invalide ["+usedProvider+"] → publication en texte brut","warn");
+      // Extract whatever text Groq returned as paragraphs
+      var lines=clean.split(/\n+/).filter(function(l){return l.trim().length>20});
+      parsed={
+        ti:item.title,
+        su:(lines[0]||item.title).substring(0,200),
+        tag:guessTag(item.title),
+        bd:lines.length>0?lines.slice(0,5).map(function(l){return{t:"p",v:l.replace(/^[-*#>\d.]+\s*/,"").trim()}}):[{t:"p",v:articleText.substring(0,1000)}],
+        _status:"brut"
+      };
+    }
+    parsed.au="ABAWI NEWS";
+    parsed.image_url=ogImage;
+
+    log("✅ IA ["+usedProvider.toUpperCase()+"] : "+parsed.ti.substring(0,50)+" ["+parsed._status+"]","ai");
+    return parsed;
+  }catch(e){
+    console.error("[REWRITE] ERREUR :",e);
+    if(e.message==="QUOTA_PAUSED"){log("⏸ Quota IA pause","warn")}
+    else{log("❌ Erreur IA: "+e.message+" → brut","warn");nErrors++; try{document.getElementById("stErrors").textContent=nErrors}catch(x){}}
+    return{ti:item.title,su:(item.desc||item.title).substring(0,200),tag:guessTag(item.title),bd:[{t:"p",v:articleText.substring(0,2000)}],au:item.source,image_url:ogImage,_status:"brut"};
+  }
+}
+
+// ===== SCANNER =====
+async function runOnce(){
+  if(quotaPaused){log("Quota IA en pause — scan en mode brut (sans reecriture)","warn")}
+  log("========== SCAN V4 DEMARRE ==========","info");setSt("wait");nScan++;document.getElementById("stS").textContent=nScan;
+  var active=sources.filter(function(s){return s.on});
+  if(active.length===0){log("Aucune source active !","warn");setSt(timer?"on":"off");return}
+  log(active.length+" sources actives","info");
+
+  var all=[];var okSrc=0;
+  for(var i=0;i<active.length;i++){
+    var items=await fetchRSS(active[i]);
+    if(items.length>0){
+      log(active[i].name+" : "+items.length+" articles","info");okSrc++;all=all.concat(items);
+      // Update source health
+      if(!sourceHealth[active[i].name])sourceHealth[active[i].name]={failCount:0,lastSuccess:0};
+      sourceHealth[active[i].name].lastSuccess=Date.now();
+      sourceHealth[active[i].name].failCount=0;
+    }else{
+      log(active[i].name+" : 0","warn");
+      if(!sourceHealth[active[i].name])sourceHealth[active[i].name]={failCount:0,lastSuccess:0};
+      sourceHealth[active[i].name].failCount=(sourceHealth[active[i].name].failCount||0)+1;
+      // Auto-disable after 7 consecutive failures
+      if(sourceHealth[active[i].name].failCount>=7){
+        var srcIdx=sources.indexOf(active[i]);
+        if(srcIdx>=0){sources[srcIdx].on=false;log("Auto-desactive : "+active[i].name+" (7+ echecs consecutifs)","warn")}
+      }
+    }
+  }
+  nSrcOk=okSrc;document.getElementById("stSrc").textContent=nSrcOk;
+  renderSrc();
+
+  // DEDUP : by title similarity + Levenshtein
+  var seen={};
+  var uniq=all.filter(function(item){
+    var key=item.title.substring(0,40).toLowerCase();
+    if(seen[key])return false;
+    if(publishedTitles.has(key))return false;
+    if(isDuplicate(item.title)){log("DOUBLON Levenshtein : "+item.title.substring(0,40),"warn");return false}
+    seen[key]=true;
+    return true;
+  });
+
+  log(all.length+" bruts -> "+uniq.length+" uniques ("+publishedTitles.size+" deja publies filtres)","info");
+
+  var toProcess=uniq.slice(0,10);
+  var startTime=Date.now();
+  for(var j=0;j<toProcess.length;j++){
+    if(quotaPaused){log("Quota IA pause — articles restants publies en brut","warn");break}
+    showProgress(j,toProcess.length,startTime);
+    log("["+(j+1)+"/"+toProcess.length+"] "+toProcess[j].title.substring(0,50)+"...","info");
+    if(j>0)await new Promise(function(r){setTimeout(r,2000)});
+    var rw=await rewrite(toProcess[j]);
+    var keywords=generateKeywords(rw.ti||toProcess[j].title,(rw.bd||[]).map(function(b){return b.v||""}).join(" "));
+    queue.push({
+      id:Date.now()+Math.floor(Math.random()*10000),
+      s:guessSec(rw.ti||toProcess[j].title,rw.su||toProcess[j].desc),
+      pr:true,tag:rw.tag||guessTag(toProcess[j].title),
+      dt:new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}),
+      tm:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
+      rt:Math.max(3,Math.ceil((rw.bd||[]).length*1.5))+" min",
+      au:rw.au||toProcess[j].source,
+      sc:guessSc(rw.ti||toProcess[j].title,rw.su||toProcess[j].desc),
+      ti:rw.ti||toProcess[j].title,
+      su:rw.su||(toProcess[j].desc||"").substring(0,200),
+      bd:rw.bd||[{t:"p",v:toProcess[j].desc}],
+      sourceUrl:toProcess[j].link,
+      image_url:rw.image_url||"",
+      keywords:keywords,
+      _status:rw._status||"brut"
+    });
+  }
+  showProgress(toProcess.length,toProcess.length,startTime);
+  setTimeout(hideProgress,2000);
+  renderQ();
+  log("========== SCAN TERMINE : "+queue.length+" en file ==========","info");
+
+  // Auto-publish
+  if(sb&&queue.length>0&&document.getElementById("autoP").checked){
+    log("Auto-publication de "+queue.length+" articles...","pub");
+    await pubAll();
+  }
+  setSt(timer?"on":"off");updNext();
+  saveConfig();
+  fetchDashboardCounters();
+}
+
+// ===== SANITIZER (anti hallucinated-JSON) =====
+// AI sometimes returns a title containing a nested JSON object, producing
+// `{"ti":"{"ti":"…"}"}` artefacts in the news UI. Unwrap up to 4 levels
+// and strip stray JSON markers before persisting.
+function sanitizeText(raw,maxLen){
+  if(raw===null||raw===undefined)return"";
+  var s=String(raw).trim();
+  for(var depth=0;depth<4;depth++){
+    if(s.charAt(0)!=="{"&&s.charAt(0)!=="[")break;
+    try{
+      var obj=JSON.parse(s);
+      var next=obj.ti||obj.su||obj.title||obj.text||null;
+      if(next==null)break;
+      s=String(next).trim();
+    }catch(_e){break}
+  }
+  s=s.replace(/^[{[\s"']+|[}\]\s"']+$/g,"")
+     .replace(/[ --]/g,"")
+     .replace(/\s+/g," ")
+     .trim();
+  if(maxLen&&s.length>maxLen)s=s.slice(0,maxLen).replace(/\s\S*$/,"")+"…";
+  return s;
+}
+function sanitizeBlocks(bd){
+  if(!Array.isArray(bd))return [];
+  return bd.map(function(b){
+    if(!b||typeof b!=="object")return null;
+    var v=sanitizeText(b.v,4000);
+    if(!v)return null;
+    return{t:b.t||"p",v:v};
+  }).filter(Boolean);
+}
+
+// ===== PUBLISH =====
+async function pubAll(){
+  if(queue.length===0){log("File vide","warn");return}
+  var ok=0,err=0;
+  for(var i=0;i<queue.length;i++){
+    var a=queue[i];
+    // Sanitize at the boundary — nothing dirty enters Supabase.
+    var cleanTi=sanitizeText(a.ti,180);
+    var cleanSu=sanitizeText(a.su,400);
+    var cleanBd=sanitizeBlocks(a.bd);
+    if(!cleanTi||cleanBd.length===0){log("⚠️ Article ignore (titre/contenu invalide) : "+(a.ti||"").substring(0,40),"warn");continue}
+    var titleKey=cleanTi.substring(0,40).toLowerCase();
+    if(publishedTitles.has(titleKey)){log("⚠️ DOUBLON : "+cleanTi.substring(0,40)+" — deja en base","warn");continue}
+    if(sb){
+      try{
+        console.log("[PUB] ÉTAPE 5 : Insertion Supabase pour :",cleanTi.substring(0,50));
+        // Use ONLY the columns we KNOW exist in the articles table
+        var insertData={
+          id:a.id, s:a.s, pr:true, tag:a.tag, dt:a.dt, tm:a.tm, rt:a.rt, au:a.au, sc:a.sc,
+          ti:cleanTi, su:cleanSu, bd:JSON.stringify(cleanBd), created_at:new Date().toISOString()
+        };
+        console.log("[PUB] Insert data:",JSON.stringify(insertData).substring(0,300));
+        var res=await sb.from("articles").insert(insertData);
+        console.log("[PUB] ÉTAPE 6 : Résultat :",res.error?"ERREUR: "+res.error.message:"SUCCESS");
+        if(res.error){
+          // If column error, retry without the problematic field
+          if(res.error.message.includes("column")){
+            log("⚠️ Colonne inconnue, tentative sans champs optionnels...","warn");
+            var minData={id:a.id,s:a.s||"ma",pr:true,tag:a.tag||"ECONOMIE",dt:a.dt,tm:a.tm,rt:a.rt||"3 min",au:a.au||"ABAWI NEWS",sc:a.sc||"def",ti:cleanTi,su:cleanSu||"",bd:JSON.stringify(cleanBd),created_at:new Date().toISOString()};
+            var res2=await sb.from("articles").insert(minData);
+            if(res2.error){
+              log("❌ ERREUR PUBLICATION : "+cleanTi.substring(0,50)+" — "+res2.error.message,"err");
+              err++;nErrors++;
+            }else{
+              log("✅ PUBLIÉ : "+cleanTi.substring(0,60),"pub");
+              publishedTitles.add(titleKey);ok++;nPub++;
+            }
+          }else{
+            log("❌ ERREUR PUBLICATION : "+cleanTi.substring(0,50)+" — "+res.error.message,"err");
+            err++;nErrors++;
+          }
+          try{document.getElementById("stErrors").textContent=nErrors}catch(x){}
+        }else{
+          var emoji=a._status==="enrichi"?"🔄":"⏭️";
+          log("✅ PUBLIÉ ["+emoji+" "+a._status+"] : "+cleanTi.substring(0,60),"pub");
+          publishedTitles.add(titleKey);ok++;nPub++;
+        }
+      }catch(e){
+        log("❌ EXCEPTION : "+cleanTi.substring(0,40)+" — "+e.message,"err");
+        console.error("[PUB] Exception:",e);
+        err++;nErrors++;try{document.getElementById("stErrors").textContent=nErrors}catch(x){}
+      }
+    }else{log("DEMO : "+a.ti.substring(0,60),"pub");publishedTitles.add(titleKey);ok++;nPub++}
+  }
+  document.getElementById("stP").textContent=nPub;
+  log(ok+" publies, "+err+" erreurs","info");
+  queue=[];renderQ();saveConfig();
+  fetchDashboardCounters();
+  fetch7DayChart();
+}
+
+// ===== PUBLISH BRUT (no AI rewrite) =====
+async function pubAllBrut(){
+  if(queue.length===0){log("File vide","warn");return}
+  // Force all articles to brut status and publish
+  queue.forEach(function(a){a._status="publie_brut"});
+  log("Publication de "+queue.length+" articles EN BRUT (sans reecriture IA)...","pub");
+  await pubAll();
+}
+
+// ===== PREVIEW MODAL =====
+function previewArticle(idx){
+  var a=queue[idx];
+  if(!a)return;
+  var html='<div style="margin-bottom:12px"><span class="tag-badge">'+a.tag+'</span>';
+  if(a.keywords&&a.keywords.length>0){
+    a.keywords.forEach(function(kw){html+='<span style="display:inline-block;background:#222;color:#9CA3AF;padding:2px 6px;border-radius:3px;font-size:9px;margin-right:4px">#'+kw+'</span>'});
+  }
+  html+='</div>';
+  html+='<h2>'+a.ti+'</h2>';
+  html+='<p style="color:#9CA3AF;font-size:12px;margin-bottom:12px">'+a.su+'</p>';
+  if(a.image_url){html+='<img src="'+a.image_url+'" style="max-width:100%;border-radius:8px;margin-bottom:12px" onerror="this.style.display=\'none\'"/>';}
+  html+='<p style="color:#9CA3AF;font-size:10px;margin-bottom:12px">'+a.au+' | '+a.dt+' '+a.tm+' | '+a.rt+' de lecture</p>';
+  var bd=a.bd||[];
+  bd.forEach(function(block){
+    if(block.t==="p"){html+='<p style="margin:8px 0;line-height:1.7;color:#d1d5db;font-size:13px">'+block.v+'</p>'}
+    else if(block.t==="q"){html+='<div class="quote">'+block.v+(block.sr?'<div class="quote-src">- '+block.sr+'</div>':'')+'</div>'}
+    else if(block.t==="d"&&block.r){
+      html+='<table><thead><tr><th colspan="2">'+(block.ti||"Donnees")+'</th></tr></thead><tbody>';
+      block.r.forEach(function(row){html+='<tr><td>'+row[0]+'</td><td style="font-weight:600;color:#34D399">'+row[1]+'</td></tr>'});
+      html+='</tbody></table>';
+    }
+    else if(block.t==="v"){html+='<div class="verdict">'+block.v+'</div>'}
+  });
+  html+='<button class="modal-close" onclick="document.getElementById(\'previewModal\').style.display=\'none\'">Fermer</button>';
+  document.getElementById("previewContent").innerHTML=html;
+  document.getElementById("previewModal").style.display="flex";
+}
+
+function renderQ(){
+  document.getElementById("qCnt").textContent=queue.length;var el=document.getElementById("qList");
+  if(queue.length===0){el.innerHTML='<p style="color:#9CA3AF;font-size:12px">Aucun article.</p>';return}
+  el.innerHTML=queue.map(function(a,i){
+    var bd=a.bd||[];
+    var fullText=bd.map(function(b){return b.v||""}).join(" ");
+    var score=qualityScore(bd,fullText);
+    var statusBadge=a._status==="enrichi"?'<span style="color:#34D399;font-size:9px;font-weight:700">ENRICHI</span>':'<span style="color:#f59e0b;font-size:9px;font-weight:700">BRUT</span>';
+    return'<div class="qi"><div class="fb"><div class="fx" style="gap:6px"><span style="color:#34D399;font-size:9px;font-weight:800">'+a.tag+'</span><span style="color:#9CA3AF;font-size:9px">'+a.s.toUpperCase()+'</span>'+starsHTML(score)+' '+statusBadge+'</div><div class="fx" style="gap:4px"><button class="btn btn-blue" onclick="previewArticle('+i+')" style="font-size:10px;padding:3px 8px">Previsualiser</button><button class="btn btn-gr" onclick="rmQ('+i+')" style="font-size:10px;padding:3px 8px">X</button></div></div><h4>'+a.ti+'</h4><p>'+a.su+'</p><p style="font-size:10px;color:#D4A843;margin-top:4px">'+a.au+(a.keywords&&a.keywords.length?' | #'+a.keywords.join(' #'):'')+'</p></div>'
+  }).join("")
+}
+function rmQ(i){queue.splice(i,1);renderQ()}
+function clrQ(){queue=[];renderQ();log("File videe")}
+
+// ===== BOT CONTROL =====
+function startBot(){
+  var m=getSmartInterval();
+  timer=setInterval(function(){
+    var newM=getSmartInterval();
+    updateScheduleDisplay();
+    runOnce();
+  },m*60*1000);
+  setSt("on");document.getElementById("btnOn").style.display="none";document.getElementById("btnOff").style.display="";
+  log("ROBOT V4 ON - "+sources.filter(function(s){return s.on}).length+" sources - mode "+(getScheduleMode()==="day"?"JOUR (15min)":"NUIT (60min)"),"info");
+  updNext();runOnce();
+}
+
+function stopBot(){clearInterval(timer);timer=null;setSt("off");document.getElementById("btnOn").style.display="";document.getElementById("btnOff").style.display="none";document.getElementById("nextRun").textContent="--";log("Robot OFF","warn")}
+
+function updNext(){if(!timer)return;var m=getSmartInterval();document.getElementById("nextRun").textContent="Prochain : "+new Date(Date.now()+m*60000).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
+
+// ===== ENRICHIR LES 50 SUIVANTS =====
+async function enrichNext50(){
+  if(!sb){log("Supabase non connecte","err");return}
+  if(!claudeKey){log("Cle IA requise pour enrichir","err");return}
+  if(quotaPaused){log("Quota en pause - enrichissement impossible","warn");return}
+
+  log("========== ENRICHISSEMENT 50 SUIVANTS ==========","ai");
+  setSt("wait");
+
+  var res=await sb.from("articles").select("*").order("created_at",{ascending:false}).neq("status","enrichi").limit(50);
+  if(!res.data||res.data.length===0){log("Aucun article a enrichir","info");setSt(timer?"on":"off");return}
+
+  var bruts=res.data;
+  log(bruts.length+" articles a enrichir","info");
+
+  var ok=0,fail=0;
+  var startTime=Date.now();
+  for(var i=0;i<bruts.length;i++){
+    if(quotaPaused){log("Enrichissement interrompu - quota pause","warn");break}
+    var a=bruts[i];
+
+    // Skip already enrichi
+    if(a.status==="enrichi"){continue}
+
+    showProgress(i,bruts.length,startTime);
+
+    var bd=a.bd;
+    if(typeof bd==="string")try{bd=JSON.parse(bd)}catch(e){bd=[]}
+    var currentText=(Array.isArray(bd)?bd:[]).map(function(b){return b.v||""}).join(" ");
+
+    log("["+(i+1)+"/"+bruts.length+"] Enrichissement : "+a.ti.substring(0,50)+"...","ai");
+
+    try{
+      var fullContent="";
+      var ogImage="";
+      if(a.sourceUrl||a.link){
+        var fetched=await fetchFullArticle(a.sourceUrl||a.link||"");
+        fullContent=fetched.text;ogImage=fetched.image;
+      }
+
+      var extraContext="";
+      try{
+        var searchQ=a.ti.split(" ").slice(0,6).join("+");
+        var searchRes=await fetch("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent("https://news.google.com/rss/search?q="+searchQ+"&hl=fr&gl=SN&ceid=SN:fr"));
+        var searchData=await searchRes.json();
+        if(searchData.items&&searchData.items.length>0){
+          extraContext=searchData.items.slice(0,3).map(function(it){return(it.title||"")+" : "+(it.description||"").replace(/<[^>]*>/g,"").substring(0,200)}).join("\n");
+        }
+      }catch(e){}
+
+      var enrichedContent=[currentText,fullContent,extraContext].filter(function(s){return s&&s.length>10}).join("\n\n---\n\n");
+
+      var prompt=`Tu es le redacteur en chef d ABAWI NEWS, le media economique digital N1 du Senegal.
+Tu DOIS transformer cet article en un article COMPLET et PROFESSIONNEL.
+
+REGLES ABSOLUES :
+1. L article doit contenir 5 a 8 blocs de contenu riche
+2. TOUJOURS inclure des CHIFFRES precis (FCFA, USD, pourcentages)
+3. TOUJOURS un CONTEXTE (pourquoi c est important)
+4. TOUJOURS l IMPACT SUR LE SENEGAL meme si le sujet est mondial
+5. TOUJOURS un bloc de DONNEES (tableau avec 4-6 lignes)
+6. TOUJOURS une CITATION d expert ou source officielle
+7. TOUJOURS terminer par IMPACT BUSINESS avec 3 actions concretes
+8. Style journalistique, factuel, engageant
+
+TITRE: ${a.ti}
+RESUME: ${a.su}
+TAG: ${a.tag}
+CONTENU COMPLET (article source + contexte supplementaire) :\n${enrichedContent}
+
+Reponds UNIQUEMENT en JSON valide sans backticks :
+{"bd":[{"t":"p","v":"ACCROCHE avec fait principal et chiffres cles"},{"t":"p","v":"CONTEXTE historique et enjeux"},{"t":"p","v":"DETAILS techniques et acteurs impliques"},{"t":"q","v":"Citation d expert ou source officielle","sr":"Nom source"},{"t":"d","ti":"Titre tableau","r":[["Indicateur 1","Valeur"],["Indicateur 2","Valeur"],["Indicateur 3","Valeur"],["Indicateur 4","Valeur"],["Indicateur 5","Valeur"]]},{"t":"p","v":"IMPACT sur le Senegal et son economie"},{"t":"p","v":"PERSPECTIVES et scenarios futurs"},{"t":"v","v":"IMPACT BUSINESS : 1) Action 1. 2) Action 2. 3) Action 3."}]}`;
+
+      var provider=document.getElementById("iaProvider").value;
+      var result=await callAI(prompt,provider);
+      var txt=result.text;
+      var usedProvider=result.provider;
+
+      var clean=txt.replace(/```json\n?/g,"").replace(/```\n?/g,"").trim();
+      var parsed=JSON.parse(clean);
+
+      if(parsed.bd&&parsed.bd.length>=3){
+        // Quality check
+        if(!validateQuality(parsed.bd)){
+          log("Qualite insuffisante pour : "+a.ti.substring(0,40)+" -> reste brut","warn");
+          fail++;
+          continue;
+        }
+        var updateData={bd:JSON.stringify(parsed.bd),status:"enrichi"};
+        if(ogImage&&!a.image_url)updateData.image_url=ogImage;
+        var updateRes=await sb.from("articles").update(updateData).eq("id",a.id);
+        if(updateRes.error){
+          log("Erreur update : "+updateRes.error.message,"err");fail++;
+        }else{
+          log("ENRICHI ["+usedProvider.toUpperCase()+"] : "+a.ti.substring(0,50)+" ("+parsed.bd.length+" blocs)","pub");
+          ok++;
+        }
+      }else{
+        log("Reponse IA invalide pour : "+a.ti.substring(0,40),"warn");fail++;
+      }
+    }catch(e){
+      if(e.message==="QUOTA_PAUSED"){log("Enrichissement suspendu (quota)","warn");break}
+      log("Erreur enrichissement : "+e.message,"err");fail++;
+      nErrors++;document.getElementById("stErrors").textContent=nErrors;
+    }
+
+    await new Promise(function(r){setTimeout(r,1000)});
+  }
+
+  showProgress(bruts.length,bruts.length,startTime);
+  setTimeout(hideProgress,2000);
+  log("========== ENRICHISSEMENT TERMINE : "+ok+" enrichis, "+fail+" echecs ==========","ai");
+  setSt(timer?"on":"off");
+  fetchDashboardCounters();
+}
+
+// ===== INIT =====
+loadConfig();renderSrc();updateScheduleDisplay();updateQuotaDisplay();
+
+setTimeout(function(){
+  var u=document.getElementById("supaUrl").value;
+  var k=document.getElementById("supaKey").value;
+  if(u&&k&&!u.includes("XXXXXX")){connectAll();log("Auto-connecte au demarrage","info")}
+},500);
+
+log("ROBOT V4 ULTRA pret - "+sources.length+" sources configurees ("+sources.filter(function(s){return s.on}).length+" actives)","info");
+log("Categories : Economie, Tech/IA, Telecom, Or/Matieres, Automobile, Geopolitique","info");
+log("Anti-doublon Levenshtein actif (seuil 0.8) - "+publishedTitles.size+" titres en memoire","info");
+log("Multi-AI fallback : Gemini -> Groq -> Claude (auto-bascule sur 429)","info");
+log("Heures creuses : jour 6h-22h (15min) / nuit 22h-6h (60min)","info");
+</script>
+</body>
+</html>

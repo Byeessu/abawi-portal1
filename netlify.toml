@@ -1,0 +1,94 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Security & performance headers
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Defaults applied to every route. These are safe defaults that do NOT enforce
+# a Content-Security-Policy yet (CSP belongs to security hardening — priority
+# #5). Sentry (*.ingest.sentry.io) and Plausible (plausible.io) reach the
+# network unhindered without CSP.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # Allow only the device features the site actually uses.
+    # camera/microphone: Photo Studio + voice tools.
+    # geolocation: Leaflet maps.
+    # interest-cohort=() opts out of Google FLoC tracking.
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self), payment=(), usb=(), interest-cohort=()"
+    # Cross-Origin-Opener-Policy hardens against window.opener-based attacks.
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+
+# Hashed, immutable build assets (Vite outputs content hashes in filenames).
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Static icons / images — long cache, but mutable.
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# Service worker MUST NOT be cached — otherwise PWA updates never land.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# CSP scaffolding (commented — enable in priority #5 "security hardening").
+# Once enabled, this whitelist already covers Sentry, Plausible, Supabase,
+# PayDunya, Groq, Anthropic, ElevenLabs, Azure Speech, Google Fonts, jsDelivr.
+# Start in Report-Only mode to discover any missing endpoint without breakage.
+# ──────────────────────────────────────────────────────────────────────────────
+# [[headers]]
+#   for = "/*"
+#   [headers.values]
+#     Content-Security-Policy-Report-Only = """
+#       default-src 'self';
+#       script-src 'self' 'unsafe-inline' https://plausible.io https://browser.sentry-cdn.com https://cdn.jsdelivr.net;
+#       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+#       font-src 'self' data: https://fonts.gstatic.com;
+#       img-src 'self' data: blob: https:;
+#       media-src 'self' blob: https:;
+#       connect-src 'self' https://*.ingest.sentry.io https://*.sentry.io https://plausible.io https://*.supabase.co wss://*.supabase.co https://app.paydunya.com https://api.paydunya.com https://api.groq.com https://api.anthropic.com https://api.elevenlabs.io https://*.tts.speech.microsoft.com;
+#       frame-src https://app.paydunya.com;
+#       worker-src 'self' blob:;
+#       object-src 'none';
+#       base-uri 'self';
+#       form-action 'self' https://app.paydunya.com;
+#     """

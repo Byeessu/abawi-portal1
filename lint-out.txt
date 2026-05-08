@@ -1,0 +1,1587 @@
+﻿
+> abawi-portal@0.0.0 lint
+> eslint .
+
+
+C:\Users\Abawi\Desktop\abawi-portal1\netlify\functions\process-social-queue.js
+  260:11  error  Empty block statement  no-empty
+  277:11  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\netlify\functions\social-dispatch.js
+  250:11  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\netlify\functions\social-ops-daily-report.js
+  116:11  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\scripts\generate-welcome-audio.mjs
+  6:10  error  'readFileSync' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+  6:39  error  'existsSync' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u    no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\scripts\import-store-products.js
+   74:10  error  'allImages' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u            no-unused-vars
+  116:33  error  'index' is defined but never used. Allowed unused args must match /^_/u                        no-unused-vars
+  120:11  error  'isFeatured' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\scripts\sync-abawi-folder.mjs
+  21:22  error  'subdir' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\scripts\sync-files.mjs
+   6:59  error  'readFileSync' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u         no-unused-vars
+   6:73  error  'writeFileSync' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u        no-unused-vars
+   7:25  error  'basename' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u             no-unused-vars
+  30:10  error  'cleanTitle' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u           no-unused-vars
+  47:10  error  'guessCategory' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u        no-unused-vars
+  59:10  error  'guessPrix' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u            no-unused-vars
+  64:16  error  'generateDescription' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\admin\AdminLogin.jsx
+  17:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\AccessGuard.jsx
+  133:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  150:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\AdminMessaging.jsx
+  50:5  error  Error: Cannot access variable before it is declared
+
+`loadMembres` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  48 |
+  49 |   useEffect(() => {
+> 50 |     loadMembres()
+     |     ^^^^^^^^^^^ `loadMembres` accessed before it is declared
+  51 |     loadHistory()
+  52 |   }, [])
+  53 |
+
+  52 |   }, [])
+  53 |
+> 54 |   async function loadMembres() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 55 |     setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 56 |     const { data } = await supabase.from('membres').select('*').order('created_at', { ascending: false })
+     | ^^^^^^^^^^^^^^^^^^^^
+> 57 |     setMembres(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^
+> 58 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 59 |   }
+     | ^^^^ `loadMembres` is declared here
+  60 |
+  61 |   async function loadHistory() {
+  62 |     setHistLoading(true)                                                                               react-hooks/immutability
+  51:5  error  Error: Cannot access variable before it is declared
+
+`loadHistory` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  49 |   useEffect(() => {
+  50 |     loadMembres()
+> 51 |     loadHistory()
+     |     ^^^^^^^^^^^ `loadHistory` accessed before it is declared
+  52 |   }, [])
+  53 |
+  54 |   async function loadMembres() {
+
+  59 |   }
+  60 |
+> 61 |   async function loadHistory() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 62 |     setHistLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 63 |     const { data } = await supabase.from('admin_messages').select('*').order('created_at', { ascending: false }).limit(50)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 64 |     setHistory(data || [])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 65 |     setHistLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 66 |   }
+     | ^^^^ `loadHistory` is declared here
+  67 |
+  68 |   const now = new Date()
+  69 |   const filtered = membres.filter(m => {  react-hooks/immutability
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\AutonomousMarketingExpert.jsx
+  153:15  error  Empty block statement  no-empty
+  225:15  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\BackgroundJobsIndicator.jsx
+  12:9  error  'total' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\BienvenuePlayer.jsx
+  72:13  error    Empty block statement                                                                                        no-empty
+  94:6   warning  React Hook useEffect has a missing dependency: 'autoPlay'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\ContentViewer.jsx
+  20:6  warning  React Hook useEffect has missing dependencies: 'audio', 'onClose', and 'titre'. Either include them or remove the dependency array. If 'onClose' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\CookieConsent.jsx
+   8:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  21:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  49:13  error  Empty block statement                                                                                                           no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\CreditGate.jsx
+  10:10  error  'loading' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  14:20  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  12 |
+  13 |   useEffect(() => {
+> 14 |     if (!membre) { setStatus('no_account'); return }
+     |                    ^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     if (isAdmin) { setStatus('ok'); return }
+  16 |     checkCredits(membre.email, type).then(result => {
+  17 |       if (result.ok) setStatus('ok')  react-hooks/set-state-in-effect
+  22:18  error  'handleAccess' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\DocOutputPanel.jsx
+   26:3  error  'saving' is assigned a value but never used. Allowed unused args must match /^_/u            no-unused-vars
+  157:9  error  'bgAccent' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\Equalizer.jsx
+  20:26  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  18 |         const h = playing
+  19 |           ? Math.max(3, (freq / 255) * maxH)
+> 20 |           : 3 + Math.sin(Date.now() / 300 + i) * 2
+     |                          ^^^^^^^^^^ Cannot call impure function
+  21 |         return (
+  22 |           <div key={i} style={{
+  23 |             width: size === 'sm' ? 3 : size === 'xl' ? 6 : 4,  react-hooks/purity
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\Navbar.jsx
+  115:21  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  113 |   }, [])
+  114 |
+> 115 |   useEffect(() => { setMobileOpen(false) }, [location.pathname])
+      |                     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  116 |
+  117 |   useEffect(() => {
+  118 |     const onKey = (e) => {  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\PDFAudioReader.jsx
+  108:13  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\ProfessionalLayout.jsx
+    1:20  error  'useMemo' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  260:8   error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+  258 |   return (
+  259 |     <>
+> 260 |       <TemplateSelector />
+      |        ^^^^^^^^^^^^^^^^ This component is created during render
+  261 |       <CompanyInfoEditor />
+  262 |       <RecipientInfoEditor />
+  263 |       
+
+  206 |   }
+  207 |   
+> 208 |   const TemplateSelector = () => {
+      |                            ^^^^^^^
+> 209 |     if (!showLayoutOptions) return null
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 210 |     
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 255 |     )
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 256 |   }
+      | ^^^^ The component is created during render here
+  257 |   
+  258 |   return (
+  259 |     <>                                                                                                 react-hooks/static-components
+  261:8   error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+  259 |     <>
+  260 |       <TemplateSelector />
+> 261 |       <CompanyInfoEditor />
+      |        ^^^^^^^^^^^^^^^^^ This component is created during render
+  262 |       <RecipientInfoEditor />
+  263 |       
+  264 |       <div style={{
+
+   74 |   }
+   75 |   
+>  76 |   const CompanyInfoEditor = () => {
+      |                             ^^^^^^^
+>  77 |     if (!editingCompany) return null
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  78 |     
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |     )
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |   }
+      | ^^^^ The component is created during render here
+  144 |   
+  145 |   const RecipientInfoEditor = () => {
+  146 |     if (!editingRecipient) return null                                      react-hooks/static-components
+  262:8   error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+  260 |       <TemplateSelector />
+  261 |       <CompanyInfoEditor />
+> 262 |       <RecipientInfoEditor />
+      |        ^^^^^^^^^^^^^^^^^^^ This component is created during render
+  263 |       
+  264 |       <div style={{
+  265 |         background: '#f5f5f5',
+
+  143 |   }
+  144 |   
+> 145 |   const RecipientInfoEditor = () => {
+      |                               ^^^^^^^
+> 146 |     if (!editingRecipient) return null
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |     
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 205 |     )
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 206 |   }
+      | ^^^^ The component is created during render here
+  207 |   
+  208 |   const TemplateSelector = () => {
+  209 |     if (!showLayoutOptions) return null  react-hooks/static-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\QuillEditorPro.jsx
+  270:37  error    Unnecessary escape character: \.                                                                                                                                                                                                                                                                      no-useless-escape
+  270:39  error    Unnecessary escape character: \/                                                                                                                                                                                                                                                                      no-useless-escape
+  322:25  error    'cleanLine' is not defined                                                                                                                                                                                                                                                                            no-undef
+  336:22  error    'cleanLine' is not defined                                                                                                                                                                                                                                                                            no-undef
+  338:22  error    'cleanLine' is not defined                                                                                                                                                                                                                                                                            no-undef
+  345:20  error    'cleanLine' is not defined                                                                                                                                                                                                                                                                            no-undef
+  351:23  error    'cleanLine' is not defined                                                                                                                                                                                                                                                                            no-undef
+  357:18  error    'cleanLine' is not defined                                                                                                                                                                                                                                                                            no-undef
+  421:3   error    'showLog' is assigned a value but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                    no-unused-vars
+  483:15  error    Empty block statement                                                                                                                                                                                                                                                                                 no-empty
+  559:6   warning  React Hook useEffect has missing dependencies: 'autoFormat', 'initialText', 'onChange', 'placeholder', and 'triggerAutoSave'. Either include them or remove the dependency array. If 'onChange' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\QuillEditorUltraPro.jsx
+  405:3   error    'fullscreen' is assigned a value but never used. Allowed unused args must match /^_/u                                                                                                                                                                                            no-unused-vars
+  407:3   error    'showGrid' is assigned a value but never used. Allowed unused args must match /^_/u                                                                                                                                                                                              no-unused-vars
+  408:3   error    'template' is assigned a value but never used. Allowed unused args must match /^_/u                                                                                                                                                                                              no-unused-vars
+  410:6   error    'props' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                          no-unused-vars
+  474:6   warning  React Hook useEffect has missing dependencies: 'onChange', 'onWordCount', 'placeholder', and 'value'. Either include them or remove the dependency array. If 'onWordCount' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+  592:11  error    'text' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                          no-unused-vars
+  601:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+  602:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+  603:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+  610:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+  616:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+  617:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+  618:9   error    Unexpected lexical declaration in case block                                                                                                                                                                                                                                     no-case-declarations
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\RichDoc.jsx
+   52:10   error  'analyzeTextContext' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u            no-unused-vars
+   75:16   error  Unnecessary escape character: \/                                                                        no-useless-escape
+   87:10   error  'conservativeMarkdownCleaning' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+   90:21   error  Unnecessary escape character: \/                                                                        no-useless-escape
+   91:22   error  Unnecessary escape character: \/                                                                        no-useless-escape
+  100:10   error  'reconstructFromFragments' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u      no-unused-vars
+  140:28   error  'analysis' is defined but never used. Allowed unused args must match /^_/u                              no-unused-vars
+  150:10   error  'safeStandardCleaning' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u          no-unused-vars
+  153:21   error  Unnecessary escape character: \/                                                                        no-useless-escape
+  154:22   error  Unnecessary escape character: \/                                                                        no-useless-escape
+  169:10   error  'intelligentBoldFormatting' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u     no-unused-vars
+  200:73   error  'hlBorder' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u             no-unused-vars
+  459:45   error  'textCol' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u              no-unused-vars
+  459:80   error  'h2Col' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                no-unused-vars
+  459:87   error  'h3Col' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                no-unused-vars
+  459:94   error  'h4Col' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                no-unused-vars
+  459:101  error  'hlBg' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                 no-unused-vars
+  459:107  error  'hlBorder' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u             no-unused-vars
+  459:117  error  'codeBg' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u               no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\Search.jsx
+  201:19  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  199 |   }
+  200 |
+> 201 |   useEffect(() => setActiveIdx(0), [query, filter])
+      |                   ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  202 |
+  203 |   // Group by type for nice section headers
+  204 |   const grouped = useMemo(() => {  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\SocialConnectorExpert.jsx
+   69:15  error    Empty block statement                                                                                                                                                    no-empty
+   82:6   warning  React Hook useEffect has missing dependencies: 'loadAlertsConfig', 'loadHistory', 'loadPauseState', and 'loadQueue'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  165:13  error    Empty block statement                                                                                                                                                    no-empty
+  179:13  error    Empty block statement                                                                                                                                                    no-empty
+  193:13  error    Empty block statement                                                                                                                                                    no-empty
+  209:13  error    Empty block statement                                                                                                                                                    no-empty
+  225:13  error    Empty block statement                                                                                                                                                    no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\ToolIcon.jsx
+  485:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\VideoGenerator.jsx
+   24:9   error  'synthRef' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   37:15  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-empty
+  109:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  107 |       }
+  108 |     }, SLIDE_DURATION)
+> 109 |     setProgress(60 + ((currentSlide + 1) / slides.length) * 40)
+      |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  110 |     return () => clearTimeout(timerRef.current)
+  111 |   }, [playing, currentSlide, slides, drawSlide])
+  112 |  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\WorkspacePanel.jsx
+  37:3  error  'toolPath' is defined but never used. Allowed unused args must match /^_/u      no-unused-vars
+  39:3  error  'containerRef' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\WorkspaceShare.jsx
+  31:25  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  29 |   const [error, setError] = useState('')
+  30 |
+> 31 |   const userId = useRef(Math.random().toString(36).slice(2, 8))
+     |                         ^^^^^^^^^^^^^ Cannot call impure function
+  32 |   const userName = useRef('Abonné-' + Math.floor(Math.random() * 900 + 100))
+  33 |
+  34 |   const subscribe = useCallback((shareCode) => {                                               react-hooks/purity
+  32:50  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  30 |
+  31 |   const userId = useRef(Math.random().toString(36).slice(2, 8))
+> 32 |   const userName = useRef('Abonné-' + Math.floor(Math.random() * 900 + 100))
+     |                                                  ^^^^^^^^^^^^^ Cannot call impure function
+  33 |
+  34 |   const subscribe = useCallback((shareCode) => {
+  35 |     if (channelRef.current) channelRef.current.unsubscribe()  react-hooks/purity
+  52:45  error  'key' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+  56:46  error  'key' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\elite\AnimatedCounter.jsx
+  39:6  warning  React Hook useEffect has a missing dependency: 'displayValue'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\premium\AnimatedCounter.jsx
+  30:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  28 |     if (!el) return
+  29 |     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+> 30 |       setVal(to)
+     |       ^^^^^^ Avoid calling setState() directly within an effect
+  31 |       return
+  32 |     }
+  33 |  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\components\premium\SectionReveal.jsx
+  22:7  error  'Tag' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\config\paydunya.js
+  127:12  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\context\AudioContext.jsx
+   5:14  error    Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                     react-refresh/only-export-components
+  71:6   warning  React Hook useEffect has missing dependencies: 'track?.isPreview' and 'track.previewDuration'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\context\AuthContext.jsx
+   30:11  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  28 |         const m = JSON.parse(saved)
+  29 |         if (m?.id) {
+> 30 |           setMembre(withNormalizedPlan(m))
+     |           ^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |           setUser({ id: m.id, email: m.email })
+  32 |         }
+  33 |       } catch {}  react-hooks/set-state-in-effect
+   33:15  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-empty
+  160:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\context\BackgroundJobsContext.jsx
+  55:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\context\FavContext.jsx
+  23:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\context\ThemeContext.jsx
+  257:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\context\ToastContext.jsx
+  33:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\data\products.js
+  2015:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2024:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2032:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2040:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2048:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2056:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2065:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2073:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2081:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2089:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2097:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2105:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2113:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2122:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2130:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2138:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2146:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2154:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2162:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2170:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2178:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2186:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2194:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2202:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2210:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2218:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2226:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2234:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2242:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2250:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2258:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2266:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2274:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2282:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2290:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2298:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2306:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2314:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2322:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2330:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2338:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2346:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2354:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2362:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2370:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2378:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2386:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2394:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2402:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2410:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2418:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2426:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2434:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2442:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2450:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2458:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2466:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2474:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2482:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2504:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2512:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2520:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2528:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2536:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2544:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2552:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2560:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2568:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2576:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2584:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2592:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2600:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2608:5  error  Duplicate key 'audio_url'  no-dupe-keys
+  2616:5  error  Duplicate key 'audio_url'  no-dupe-keys
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\data\senegalRouteData.js
+  1499:45  error  'radius' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\hooks\useAnimation.js
+  159:6  warning  React Hook useCallback has an unnecessary dependency: 'start'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\hooks\useBackgroundJob.js
+  38:9  error    Error: Cannot access variable before it is declared
+
+`loadJobs` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  36 |     const handleJobUpdate = (job) => {
+  37 |       if (mountedRef.current && job.tool === toolId) {
+> 38 |         loadJobs()
+     |         ^^^^^^^^ `loadJobs` accessed before it is declared
+  39 |         onJobUpdate?.(job)
+  40 |       }
+  41 |     }
+
+  65 |   }, [toolId, onJobUpdate])
+  66 |
+> 67 |   const loadJobs = useCallback(() => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 68 |     return robustAsync.execute(
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 69 |       async () => {
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 92 |     )
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 93 |   }, [toolId, userId])
+     | ^^^^^^^^^^^^^^^^^^^^^^^ `loadJobs` is declared here
+  94 |
+  95 |   /**
+  96 |    * Créer et lancer un job en arrière-plan (version robuste)  react-hooks/immutability
+  65:6  warning  React Hook useEffect has a missing dependency: 'loadJobs'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\hooks\useDraftAutoSave.js
+  76:48  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\hooks\useScrollReveal.js
+  1:29  error  'useState' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\hooks\useWorkspace.js
+  29:78  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\AbawiAIEngine.js
+   17:8   error  'apiManager' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+   36:14  error  'process' is not defined                                                              no-undef
+   37:28  error  'process' is not defined                                                              no-undef
+  176:26  error  'options' is assigned a value but never used. Allowed unused args must match /^_/u    no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\ProductionErrorHandler.js
+  111:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u     no-unused-vars
+  261:23  error  'error' is defined but never used. Allowed unused args must match /^_/u          no-unused-vars
+  261:30  error  'context' is defined but never used. Allowed unused args must match /^_/u        no-unused-vars
+  290:30  error  'context' is defined but never used. Allowed unused args must match /^_/u        no-unused-vars
+  501:26  error  'errorMetadata' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  620:49  error  'React' is not defined                                                           no-undef
+  638:18  error  'React' is not defined                                                           no-undef
+  648:13  error  'React' is not defined                                                           no-undef
+  649:13  error  'React' is not defined                                                           no-undef
+  650:13  error  'React' is not defined                                                           no-undef
+  658:16  error  'React' is not defined                                                           no-undef
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\RobustAsyncWrapper.js
+   25:28  error  'process' is not defined                                                                        no-undef
+   59:45  error  'error' is assigned a value but never used. Allowed unused args must match /^_/u                no-unused-vars
+  132:11  error  'operationId' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+  233:7   error  'priority' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u     no-unused-vars
+  354:14  error  'signal' is defined but never used. Allowed unused args must match /^_/u                        no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\RobustExportEngine.js
+  575:14  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+  584:14  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\RobustMediaEngine.js
+  469:7  error  'maxWidth' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u   no-unused-vars
+  470:7  error  'maxHeight' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\abawiPayService.js
+    9:88  error  Empty block statement                                                            no-empty
+  108:74  error  'recipientName' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  159:13  error  Empty block statement                                                            no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\aiService.js
+   16:13  error  'process' is not defined                                                                         no-undef
+   22:13  error  'process' is not defined                                                                         no-undef
+   34:5   error  'openaiClient' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+  236:51  error  'options' is assigned a value but never used. Allowed unused args must match /^_/u               no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\annahAI.js
+  201:26  error  'kpis' is defined but never used. Allowed unused args must match /^_/u     no-unused-vars
+  281:36  error  'query' is defined but never used. Allowed unused args must match /^_/u    no-unused-vars
+  281:43  error  'options' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+  444:30  error  'context' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\apiManager.js
+  402:11  error  'provider' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\autoAudio.js
+  45:9  error  Parsing error: Identifier 'blob' has already been declared
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\backgroundJobManager.js
+  230:21  error  'job' is not defined                                                                                              no-undef
+  233:11  error  'job' is not defined                                                                                              no-undef
+  470:13  error  'saveJob' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                        no-unused-vars
+  538:17  error  'scheduleId' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\businessIntelligence.js
+  589:40  error  'industry' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\cleanText.js
+   7:20  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f  no-control-regex
+   7:25  error  Irregular whitespace not allowed                                                           no-irregular-whitespace
+   7:34  error  Irregular whitespace not allowed                                                           no-irregular-whitespace
+   7:37  error  Irregular whitespace not allowed                                                           no-irregular-whitespace
+  27:21  error  Unnecessary escape character: \/                                                           no-useless-escape
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\generatePDF.js
+   15:8   error  'productionErrorHandler' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+  411:56  error  'require' is not defined                                                                          no-undef
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\groqClient.js
+   61:12  error  'proxyError' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+  110:31  error  Unnecessary escape character: \[                                                       no-useless-escape
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\mediaResolver.js
+  6:11  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\pdfExtractor.js
+   81:13  error  Unnecessary escape character: \.  no-useless-escape
+   81:15  error  Unnecessary escape character: \)  no-useless-escape
+  121:11  error  Empty block statement             no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\ttsEngine.js
+  162:41  error  Empty block statement  no-empty
+  165:57  error  Empty block statement  no-empty
+  180:13  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\lib\writingModes.js
+  222:11  error  'characteristics' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\AbawiPay.jsx
+    3:23  error  'sendInternational' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+    3:42  error  'orderVirtualCard' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u   no-unused-vars
+  124:9   error  'map' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u       no-unused-vars
+  164:15  error  Empty block statement                                                                        no-empty
+  211:23  error  Empty block statement                                                                        no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\Academy.jsx
+  3:85  error  'waLink' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\Credits.jsx
+  16:10  error    'loading' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  18:21  error    Error: Cannot access variable before it is declared
+
+`loadAll` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  16 |   const [loading, setLoading] = useState(true)
+  17 |
+> 18 |   useEffect(() => { loadAll() }, [membre])
+     |                     ^^^^^^^ `loadAll` accessed before it is declared
+  19 |
+  20 |   async function loadAll() {
+  21 |     if (!membre) return
+
+  18 |   useEffect(() => { loadAll() }, [membre])
+  19 |
+> 20 |   async function loadAll() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 21 |     if (!membre) return
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+> 22 |     const [creditsData, packsData, historyData] = await Promise.all([
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+> 30 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^
+> 31 |   }
+     | ^^^^ `loadAll` is declared here
+  32 |
+  33 |   if (!membre) return (
+  34 |     <div className="credits-login">  react-hooks/immutability
+  18:34  warning  React Hook useEffect has a missing dependency: 'loadAll'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\Merci.jsx
+  76:6   warning  React Hook useEffect has missing dependencies: 'membre', 'params', and 'type'. Either include them or remove the dependency array               react-hooks/exhaustive-deps
+  90:17  error    Empty block statement                                                                                                                           no-empty
+  95:6   warning  React Hook useEffect has missing dependencies: 'membre.email', 'refreshMembre', and 'type'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\News.jsx
+  101:14  error  Unexpected control character(s) in regular expression: \x00, \x1f                              no-control-regex
+  126:9   error  'emoji' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u       no-unused-vars
+  202:21  error  Empty block statement                                                                          no-empty
+  218:77  error  Empty block statement                                                                          no-empty
+  278:9   error  'featuredTs' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\NewsAdmin.jsx
+   14:9     error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  12 |       const pwd = prompt('Mot de passe admin ABAWI :')
+  13 |       if (pwd === PASSWORD) {
+> 14 |         setAuth(true)
+     |         ^^^^^^^ Avoid calling setState() directly within an effect
+  15 |         sessionStorage.setItem('abawi-admin', '1')
+  16 |       }
+  17 |     }  react-hooks/set-state-in-effect
+  232:1950  error  Unnecessary escape character: \/                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-useless-escape
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\Podcasts.jsx
+  84:28  error  'i' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\Store.jsx
+  113:10  error  'showModal' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  114:10  error  'selectedProduct' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+  116:9   error  'openProductModal' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  121:9   error  'closeProductModal' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+  127:5   error  Error: Cannot access variable before it is declared
+
+`loadProducts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  125 |
+  126 |   useEffect(() => {
+> 127 |     loadProducts()
+      |     ^^^^^^^^^^^^ `loadProducts` accessed before it is declared
+  128 |   }, [])
+  129 |
+  130 |   async function loadProducts() {
+
+  128 |   }, [])
+  129 |
+> 130 |   async function loadProducts() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 131 |     setLoading(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 132 |     setError(null)
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 165 |     setLoading(false)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 166 |   }
+      | ^^^^ `loadProducts` is declared here
+  167 |
+  168 |   const filtered = filter === 'Tous' ? products : products.filter((p) => (p.cat || p.categorie) === filter)
+  169 |  react-hooks/immutability
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\StoreProductDetail.jsx
+  66:34  error  Unnecessary escape character: \.  no-useless-escape
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\abawi360\AbawiStudioPro.jsx
+  228:13  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\abawi360\CRM.jsx
+  43:33  error    Error: Cannot access variable before it is declared
+
+`loadContacts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  41 |   const [lastSyncAt, setLastSyncAt] = useState(null)
+  42 |
+> 43 |   useEffect(() => { if (membre) loadContacts() }, [membre])
+     |                                 ^^^^^^^^^^^^ `loadContacts` accessed before it is declared
+  44 |
+  45 |   async function loadContacts() {
+  46 |     setLoading(true)
+
+  43 |   useEffect(() => { if (membre) loadContacts() }, [membre])
+  44 |
+> 45 |   async function loadContacts() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 46 |     setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 47 |     setLoadError('')
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 60 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 61 |   }
+     | ^^^^ `loadContacts` is declared here
+  62 |
+  63 |   async function saveContact() {
+  64 |     if (!form.prenom && !form.nom && !form.entreprise) return  react-hooks/immutability
+  43:51  warning  React Hook useEffect has a missing dependency: 'loadContacts'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\abawi360\DissecteurInfosElite.jsx
+    7:214  error  Unexpected constant truthiness on the left-hand side of a `||` expression                                         no-constant-binary-expression
+  193:10   error  'isDragging' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+  203:9    error  'dropRef' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                        no-unused-vars
+  205:9    error  'handleDrop' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                     no-unused-vars
+  211:9    error  'handleDragOver' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                 no-unused-vars
+  212:9    error  'handleDragLeave' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                no-unused-vars
+  254:156  error  Empty block statement                                                                                             no-empty
+  260:9    error  'inp' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                            no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\abawi360\Marketing.jsx
+    5:10  error    'supabase' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+   80:21  error    Error: Cannot access variable before it is declared
+
+`loadPosts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  78 |   const [previewOpen, setPreviewOpen] = useState(false)
+  79 |
+> 80 |   useEffect(() => { loadPosts() }, [owner, year, month])
+     |                     ^^^^^^^^^ `loadPosts` accessed before it is declared
+  81 |
+  82 |   async function loadPosts() {
+  83 |     setLoadError('')
+
+  80 |   useEffect(() => { loadPosts() }, [owner, year, month])
+  81 |
+> 82 |   async function loadPosts() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 83 |     setLoadError('')
+     | ^^^^^^^^^^^^^^^^^^^^
+> 84 |     if (!owner) { setPosts([]); return }
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 94 |     setLastSyncAt(new Date())
+     | ^^^^^^^^^^^^^^^^^^^^
+> 95 |   }
+     | ^^^^ `loadPosts` is declared here
+  96 |
+  97 |   async function save() {
+  98 |     if (!form.titre || !form.date_publication) return          react-hooks/immutability
+   80:36  warning  React Hook useEffect has a missing dependency: 'loadPosts'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/exhaustive-deps
+  486:21  error    Error: Cannot access variable before it is declared
+
+`loadCampagnes` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  484 |   const [campPreview, setCampPreview] = useState(null)
+  485 |
+> 486 |   useEffect(() => { loadCampagnes() }, [owner])
+      |                     ^^^^^^^^^^^^^ `loadCampagnes` accessed before it is declared
+  487 |
+  488 |   async function loadCampagnes() {
+  489 |     setLoadError('')
+
+  486 |   useEffect(() => { loadCampagnes() }, [owner])
+  487 |
+> 488 |   async function loadCampagnes() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 489 |     setLoadError('')
+      | ^^^^^^^^^^^^^^^^^^^^
+> 490 |     if (!owner) { setCampagnes([]); return }
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 497 |     setLastSyncAt(new Date())
+      | ^^^^^^^^^^^^^^^^^^^^
+> 498 |   }
+      | ^^^^ `loadCampagnes` is declared here
+  499 |
+  500 |   async function save() {
+  501 |     if (!form.nom) return  react-hooks/immutability
+  486:40  warning  React Hook useEffect has a missing dependency: 'loadCampagnes'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\abawi360\Planification.jsx
+  19:10  error    'okrs' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  31:33  error    Error: Cannot access variable before it is declared
+
+`loadAll` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  29 |   const [lastSyncAt, setLastSyncAt] = useState(null)
+  30 |
+> 31 |   useEffect(() => { if (membre) loadAll() }, [membre])
+     |                                 ^^^^^^^ `loadAll` accessed before it is declared
+  32 |
+  33 |   async function loadAll() {
+  34 |     setLoading(true)
+
+  31 |   useEffect(() => { if (membre) loadAll() }, [membre])
+  32 |
+> 33 |   async function loadAll() {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 34 |     setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 35 |     setLoadError('')
+     …
+     | ^^^^^^^^^^^^^^^^^^^^
+> 52 |     setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^
+> 53 |   }
+     | ^^^^ `loadAll` is declared here
+  54 |
+  55 |   async function saveProjet() {
+  56 |     if (!formProjet.nom) return  react-hooks/immutability
+  31:46  warning  React Hook useEffect has a missing dependency: 'loadAll'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\abawi360\Statistiques.jsx
+   45:46  warning  React Hook useEffect has a missing dependency: 'loadAll'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  296:33  error    'i' is defined but never used. Allowed unused args must match /^_/u                                         no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\admin\Admin.jsx
+    17:10  error    'cleanIAText' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+   517:6   warning  React Hook useEffect has a missing dependency: 'runAllChecks'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+   902:21  error    Error: Cannot access variable before it is declared
+
+`loadRows` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  900 |   const [draft, setDraft] = useState({ title: '', description: '', link: '/plans', img: '', active: true })
+  901 |
+> 902 |   useEffect(() => { loadRows() }, [])
+      |                     ^^^^^^^^ `loadRows` accessed before it is declared
+  903 |
+  904 |   async function loadRows() {
+  905 |     setLoading(true)
+
+  902 |   useEffect(() => { loadRows() }, [])
+  903 |
+> 904 |   async function loadRows() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 905 |     setLoading(true)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 906 |     const { data, error } = await supabase.from('site_slider').select('*').order('created_at', { ascending: false })
+      | ^^^^^^^^^^^^^^^^^^^^
+> 907 |     if (error) showToast('Erreur chargement slider: ' + error.message, 'error')
+      | ^^^^^^^^^^^^^^^^^^^^
+> 908 |     else setRows(data || [])
+      | ^^^^^^^^^^^^^^^^^^^^
+> 909 |     setLoading(false)
+      | ^^^^^^^^^^^^^^^^^^^^
+> 910 |   }
+      | ^^^^ `loadRows` is declared here
+  911 |
+  912 |   async function createRow() {
+  913 |     if (!draft.title?.trim()) return showToast('Titre requis', 'error')                                                                                                                                                                                                                                           react-hooks/immutability
+   902:35  warning  React Hook useEffect has a missing dependency: 'loadRows'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+   992:21  error    Error: Cannot access variable before it is declared
+
+`loadRows` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  990 |   const [tableMissing, setTableMissing] = useState(false)
+  991 |
+> 992 |   useEffect(() => { loadRows() }, [])
+      |                     ^^^^^^^^ `loadRows` accessed before it is declared
+  993 |
+  994 |   async function loadRows() {
+  995 |     setLoading(true)
+
+   992 |   useEffect(() => { loadRows() }, [])
+   993 |
+>  994 |   async function loadRows() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  995 |     setLoading(true)
+       | ^^^^^^^^^^^^^^^^^^^^
+>  996 |     const { data, error } = await supabase.from('site_banners').select('*').order('created_at', { ascending: false })
+       …
+       | ^^^^^^^^^^^^^^^^^^^^
+> 1005 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 1006 |   }
+       | ^^^^ `loadRows` is declared here
+  1007 |
+  1008 |   async function createRow() {
+  1009 |     const payload = {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/immutability
+   992:35  warning  React Hook useEffect has a missing dependency: 'loadRows'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  1104:36  warning  React Hook useEffect has a missing dependency: 'loadStats'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  1360:44  error    'width' is assigned a value but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  2046:21  error    Error: Cannot access variable before it is declared
+
+`loadArticles` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  2044 |   const editorRef = useRef()
+  2045 |
+> 2046 |   useEffect(() => { loadArticles() }, [])
+       |                     ^^^^^^^^^^^^ `loadArticles` accessed before it is declared
+  2047 |
+  2048 |   async function loadArticles() {
+  2049 |     const { data } = await supabase.from('articles').select('*').order('created_at', { ascending: false }).limit(100)
+
+  2046 |   useEffect(() => { loadArticles() }, [])
+  2047 |
+> 2048 |   async function loadArticles() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2049 |     const { data } = await supabase.from('articles').select('*').order('created_at', { ascending: false }).limit(100)
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2050 |     setArticles(data || [])
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2051 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2052 |   }
+       | ^^^^ `loadArticles` is declared here
+  2053 |
+  2054 |   function openNew() {
+  2055 |     setEditData({ ti: '', tag: 'Business', co: '', su: '', pr: false })                                                   react-hooks/immutability
+  2674:21  error    Error: Cannot access variable before it is declared
+
+`loadMembres` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  2672 |   const [ficheMembre, setFicheMembre] = useState(null)
+  2673 |
+> 2674 |   useEffect(() => { loadMembres() }, [])
+       |                     ^^^^^^^^^^^ `loadMembres` accessed before it is declared
+  2675 |
+  2676 |   async function loadMembres() {
+  2677 |     setLoading(true)
+
+  2674 |   useEffect(() => { loadMembres() }, [])
+  2675 |
+> 2676 |   async function loadMembres() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2677 |     setLoading(true)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2678 |     const { data } = await supabase.from('membres').select('*').order('created_at', { ascending: false })
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2679 |     setMembres(data || [])
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2680 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2681 |   }
+       | ^^^^ `loadMembres` is declared here
+  2682 |
+  2683 |   function exportCSV() {
+  2684 |     const header = 'Prénom,Nom,Email,Téléphone,Plan,Statut,Rôle,Crédits,Inscription,Expiration\n'                                                                                                                                                                                                                                                                                                                                                           react-hooks/immutability
+  2693:9   error    'now' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+  2807:21  error    Error: Cannot access variable before it is declared
+
+`loadPaiements` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  2805 |   const [filter, setFilter] = useState('tous')
+  2806 |
+> 2807 |   useEffect(() => { loadPaiements() }, [])
+       |                     ^^^^^^^^^^^^^ `loadPaiements` accessed before it is declared
+  2808 |
+  2809 |   async function loadPaiements() {
+  2810 |     const { data } = await supabase.from('payments').select('*').order('created_at', { ascending: false }).limit(200)
+
+  2807 |   useEffect(() => { loadPaiements() }, [])
+  2808 |
+> 2809 |   async function loadPaiements() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2810 |     const { data } = await supabase.from('payments').select('*').order('created_at', { ascending: false }).limit(200)
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2811 |     setPaiements(data || [])
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2812 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2813 |   }
+       | ^^^^ `loadPaiements` is declared here
+  2814 |
+  2815 |   async function validatePayment(p) {
+  2816 |     await supabase.from('payments').update({ statut: 'paid' }).eq('id', p.id)  react-hooks/immutability
+  2818:32  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  2816 |     await supabase.from('payments').update({ statut: 'paid' }).eq('id', p.id)
+  2817 |     if (p.product_type === 'abonnement' && p.email) {
+> 2818 |       const newDate = new Date(Date.now() + 30 * 86400000).toISOString()
+       |                                ^^^^^^^^^^ Cannot call impure function
+  2819 |       await supabase.from('membres').update({ statut: 'actif', date_fin: newDate }).eq('email', p.email)
+  2820 |     }
+  2821 |     showToast('✅ Paiement validé')                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/purity
+  2894:21  error    Error: Cannot access variable before it is declared
+
+`loadFiles` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  2892 |   const BUCKETS = ['covers', 'guides', 'podcasts', 'audio-summaries', 'images']
+  2893 |
+> 2894 |   useEffect(() => { loadFiles() }, [bucket])
+       |                     ^^^^^^^^^ `loadFiles` accessed before it is declared
+  2895 |
+  2896 |   async function loadFiles() {
+  2897 |     setLoading(true)
+
+  2894 |   useEffect(() => { loadFiles() }, [bucket])
+  2895 |
+> 2896 |   async function loadFiles() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 2897 |     setLoading(true)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2898 |     const { data } = await supabase.storage.from(bucket).list('', { limit: 100 })
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2899 |     setFiles(data || [])
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2900 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 2901 |   }
+       | ^^^^ `loadFiles` is declared here
+  2902 |
+  2903 |   async function upload(file) {
+  2904 |     setUploading(true)                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/immutability
+  2894:36  warning  React Hook useEffect has a missing dependency: 'loadFiles'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  2999:21  error    'setPlayerSrc' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+  3015:21  error    Error: Cannot access variable before it is declared
+
+`checkAudioStatus` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  3013 |   ]
+  3014 |
+> 3015 |   useEffect(() => { checkAudioStatus() }, [])
+       |                     ^^^^^^^^^^^^^^^^ `checkAudioStatus` accessed before it is declared
+  3016 |
+  3017 |   async function checkAudioStatus() {
+  3018 |     const status = {}
+
+  3015 |   useEffect(() => { checkAudioStatus() }, [])
+  3016 |
+> 3017 |   async function checkAudioStatus() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 3018 |     const status = {}
+       | ^^^^^^^^^^^^^^^^^^^^^
+> 3019 |     // Check via Supabase Storage
+       …
+       | ^^^^^^^^^^^^^^^^^^^^^
+> 3029 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^^
+> 3030 |   }
+       | ^^^^ `checkAudioStatus` is declared here
+  3031 |
+  3032 |   async function generateForItem(item) {
+  3033 |     setGenerating(item.id)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/immutability
+  3015:43  warning  React Hook useEffect has a missing dependency: 'checkAudioStatus'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  3749:21  error    Error: Cannot access variable before it is declared
+
+`loadProducts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  3747 |   const [editData, setEditData] = useState({})
+  3748 |
+> 3749 |   useEffect(() => { loadProducts() }, [])
+       |                     ^^^^^^^^^^^^ `loadProducts` accessed before it is declared
+  3750 |
+  3751 |   async function loadProducts() {
+  3752 |     setLoading(true)
+
+  3749 |   useEffect(() => { loadProducts() }, [])
+  3750 |
+> 3751 |   async function loadProducts() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 3752 |     setLoading(true)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 3753 |     const { data, error } = await supabase.from('store_products').select('*').order('created_at', { ascending: false })
+       | ^^^^^^^^^^^^^^^^^^^^
+> 3754 |     if (error) console.error('[StorePanel] loadProducts:', error.message)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 3755 |     setProducts(data || [])
+       | ^^^^^^^^^^^^^^^^^^^^
+> 3756 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 3757 |   }
+       | ^^^^ `loadProducts` is declared here
+  3758 |
+  3759 |   function openNew() {
+  3760 |     setEditData({ name: '', categorie: 'Portables', specs: '', prix: '', image_url: '', images: [], actif: true, stock: 10 })                                                                                                                                                                                                react-hooks/immutability
+  4252:21  error    Error: Cannot access variable before it is declared
+
+`loadProducts` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  4250 |   const [loading, setLoading] = useState(true)
+  4251 |
+> 4252 |   useEffect(() => { loadProducts() }, [])
+       |                     ^^^^^^^^^^^^ `loadProducts` accessed before it is declared
+  4253 |
+  4254 |   async function loadProducts() {
+  4255 |     setLoading(true)
+
+  4252 |   useEffect(() => { loadProducts() }, [])
+  4253 |
+> 4254 |   async function loadProducts() {
+       |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 4255 |     setLoading(true)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 4256 |     const { data } = await supabase.from('store_products').select('id,name,stock,actif,prix').order('name')
+       | ^^^^^^^^^^^^^^^^^^^^
+> 4257 |     setProducts(data || [])
+       | ^^^^^^^^^^^^^^^^^^^^
+> 4258 |     setLoading(false)
+       | ^^^^^^^^^^^^^^^^^^^^
+> 4259 |   }
+       | ^^^^ `loadProducts` is declared here
+  4260 |
+  4261 |   async function updateStock(id, delta) {
+  4262 |     const prod = products.find(p => p.id === id)                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/immutability
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\detail\ArticleDetail.jsx
+   42:7   error  'currentLen' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+   80:14  error  Unexpected control character(s) in regular expression: \x00, \x1f                              no-control-regex
+  104:14  error  Unexpected control character(s) in regular expression: \x00, \x1f                              no-control-regex
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\detail\PodcastDetail.jsx
+    3:41  error  'waLink' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  147:11  error  'isMember' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  177:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  175 |     let cancelled = false
+  176 |     if (!ep) return
+> 177 |     setAudioCheckDone(false)
+      |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  178 |     resolveFirstPlayable(audioCandidates).then((src) => {
+  179 |       if (cancelled) return
+  180 |       setPlayableSrc(src || ep.audio_url || '')  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\membre\Membre.jsx
+    4:43  error    'formatPrix' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+    4:55  error    'slugify' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-unused-vars
+  104:40  warning  React Hook useEffect has a missing dependency: 'refreshMembre'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+  107:37  error    Error: Cannot access variable before it is declared
+
+`loadPurchases` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  105 |
+  106 |   useEffect(() => {
+> 107 |     if (tab === 'achats' && membre) loadPurchases()
+      |                                     ^^^^^^^^^^^^^ `loadPurchases` accessed before it is declared
+  108 |   }, [tab, membre])
+  109 |
+  110 |   async function loadPurchases() {
+
+  108 |   }, [tab, membre])
+  109 |
+> 110 |   async function loadPurchases() {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 111 |     if (!membre?.email) return
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |     setPurchasesLoading(true)
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 119 |     setPurchasesLoading(false)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 120 |   }
+      | ^^^^ `loadPurchases` is declared here
+  121 |
+  122 |   async function saveProfile() {
+  123 |     if (!membre?.id) return  react-hooks/immutability
+  108:6   warning  React Hook useEffect has a missing dependency: 'loadPurchases'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\AbawiAutoRoute.jsx
+  33:7   error  'cameraIcon' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                           no-unused-vars
+  40:7   error  'autoEcoleIcon' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                        no-unused-vars
+  59:25  error  'setSelectedRoute' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\AbawiIA.jsx
+    4:43  error    'getTTSSettings' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+    4:59  error    'saveTTSSettings' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+    6:10  error    'toUserFriendlyAIError' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+  339:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-empty
+  951:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  949 |   useEffect(() => {
+  950 |     if (messages.length === 0) {
+> 951 |       setMessages([{ role: 'assistant', content: 'Bonjour, je suis **Annah**, votre assistante stratégique ABAWI. Je suis là pour vous conseiller avec précision sur vos enjeux professionnels, business et personnels. Comment puis-je vous aider aujourd\'hui ?' }])
+      |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  952 |     }
+  953 |   }, [])
+  954 |  react-hooks/set-state-in-effect
+  953:6   warning  React Hook useEffect has a missing dependency: 'messages.length'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  985:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\AbawiTranslatorElite.jsx
+  101:76  warning  React Hook useMemo has an unnecessary dependency: 'result'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\AnalyseCV.jsx
+   58:13  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-empty
+   71:13  error  'e2' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+   71:17  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-empty
+   78:18  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-control-regex
+   80:13  error  'e3' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+   80:17  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-empty
+   86:33  error  'dataUrl' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  106:16  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-control-regex
+  111:11  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+  132:11  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-empty
+  166:10  error  'pdfFile' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  181:40  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  179 |
+  180 |   useEffect(() => {
+> 181 |     if (hasAllInclusiveAccess(membre)) setPaid(true)
+      |                                        ^^^^^^^ Avoid calling setState() directly within an effect
+  182 |   }, [membre])
+  183 |
+  184 |   function openFilePicker() {  react-hooks/set-state-in-effect
+  228:17  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\BusinessPlanEliteSimple.jsx
+     6:8   error  'robustAsync' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                  no-unused-vars
+     7:8   error  'abawiAIEngine' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                no-unused-vars
+     8:8   error  'productionErrorHandler' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                       no-unused-vars
+    53:7   error  'defaults' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                            no-unused-vars
+   238:10  error  'getIconForKey' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                no-unused-vars
+   445:30  error  'accent' is defined but never used. Allowed unused args must match /^_/u                                               no-unused-vars
+  1213:68  error  'c' is defined but never used. Allowed unused args must match /^_/u                                                    no-unused-vars
+  1325:10  error  'logoUrl' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u          no-unused-vars
+  1325:19  error  'setLogoUrl' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+  1326:10  error  'signatureUrl' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+  1326:24  error  'setSignatureUrl' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+  1482:20  error  'result' is defined but never used. Allowed unused args must match /^_/u                                               no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\CVCreator.jsx
+   18:98  error  Empty block statement                                                         no-empty
+  137:16  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+  161:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u  no-unused-vars
+  166:19  error  'GROQ_KEY' is not defined                                                     no-undef
+  208:10  error  'GROQ_KEY' is not defined                                                     no-undef
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\ComptableEliteSimple.jsx
+    1:17  error  'useEffect' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                       no-unused-vars
+   57:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                 no-unused-vars
+   58:10  error  'proMode' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u             no-unused-vars
+   58:19  error  'setProMode' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u          no-unused-vars
+   60:10  error  'paid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                no-unused-vars
+   60:16  error  'setPaid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u             no-unused-vars
+   61:10  error  'showPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u         no-unused-vars
+   61:23  error  'setShowPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u      no-unused-vars
+   64:10  error  'uploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+   64:27  error  'setUploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+   66:9   error  'workspace' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                              no-unused-vars
+   75:19  error  'setBalance' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u          no-unused-vars
+   97:17  error  'setBilan' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u            no-unused-vars
+  108:15  error  'setTva' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u              no-unused-vars
+  117:16  error  'setPaie' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u             no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\ConsultantEliteSimple.jsx
+   1:17  error  'useEffect' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                       no-unused-vars
+  41:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                 no-unused-vars
+  43:10  error  'paid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                no-unused-vars
+  43:16  error  'setPaid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u             no-unused-vars
+  44:10  error  'showPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u         no-unused-vars
+  44:23  error  'setShowPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u      no-unused-vars
+  47:10  error  'pendingAction' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+  47:25  error  'setPendingAction' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u    no-unused-vars
+  48:10  error  'uploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+  48:27  error  'setUploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+  51:9   error  'workspace' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                              no-unused-vars
+  79:24  error  'setNoteSynthese' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+  85:21  error  'setCrReunion' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u        no-unused-vars
+  90:15  error  'setKpi' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u              no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\DictionnaireElite.jsx
+  39:11  error  Empty block statement  no-empty
+  43:11  error  Empty block statement  no-empty
+  49:13  error  Empty block statement  no-empty
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\EditeurPro.jsx
+  39:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  37 |     const stored = getSaved()
+  38 |     if (stored) {
+> 39 |       setContent(stored.html || '')
+     |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  40 |       lastSavedRef.current = stored.html || ''
+  41 |       if (stored.title) setDocTitle(stored.title)
+  42 |       setRestored(stored.savedAt)  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\FinanceEliteSimple.jsx
+    9:10  error    'parseCAFromCSV' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+    9:26  error    'parseCAFromExcelBuffer' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  no-unused-vars
+   48:11  error    'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+   50:10  error    'paid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+   50:16  error    'setPaid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   51:10  error    'showPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 no-unused-vars
+   51:23  error    'setShowPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+   54:10  error    'importMsg' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+   54:21  error    'setImportMsg' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-unused-vars
+   55:10  error    'uploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             no-unused-vars
+   55:27  error    'setUploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   56:9   error    'caFileRef' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+   58:9   error    'workspace' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  111:24  error    'draftSavedAt' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  111:50  error    'clearFinanceDraft' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-unused-vars
+  147:11  error    'actif' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  424:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  422 |   // Auto-calculs
+  423 |   useEffect(() => {
+> 424 |     calculerResultatNet()
+      |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  425 |     calculerBilanEquilibre()
+  426 |     calculerTresorerie()
+  427 |     calculerRatios()  react-hooks/set-state-in-effect
+  429:6   warning  React Hook useEffect has missing dependencies: 'calculerBilanEquilibre', 'calculerRatios', 'calculerResultatNet', 'calculerTresorerie', and 'calculerValorisation'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            react-hooks/exhaustive-deps
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\GestionComptablePro.jsx
+  191:21  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  189 |   const ref = useRef()
+  190 |
+> 191 |   useEffect(() => { setQ(value || '') }, [value])
+      |                     ^^^^ Avoid calling setState() directly within an effect
+  192 |
+  193 |   const filtered = useMemo(() => {
+  194 |     if (!q || q.length < 1) return []                                                         react-hooks/set-state-in-effect
+  268:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  266 |   // Init form exercice
+  267 |   useEffect(() => {
+> 268 |     setForm(f => ({ ...f, exercice: data.currentExercice }))
+      |     ^^^^^^^ Avoid calling setState() directly within an effect
+  269 |   }, [data.currentExercice])
+  270 |
+  271 |   // ── Computed ──────────────────────────────────────────────────────────────  react-hooks/set-state-in-effect
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\ImmobilierEliteSimple.jsx
+    1:17  error  'useEffect' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                       no-unused-vars
+   44:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                 no-unused-vars
+   46:10  error  'paid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                no-unused-vars
+   46:16  error  'setPaid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u             no-unused-vars
+   47:10  error  'showPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u         no-unused-vars
+   47:23  error  'setShowPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u      no-unused-vars
+   50:10  error  'pendingAction' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+   50:25  error  'setPendingAction' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u    no-unused-vars
+   51:10  error  'uploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+   51:27  error  'setUploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+   52:9   error  'workspace' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                              no-unused-vars
+   63:18  error  'setSimLoc' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u           no-unused-vars
+   69:20  error  'setSimConst' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u         no-unused-vars
+   76:19  error  'setAnnonce' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u          no-unused-vars
+   85:22  error  'setComparatif' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+  100:22  error  'setEstimation' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+  109:23  error  'setContratBail' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u      no-unused-vars
+  120:24  error  'setBusinessPlan' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\InfographiePro.jsx
+  59:18  error  'c' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\JuridiqueElite.jsx
+  204:20   error  'setEditMode' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+  213:24   error  'juridiqueSavedAt' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                no-unused-vars
+  213:54   error  'clearJuridiqueDraft' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u             no-unused-vars
+  243:133  error  Empty block statement                                                                                              no-empty
+  254:14   error  'e' is defined but never used. Allowed unused caught errors must match /^_/u                                       no-unused-vars
+  261:12   error  'handleGenerate' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                           no-unused-vars
+  277:18   error  'handleExportPDF' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                          no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\PhotoStudioPro.jsx
+  132:10  error  'composeOnBackground' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u  no-unused-vars
+  207:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u                   no-unused-vars
+  262:16  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u                   no-unused-vars
+  307:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u                   no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\RHEliteSimple.jsx
+    1:17  error  'useEffect' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                       no-unused-vars
+   43:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                 no-unused-vars
+   45:10  error  'paid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                no-unused-vars
+   45:16  error  'setPaid' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u             no-unused-vars
+   46:10  error  'showPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u         no-unused-vars
+   46:23  error  'setShowPayment' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u      no-unused-vars
+   49:10  error  'pendingAction' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+   49:25  error  'setPendingAction' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u    no-unused-vars
+   50:10  error  'uploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u     no-unused-vars
+   50:27  error  'setUploadedContext' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u  no-unused-vars
+   51:9   error  'workspace' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                              no-unused-vars
+   62:18  error  'setGrille' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u           no-unused-vars
+   69:22  error  'setEvaluation' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+   84:19  error  'setContrat' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u          no-unused-vars
+   91:21  error  'setReglement' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u        no-unused-vars
+   97:22  error  'setOnboarding' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u       no-unused-vars
+  104:21  error  'setFormation' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u        no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\SmartWordEditor.jsx
+  423:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  421 |     const text = content.replace(/<[^>]*>/g, ' ')
+  422 |     const words = text.trim().split(/\s+/).filter(w => w.length > 0)
+> 423 |     setWordCount(words.length)
+      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  424 |     setCharCount(text.length)
+  425 |   }, [content])
+  426 |  react-hooks/set-state-in-effect
+  500:9  error  'exportToText' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\Tontine.jsx
+   19:40  error  'useCallback' is defined but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+   59:7   error  'getPricingTier' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  651:14  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  687:23  error  'setCurrentUser' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  690:10  error  'selectedTontine' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+  693:10  error  'showTourModal' is assigned a value but never used. Allowed unused elements of array destructuring must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+  817:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  815 |     })
+  816 |
+> 817 |     setAlertes(nouvellesAlertes.sort((a, b) => new Date(b.date) - new Date(a.date)))
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  818 |   }, [paiements, membres, tontines, tours])
+  819 |
+  820 |   /* ═══════════════════════════════════════════════════════════════  react-hooks/set-state-in-effect
+  906:9   error  'genererRapportPDF' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+
+C:\Users\Abawi\Desktop\abawi-portal1\src\pages\outils\ToolTemplate.jsx
+   141:90  error  Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-empty
+   155:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   253:72  error  Unnecessary escape character: \-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-useless-escape
+   388:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+   590:70  error  Unnecessary escape character: \-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              no-useless-escape
+   731:20  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  729 |   const [meta, setMeta] = useState({
+  730 |     type: 'facture',
+> 731 |     numero: `FAC-${Date.now().toString().slice(-6)}`,
+      |                    ^^^^^^^^^^ Cannot call impure function
+  732 |     date: new Date().toISOString().slice(0, 10),
+  733 |     emetteur: '',
+  734 |     emetteur_detail: '',  react-hooks/purity
+  1088:11  error  'membre' is assigned a value but never used. Allowed unused vars must match /^(_|[A-Z])/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     no-unused-vars
+
+✖ 493 problems (465 errors, 28 warnings)
+

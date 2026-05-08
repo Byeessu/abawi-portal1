@@ -1,0 +1,46 @@
+.bv-page { min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px; position: relative; overflow: hidden; }
+
+.bv-confetti {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle, var(--gold) 2px, transparent 2px),
+    radial-gradient(circle, var(--green) 2px, transparent 2px),
+    radial-gradient(circle, var(--gold) 1.5px, transparent 1.5px);
+  background-size: 80px 80px, 120px 120px, 60px 60px;
+  background-position: 0 0, 40px 40px, 20px 60px;
+  opacity: 0.15;
+  animation: bv-sparkle 4s ease-in-out infinite;
+}
+
+@keyframes bv-sparkle {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.2; }
+}
+
+.bv-card { position: relative; z-index: 1; text-align: center; max-width: 540px; width: 100%; background: var(--bg-card); border: 2px solid var(--gold-border); border-radius: var(--radius-xl); padding: 48px 36px; animation: fade-up 0.6s ease-out; }
+
+.bv-badge-anim {
+  display: inline-block; padding: 8px 24px; border-radius: 100px;
+  font-size: 0.8rem; font-weight: 800; letter-spacing: 2px;
+  color: #070B0F; background: linear-gradient(90deg, var(--gold), var(--green), var(--gold));
+  background-size: 200% 100%;
+  animation: bv-gradient 3s ease-in-out infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes bv-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.bv-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 12px; }
+.bv-text { font-size: 1rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+.bv-email { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 28px; }
+
+.bv-btns { display: flex; flex-direction: column; gap: 12px; }
+.bv-btn { display: block; padding: 14px 24px; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700; text-align: center; transition: all 0.2s; }
+.bv-btn--gold { background: var(--gold); color: #070B0F; }
+.bv-btn--gold:hover { background: #e5a820; }
+.bv-btn--green { background: var(--green); color: #fff; }
+.bv-btn--green:hover { background: #15943f; }

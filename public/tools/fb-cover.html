@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<title>ABAWI — Facebook Cover 820x312</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#222;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'Outfit',sans-serif}
+.cover{
+  width:820px;height:312px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#070B0F 0%,#0D1117 40%,#0a1a12 70%,#070B0F 100%);
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+/* Dot pattern */
+.cover::before{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,0.03) 1px,transparent 1px);
+  background-size:20px 20px;pointer-events:none;z-index:0;
+}
+/* Gold accent line top */
+.cover::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#F0B429 30%,#18A84A 70%,transparent);z-index:1;
+}
+
+.top{display:flex;align-items:center;justify-content:space-between;padding:24px 36px 0;position:relative;z-index:1}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{
+  width:60px;height:60px;border-radius:50%;object-fit:cover;
+  border:2px solid rgba(24,168,74,0.4);
+  box-shadow:0 0 12px rgba(24,168,74,0.3);
+}
+.logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;letter-spacing:-0.5px}
+.logo-star{color:#18A84A;font-size:14px;margin-left:2px}
+.slogan{font-size:13px;color:#18A84A;font-weight:600;letter-spacing:0.5px}
+
+.center{position:relative;z-index:1;padding:0 36px;flex:1;display:flex;align-items:center}
+.title{
+  font-family:'Syne',sans-serif;font-size:38px;font-weight:800;color:#fff;
+  line-height:1.1;letter-spacing:-1px;max-width:500px;
+}
+.title span.green{color:#18A84A}
+.title span.gold{color:#F0B429}
+
+/* Glow decoration */
+.glow{
+  position:absolute;right:40px;top:50%;transform:translateY(-50%);
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(24,168,74,0.12) 0%,rgba(240,180,41,0.06) 40%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.brands{
+  position:relative;z-index:1;
+  display:flex;gap:0;padding:0 36px 0;margin-bottom:0;
+}
+.brand{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 8px;position:relative;
+}
+.brand::after{
+  content:'';position:absolute;right:0;top:20%;height:60%;width:1px;
+  background:rgba(240,180,41,0.15);
+}
+.brand:last-child::after{display:none}
+.brand-icon{font-size:18px}
+.brand-name{font-family:'Syne',sans-serif;font-size:10px;font-weight:800;color:#fff;letter-spacing:0.5px}
+.brand-desc{font-size:9px;font-weight:600;letter-spacing:0.3px}
+.brand-desc.gold{color:#F0B429}
+.brand-desc.green{color:#18A84A}
+.brand-desc.blue{color:#3B82F6}
+
+.bar{
+  position:relative;z-index:1;
+  background:#18A84A;height:32px;
+  display:flex;align-items:center;justify-content:center;gap:24px;
+  font-size:11px;font-weight:700;color:#fff;letter-spacing:0.3px;
+}
+.bar-sep{color:rgba(255,255,255,0.4);font-size:10px}
+#dlBtn{
+  display:block;margin:24px auto 0;padding:14px 36px;border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;
+  background:#18A84A;color:#fff;border:none;cursor:pointer;transition:all .2s;
+}
+#dlBtn:hover{background:#15943f;transform:translateY(-2px);box-shadow:0 4px 16px rgba(24,168,74,.35)}
+#dlBtn:disabled{opacity:.6;cursor:wait;transform:none;box-shadow:none}
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="top">
+    <div class="logo">
+      <img src="/1529e77a-e329-4644-b830-41717af2683f.png" class="logo-mark" alt="ABAWI"/>
+      <span class="logo-text">ABAWI</span>
+    </div>
+    <div class="slogan">le tout à portée de clic</div>
+  </div>
+
+  <div class="center">
+    <h1 class="title">Le savoir qui <span class="green">transforme</span> l'<span class="gold">Afrique</span></h1>
+    <div class="glow"></div>
+  </div>
+
+  <div class="brands">
+    <div class="brand">
+      <span class="brand-icon">📚</span>
+      <span class="brand-name">Digital</span>
+      <span class="brand-desc gold">Guides Premium</span>
+    </div>
+    <div class="brand">
+      <span class="brand-icon">🎓</span>
+      <span class="brand-name">Academy</span>
+      <span class="brand-desc green">Réussis ton Bac</span>
+    </div>
+    <div class="brand">
+      <span class="brand-icon">📰</span>
+      <span class="brand-name">News</span>
+      <span class="brand-desc green">Actu 24/7</span>
+    </div>
+    <div class="brand">
+      <span class="brand-icon">💻</span>
+      <span class="brand-name">Store IT</span>
+      <span class="brand-desc blue">Matériel Info</span>
+    </div>
+    <div class="brand">
+      <span class="brand-icon">🎧</span>
+      <span class="brand-name">Podcasts</span>
+      <span class="brand-desc gold">Audio Premium</span>
+    </div>
+  </div>
+
+  <div class="bar">
+    <span>WhatsApp : 77 518 50 50</span>
+    <span class="bar-sep">|</span>
+    <span>Dakar, Sénégal</span>
+    <span class="bar-sep">|</span>
+    <span>abawi.sn</span>
+  </div>
+</div>
+
+<button id="dlBtn" onclick="downloadCover()">Télécharger en PNG</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+function downloadCover(){
+  var btn=document.getElementById('dlBtn');
+  btn.textContent='Génération...';btn.disabled=true;
+  html2canvas(document.querySelector('.cover'),{scale:2,useCORS:true,backgroundColor:null}).then(function(canvas){
+    var a=document.createElement('a');
+    a.download='ABAWI_Facebook_Cover_820x312.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    btn.textContent='Télécharger en PNG';btn.disabled=false;
+  }).catch(function(){btn.textContent='Erreur — réessayez';btn.disabled=false;});
+}
+</script>
+</body>
+</html>

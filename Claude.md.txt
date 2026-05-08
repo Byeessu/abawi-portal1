@@ -1,0 +1,27 @@
+# Instructions de Projet : Abawi-Portal1
+
+## 🎯 Niveau de Performance
+- **Mode :** Expert & Excellence (Code L8019)
+- **Raisonnement :** Toujours utiliser des balises `<thinking>` pour analyser le problème avant de répondre.
+- **Rigueur :** Prioriser la précision technique, la sécurité et l'optimisation des ressources.
+
+## 🛠 Commandes et Scripts (Build & Dev)
+- **Build :** `npm run build` / `make build`
+- **Tests :** `npm test` / `pytest`
+- **Linting :** `npm run lint`
+
+## 📜 Directives de Code (Style & Standards)
+- **Langue :** Commentaires et documentation en [Français/Anglais].
+- **Architecture :** Préférer les fonctions pures, l'immuabilité et les types explicites.
+- **Gestion d'erreurs :** Ne jamais ignorer une erreur ; utiliser des blocs try/catch robustes ou des types "Result".
+- **Imports :** Toujours trier par ordre alphabétique.
+
+## ✍️ Style de Communication
+- **Concision :** Pas de blabla inutile, aller droit à la solution technique.
+- **Formatage :** Utiliser les **Artifacts** pour les blocs de code complexes ou les documents longs.
+- **Révision :** Critiquer systématiquement sa propre proposition pour identifier des failles potentielles avant l'affichage final.
+
+## 🔍 Processus de Vérification
+1. Analyser la requête via le cadre **OODA** (Observer, Orienter, Décider, Agir).
+2. Vérifier la compatibilité avec les versions actuelles des bibliothèques utilisées.
+3. Proposer des tests unitaires pour chaque nouvelle fonctionnalité produite.

@@ -1,0 +1,371 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-content {
+  flex: 1;
+  animation: pageEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TRANSITIONS PAGE
+   ───────────────────────────────────────────────────────────────────────────*/
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   UTILITAIRES
+   ───────────────────────────────────────────────────────────────────────────*/
+.fade-in { animation: fadeIn 0.4s ease-out; }
+.slide-up { animation: slideUp 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Skeleton loader pour états de chargement */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card, #0D1117) 0%,
+    var(--border, #1A2332) 50%,
+    var(--bg-card, #0D1117) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 8px;
+}
+
+/* Scrollbars customisées */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 149, 165, 0.25);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(240, 180, 41, 0.5);
+}
+
+/* Focus states accessibles (a11y) */
+*:focus-visible {
+  outline: 2px solid #F0B429;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Sélection texte */
+::selection {
+  background: rgba(240, 180, 41, 0.35);
+  color: var(--text-primary, #F0F2F5);
+}
+
+/* Désactiver les transitions pour ceux qui préfèrent moins de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BOUTONS & CARDS PREMIUM — classes utilitaires globales
+   ───────────────────────────────────────────────────────────────────────────*/
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
+  font-family: inherit;
+  background: linear-gradient(135deg, #F0B429, #F59E0B);
+  color: #0a0a0a;
+  box-shadow: 0 4px 14px rgba(240, 180, 41, 0.3);
+}
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(240, 180, 41, 0.45);
+}
+.btn-premium:active { transform: translateY(0); }
+.btn-premium:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Effet shine au survol */
+.btn-premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  z-index: -1;
+}
+.btn-premium:hover::before { transform: translateX(100%); }
+
+/* Card premium avec hover élévation */
+.card-premium {
+  background: var(--bg-card, #0D1117);
+  border: 1px solid var(--border, #1A2332);
+  border-radius: 16px;
+  padding: 20px;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+.card-premium:hover {
+  transform: translateY(-3px);
+  border-color: rgba(240, 180, 41, 0.35);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Micro-interaction pour les liens */
+.link-underline {
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #F0B429, #F59E0B);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Typographie : hiérarchie premium */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+p, li { text-wrap: pretty; }
+
+/* Image : éviter les sauts de layout */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Inputs premium : focus fluide */
+input, textarea, select, button {
+  font-family: inherit;
+}
+input:focus, textarea:focus, select:focus {
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+/* Toasts / notifications — slide-in premium */
+@keyframes slideInRight {
+  from { transform: translateX(calc(100% + 24px)); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: none; opacity: 1; }
+  to { transform: translateX(calc(100% + 24px)); opacity: 0; }
+}
+
+/* Smooth scroll global */
+html { scroll-behavior: smooth; }
+
+/* Prévenir les bugs FOUC sur le bouton install / banner */
+.app > *:not(.page-content) { flex-shrink: 0; }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   AMÉLIORATIONS UI/UX GLOBAES
+   ═══════════════════════════════════════════════════════════════════════════*/
+
+/* Tooltips élégants */
+[title] {
+  position: relative;
+}
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  font-size: 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0;
+  animation: tooltipFade 0.2s ease 0.3s forwards;
+  pointer-events: none;
+}
+
+@keyframes tooltipFade {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* États de hover fluides pour tous les éléments interactifs */
+button, a, input, textarea, select {
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Effet de ripple subtil au clic */
+button:active, a:active {
+  transform: scale(0.98);
+}
+
+/* Loading states premium */
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.loading-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* Card hover lift avec ombre dynamique */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Focus rings accessibles et visibles */
+.focus-ring:focus-visible {
+  outline: 3px solid #F0B429;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Transitions de page fluides */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.page-transition-exit {
+  opacity: 1;
+}
+.page-transition-exit-active {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Skeleton screens améliorés */
+.skeleton-card {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card, #0D1117) 0%,
+    var(--border, #1A2332) 50%,
+    var(--bg-card, #0D1117) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* États disabled plus visibles */
+:disabled, [disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+/* Sélection de texte améliorée */
+::selection {
+  background: rgba(240, 180, 41, 0.4);
+  color: inherit;
+}
+
+/* Scrollbar améliorée pour Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 149, 165, 0.25) transparent;
+}
+
+/* Amélioration du contraste pour le texte */
+.text-high-contrast {
+  color: #1a1a1a;
+}
+.text-high-contrast-light {
+  color: #f0f0f0;
+}

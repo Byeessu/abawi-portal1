@@ -1,0 +1,316 @@
+/* ============================================
+   CREDITS PAGE - Theme CSS
+   ============================================ */
+
+/* ─── Main Container ─── */
+.credits-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+/* ─── Login State ─── */
+.credits-login {
+  max-width: 600px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 40px;
+}
+
+.credits-login__icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.credits-login__title {
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.credits-login__text {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.credits-login__btn {
+  padding: 14px 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #F0B429, #e5a820);
+  color: #070B0F;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* ─── Header ─── */
+.credits-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.credits-header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 18px;
+  border-radius: 100px;
+  background: rgba(240, 180, 41, 0.1);
+  border: 1px solid rgba(240, 180, 41, 0.25);
+  color: #F0B429;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.credits-header__title {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.credits-header__subtitle {
+  color: var(--text-secondary);
+}
+
+/* ─── Balance Card ─── */
+.credits-balance {
+  background: linear-gradient(135deg, rgba(240, 180, 41, 0.1), rgba(240, 180, 41, 0.04));
+  border: 2px solid rgba(240, 180, 41, 0.25);
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.credits-balance__label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.credits-balance__amount {
+  font-size: 5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #F0B429, #FFD700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.credits-balance__unit {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.credits-balance__alert {
+  margin-top: 16px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.credits-balance__alert--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red);
+}
+
+.credits-balance__alert--warning {
+  background: rgba(240, 180, 41, 0.1);
+  color: #F0B429;
+}
+
+/* ─── Pricing Section ─── */
+.credits-pricing {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 40px;
+}
+
+.credits-pricing__title {
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.credits-pricing__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.credits-pricing__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.credits-pricing__label {
+  color: var(--text-primary);
+  font-size: 0.82rem;
+}
+
+.credits-pricing__cost {
+  padding: 2px 10px;
+  border-radius: 100px;
+  background: rgba(240, 180, 41, 0.1);
+  color: #F0B429;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* ─── Packs Section ─── */
+.credits-packs__title {
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+}
+
+.credits-packs__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.credits-pack {
+  padding: 20px;
+  border-radius: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.credits-pack:hover {
+  transform: translateY(-4px);
+  border-color: #F0B429 !important;
+}
+
+.credits-pack--popular {
+  background: rgba(240, 180, 41, 0.08);
+  border: 2px solid rgba(240, 180, 41, 0.4);
+}
+
+.credits-pack--regular {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+}
+
+.credits-pack__badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 12px;
+  border-radius: 100px;
+  background: #F0B429;
+  color: #070B0F;
+  font-size: 0.65rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.credits-pack__credits {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #F0B429;
+}
+
+.credits-pack__bonus {
+  font-size: 0.72rem;
+  color: var(--green);
+  font-weight: 600;
+}
+
+.credits-pack__label {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  margin-bottom: 8px;
+}
+
+.credits-pack__price {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+/* ─── History Section ─── */
+.credits-history {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.credits-history__title {
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+}
+
+.credits-history__empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.credits-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.credits-history__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+}
+
+.credits-history__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.credits-history__type {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.credits-history__date {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.credits-history__amount {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.credits-history__amount--positive {
+  color: var(--green);
+}
+
+.credits-history__amount--negative {
+  color: var(--red);
+}

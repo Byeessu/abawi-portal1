@@ -1,0 +1,23 @@
+{
+  "name": "ABAWI Portal",
+  "short_name": "ABAWI",
+  "description": "Guides, outils IA, podcasts et fascicules pour les professionnels africains",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070B0F",
+  "theme_color": "#F0B429",
+  "orientation": "portrait-primary",
+  "lang": "fr",
+  "scope": "/",
+  "categories": ["education", "business", "productivity"],
+  "icons": [
+    { "src": "/favicon-symbol.png", "sizes": "64x64", "type": "image/png" },
+    { "src": "/abawi-symbol.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/1529e77a-e329-4644-b830-41717af2683f.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Guides", "url": "/digital", "icons": [{"src": "/icons/icon-96.svg", "sizes": "96x96"}] },
+    { "name": "Outils IA", "url": "/outils", "icons": [{"src": "/icons/icon-96.svg", "sizes": "96x96"}] },
+    { "name": "Mon espace", "url": "/membre", "icons": [{"src": "/icons/icon-96.svg", "sizes": "96x96"}] }
+  ]
+}

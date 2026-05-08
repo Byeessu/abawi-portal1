@@ -1,0 +1,52 @@
+# Dossiers binaires lourds — ne pas versionner
+ABAWI DIGITAL/
+public/files/
+public/icons/*.png
+
+# Gros fichiers de dump
+code_complet.txt
+*.zip
+*.tar.gz
+
+# Scripts locaux contenant des secrets — ne pas versionner
+scripts/
+deploy-replicate-function.bat
+deploy-replicate-function.ps1
+grok_expert.py
+*.py
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Test outputs
+coverage
+playwright-report
+test-results
+.vitest-cache
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

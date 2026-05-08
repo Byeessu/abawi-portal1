@@ -1,0 +1,103 @@
+{
+  "hash": "cad77aad",
+  "configHash": "58c6e646",
+  "lockfileHash": "bb07a4f2",
+  "browserHash": "15d5cc8b",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "916db5e3",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "e08219bd",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "91bdf58e",
+      "needsInterop": false
+    },
+    "@tanstack/react-query": {
+      "src": "../../node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "d2d0dd09",
+      "needsInterop": false
+    },
+    "@tanstack/react-query-devtools": {
+      "src": "../../node_modules/@tanstack/react-query-devtools/build/modern/index.js",
+      "file": "@tanstack_react-query-devtools.js",
+      "fileHash": "4b84da83",
+      "needsInterop": false
+    },
+    "@sentry/react": {
+      "src": "../../node_modules/@sentry/react/build/esm/index.js",
+      "file": "@sentry_react.js",
+      "fileHash": "d787ff4f",
+      "needsInterop": false
+    },
+    "web-vitals": {
+      "src": "../../node_modules/web-vitals/dist/web-vitals.js",
+      "file": "web-vitals.js",
+      "fileHash": "d8c27791",
+      "needsInterop": false
+    },
+    "@supabase/supabase-js": {
+      "src": "../../node_modules/@supabase/supabase-js/dist/index.mjs",
+      "file": "@supabase_supabase-js.js",
+      "fileHash": "021ba2e5",
+      "needsInterop": false
+    },
+    "react-dom": {
+      "src": "../../node_modules/react-dom/index.js",
+      "file": "react-dom.js",
+      "fileHash": "cfd840c4",
+      "needsInterop": true
+    },
+    "swiper/modules": {
+      "src": "../../node_modules/swiper/modules/index.mjs",
+      "file": "swiper_modules.js",
+      "fileHash": "ac6371de",
+      "needsInterop": false
+    },
+    "swiper/react": {
+      "src": "../../node_modules/swiper/swiper-react.mjs",
+      "file": "swiper_react.js",
+      "fileHash": "3daee005",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-6AZPPJCY": {
+      "file": "chunk-6AZPPJCY.js"
+    },
+    "VKXKX7EQ-DL4CSV3G": {
+      "file": "VKXKX7EQ-DL4CSV3G.js"
+    },
+    "ZUJJ2RGI-2C5TOOM3": {
+      "file": "ZUJJ2RGI-2C5TOOM3.js"
+    },
+    "chunk-VJTRYBCL": {
+      "file": "chunk-VJTRYBCL.js"
+    },
+    "chunk-7WISTKVT": {
+      "file": "chunk-7WISTKVT.js"
+    },
+    "chunk-27JXGOK4": {
+      "file": "chunk-27JXGOK4.js"
+    },
+    "chunk-JII5QAIW": {
+      "file": "chunk-JII5QAIW.js"
+    },
+    "chunk-GFHUBOII": {
+      "file": "chunk-GFHUBOII.js"
+    },
+    "chunk-QWN5BXRD": {
+      "file": "chunk-QWN5BXRD.js"
+    }
+  }
+}

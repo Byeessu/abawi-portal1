@@ -1,0 +1,428 @@
+/* ============================================================================
+   THEME COLORS - VISIBILITY GUARANTEE
+   Ce fichier garantit que tous les textes sont visibles quel que soit le mode
+   ============================================================================ */
+
+/* === VARIABLES CSS GLOBALES === */
+:root {
+  /* Mode sombre (par défaut) */
+  --color-bg-primary: #070B0F;
+  --color-bg-secondary: #0D1117;
+  --color-bg-card: #0D1117;
+  --color-bg-hover: #131A23;
+  --color-bg-input: #0D1117;
+  --color-border: #1A2332;
+  --color-border-hover: #2A3342;
+  --color-text-primary: #F0F2F5;
+  --color-text-secondary: #8B95A5;
+  --color-text-muted: #5A6575;
+  --color-text-placeholder: #5A6575;
+  --color-accent: #60A5FA;
+  --color-accent-hover: #3B82F6;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+}
+
+/* === MODE CLAIR === */
+[data-theme="light"],
+.light-mode,
+html.light {
+  --color-bg-primary: #F8FAFC;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-card: #FFFFFF;
+  --color-bg-hover: #F1F5F9;
+  --color-bg-input: #FFFFFF;
+  --color-border: #E2E8F0;
+  --color-border-hover: #CBD5E1;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94A3B8;
+  --color-text-placeholder: #94A3B8;
+  --color-accent: #3B82F6;
+  --color-accent-hover: #2563EB;
+  --color-success: #16A34A;
+  --color-warning: #D97706;
+  --color-error: #DC2626;
+  --color-info: #2563EB;
+}
+
+/* === APPLICATION FORCÉE À TOUS LES ÉLÉMENTS === */
+
+/* Body et container principal */
+body,
+#root,
+.app-container {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Titres — :where() réduit la spécificité à 0 pour que les classes CSS gagnent toujours.
+   Sans :where(), h1{color:!important} écrasait .ap-hero-title{color:#fff}, rendant
+   tout texte sombre même sur des sections intentionnellement sombres en mode clair. */
+:where(h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.title, .page-title, .section-title, .card-title) {
+  color: var(--color-text-primary);
+}
+
+/* Texte normal — idem, pas d'!important pour ne pas bloquer les overrides de classe */
+:where(p, label, li, td, th,
+.text, .description, .content) {
+  color: var(--color-text-primary);
+}
+/* span et div : héritent du parent, ne forçons pas la couleur sur eux */
+
+/* Texte secondaire */
+:where(.text-secondary, .subtitle, .caption, .helper-text, .small-text) {
+  color: var(--color-text-secondary);
+}
+
+/* Texte atténué */
+:where(.text-muted, .disabled, .placeholder) {
+  color: var(--color-text-muted);
+}
+
+/* === CARTES ET CONTAINERS ===
+   On garde !important uniquement pour les éléments sémantiques stables */
+.card, .panel, .box, .container-box,
+.module-card, .tool-card, .info-box, .stats-card {
+  background-color: var(--color-bg-card);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+.card:hover, .panel:hover, .box:hover {
+  background-color: var(--color-bg-hover);
+  border-color: var(--color-border-hover);
+}
+
+/* === INPUTS ET FORMULAIRES === */
+input, textarea, select,
+.form-control, .input-field {
+  background-color: var(--color-bg-input);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+/* === BOUTONS (pas d'!important — les classes de couleur doivent gagner) === */
+:where(.btn, .button) {
+  color: var(--color-text-primary);
+}
+/* Les boutons avec couleur explicite gardent leur couleur */
+.btn-primary, .button-primary {
+  background-color: var(--color-accent);
+  color: #FFFFFF !important;  /* le blanc sur fond coloré doit toujours tenir */
+}
+
+.btn-secondary,
+.button-secondary {
+  background-color: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* === TABLES === */
+:where(table, .table) {
+  background-color: var(--color-bg-card);
+  color: var(--color-text-primary);
+}
+:where(th, .table-header) {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+:where(td, .table-cell) {
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+/* === NAVIGATION (no !important — our Navbar has its own specific rules) === */
+:where(.nav-item, .nav-link, .menu-item) {
+  color: var(--color-text-secondary);
+}
+
+/* === LISTES === */
+:where(ul, ol) { /* lists themselves don't need a forced color */ }
+
+/* === LIENS === */
+:where(a, .link) {
+  color: var(--color-accent);
+}
+
+/* === BADGES ET TAGS === */
+:where(.badge, .tag, .pill) {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+/* === SCROLLBARS === */
+::-webkit-scrollbar { background-color: var(--color-bg-secondary); }
+::-webkit-scrollbar-thumb { background-color: var(--color-border); }
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-border-hover); }
+
+.alert-success { background-color: rgba(34, 197, 94, 0.15) !important; border-color: var(--color-success) !important; }
+.alert-warning { background-color: rgba(245, 158, 11, 0.15) !important; border-color: var(--color-warning) !important; }
+.alert-error { background-color: rgba(239, 68, 68, 0.15) !important; border-color: var(--color-error) !important; }
+.alert-info { background-color: rgba(59, 130, 246, 0.15) !important; border-color: var(--color-info) !important; }
+
+/* === UTILITAIRES DE VISIBILITÉ === */
+.force-visible {
+  color: var(--color-text-primary) !important;
+  background-color: var(--color-bg-card) !important;
+}
+
+.force-dark-text {
+  color: #0F172A !important;
+}
+
+.force-light-text {
+  color: #F0F2F5 !important;
+}
+
+/* === CORRECTIONS SPÉCIFIQUES POUR LES OUTILS === */
+
+/* Marketing 360 */
+.marketing-container,
+.marketing-dashboard,
+.campaign-card,
+.calendar-event,
+.metric-box {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Dissecteur */
+.dissecteur-panel,
+.analysis-result,
+.section-content,
+.kpi-card {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* MaxAvis */
+.survey-card,
+.question-box,
+.response-item,
+.stat-box {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Tontine */
+.tontine-container,
+.member-card,
+.payment-row,
+.tontine-stats {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* Studio Pro */
+.studio-panel,
+.audio-track,
+.image-preview,
+.recording-item {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* CRM */
+.contact-card,
+.client-row,
+.crm-stats,
+.pipeline-item {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* === OVERRIDE POUR LES COULEURS INLINE PROBLÉMATIQUES === */
+[style*="color: #"],
+[style*="color: rgb"],
+[style*="background-color: #"],
+[style*="background-color: rgb"] {
+  /* Force le recalcul si nécessaire */
+}
+
+/* S'assurer que tout élément avec un fond très clair en mode sombre est corrigé */
+[style*="background: #fff" i],
+[style*="background-color: #fff" i],
+[style*="background: white" i],
+[style*="background-color: white" i] {
+  background-color: var(--color-bg-card) !important;
+}
+
+/* S'assurer que tout élément avec un fond très sombre en mode clair est corrigé */
+.light-mode [style*="background: #000" i],
+.light-mode [style*="background-color: #000" i],
+.light-mode [style*="background: black" i],
+.light-mode [style*="background-color: black" i] {
+  background-color: var(--color-bg-card) !important;
+}
+
+/* === IMAGES ET MÉDIAS === */
+img, video, iframe, canvas {
+  background-color: transparent !important;
+}
+
+/* === CHARTS ET GRAPHIQUES === */
+canvas.chart, .chart-container,
+.graph, .stat-visualization {
+  background-color: var(--color-bg-card) !important;
+}
+
+/* === EDITEURS === */
+.editor, .rich-text, .wysiwyg,
+.ql-editor, .ck-editor,
+.ProseMirror {
+  background-color: var(--color-bg-input) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* === TABS ET ONGLETS === */
+.tab, .tab-item, .tab-button {
+  color: var(--color-text-secondary) !important;
+  background-color: transparent !important;
+}
+
+.tab.active, .tab-item.active, .tab-button.active {
+  color: var(--color-accent) !important;
+  background-color: var(--color-bg-hover) !important;
+}
+
+/* === DROPDOWNS ET MENUS === */
+.dropdown, .dropdown-menu, .dropdown-content,
+.select-options, .autocomplete-list {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border) !important;
+}
+
+.dropdown-item, .option {
+  color: var(--color-text-primary) !important;
+}
+
+.dropdown-item:hover, .option:hover {
+  background-color: var(--color-bg-hover) !important;
+}
+
+/* === TOOLTIPS === */
+.tooltip, .tooltip-content,
+[role="tooltip"] {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* === PROGRESS BARS === */
+.progress, .progress-bar,
+.loading-bar, .progress-track {
+  background-color: var(--color-bg-secondary) !important;
+}
+
+.progress-fill, .progress-bar-fill {
+  background-color: var(--color-accent) !important;
+}
+
+/* === SLIDERS ET RANGES === */
+input[type="range"] {
+  background-color: var(--color-bg-secondary) !important;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background-color: var(--color-accent) !important;
+}
+
+/* === CHECKBOXES ET RADIOS === */
+input[type="checkbox"],
+input[type="radio"] {
+  background-color: var(--color-bg-input) !important;
+  border-color: var(--color-border) !important;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+/* === SWITCHES === */
+.switch, .toggle {
+  background-color: var(--color-bg-secondary) !important;
+}
+
+.switch.active, .toggle.active {
+  background-color: var(--color-accent) !important;
+}
+
+/* === CODE ET PRE === */
+code, pre, .code, .code-block,
+pre code, .syntax-highlight {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* === BLOCKQUOTES === */
+blockquote, .quote {
+  border-left-color: var(--color-accent) !important;
+  color: var(--color-text-secondary) !important;
+  background-color: var(--color-bg-hover) !important;
+}
+
+/* === HR === */
+hr, .divider {
+  border-top-color: var(--color-border) !important;
+}
+
+/* === SÉLECTION DE TEXTE === */
+::selection {
+  background-color: var(--color-accent) !important;
+  color: #FFFFFF !important;
+}
+
+/* === FOCUS ET OUTLINE === */
+:focus {
+  outline-color: var(--color-accent) !important;
+}
+
+:focus-visible {
+  outline-color: var(--color-accent) !important;
+}
+
+/* === DISABLED === */
+[disabled], .disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === HIGH CONTRAST MODE === */
+@media (prefers-contrast: high) {
+  :root {
+    --color-text-primary: #000000;
+    --color-border: #000000;
+  }
+  
+  [data-theme="light"],
+  .light-mode {
+    --color-text-primary: #000000;
+    --color-border: #000000;
+  }
+}
+
+/* === PRINT MODE === */
+@media print {
+  :root {
+    --color-bg-primary: #FFFFFF;
+    --color-bg-card: #FFFFFF;
+    --color-text-primary: #000000;
+  }
+  
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+  }
+}

@@ -1,0 +1,90 @@
+/* ========================================
+   ABAWI 360 — Styles avec support thème
+   ======================================== */
+
+/* Variables pour le thème sombre (par défaut) */
+.abawi360-page {
+  --abawi360-hero-bg: linear-gradient(135deg, #0b0f1f 0%, #14182e 45%, #1a1240 100%);
+  --abawi360-hero-border: rgba(139, 92, 246, 0.35);
+  --abawi360-badge-bg: rgba(139, 92, 246, 0.18);
+  --abawi360-badge-border: rgba(139, 92, 246, 0.45);
+  --abawi360-badge-text: #C4B5FD;
+  --abawi360-tag-bg: rgba(255, 255, 255, 0.06);
+  --abawi360-tag-border: rgba(139, 92, 246, 0.3);
+  --abawi360-module-bg: var(--bg-card, #0D1117);
+  --abawi360-module-border: #1A2332;
+  --abawi360-module-border-hover: var(--border-hover, #2A3441);
+  --abawi360-coming-bg: rgba(255, 255, 255, 0.04);
+}
+
+/* Variables pour le thème clair */
+[data-mode="light"] .abawi360-page,
+html.light .abawi360-page {
+  --abawi360-hero-bg: linear-gradient(135deg, #fafafa 0%, #f3f0ff 45%, #e9e3ff 100%);
+  --abawi360-hero-border: rgba(139, 92, 246, 0.2);
+  --abawi360-badge-bg: rgba(139, 92, 246, 0.1);
+  --abawi360-badge-border: rgba(139, 92, 246, 0.25);
+  --abawi360-badge-text: #6D28D9;
+  --abawi360-tag-bg: rgba(139, 92, 246, 0.06);
+  --abawi360-tag-border: rgba(139, 92, 246, 0.15);
+  --abawi360-tag-text: #5B21B6;
+  --abawi360-module-bg: var(--bg-card, #FFFFFF);
+  --abawi360-module-border: #E5E7EB;
+  --abawi360-module-border-hover: #8B5CF6;
+  --abawi360-coming-bg: rgba(0, 0, 0, 0.03);
+}
+
+/* Hero section */
+.abawi360-hero {
+  background: var(--abawi360-hero-bg) !important;
+  border-color: var(--abawi360-hero-border) !important;
+}
+
+/* Badge dans le hero */
+.abawi360-hero [style*="background: rgba(139,92,246,0.18)"] {
+  background: var(--abawi360-badge-bg) !important;
+  border-color: var(--abawi360-badge-border) !important;
+  color: var(--abawi360-badge-text) !important;
+}
+
+/* Tags */
+.abawi360-hero [style*="background: rgba(255,255,255,0.06)"],
+.abawi360-hero [style*="background: var(--bg-tag"] {
+  background: var(--abawi360-tag-bg) !important;
+  border-color: var(--abawi360-tag-border) !important;
+  color: var(--abawi360-tag-text) !important;
+}
+
+/* Module cards */
+.abawi360-module-card {
+  background: var(--abawi360-module-bg) !important;
+}
+
+/* Module card hover en mode clair */
+[data-mode="light"] .abawi360-module-card:hover,
+html.light .abawi360-module-card:hover {
+  box-shadow: 0 8px 30px rgba(139, 92, 246, 0.15);
+}
+
+/* Bientôt badge */
+.abawi360-module-card [style*="background: rgba(255,255,255,0.08)"],
+.abawi360-module-card [style*="background: var(--bg-badge)"] {
+  background: var(--bg-muted, rgba(255, 255, 255, 0.08)) !important;
+}
+
+/* En développement box */
+.abawi360-module-card [style*="background: rgba(255,255,255,0.04)"] {
+  background: var(--abawi360-coming-bg) !important;
+  border-color: var(--border-muted, #1A2332) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .abawi360-page {
+    padding: 24px 16px 60px !important;
+  }
+  
+  .abawi360-hero {
+    padding: 24px 20px !important;
+  }
+}

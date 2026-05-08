@@ -1,0 +1,100 @@
+.ac-page { max-width: var(--max-width); margin: 0 auto; padding: 0 24px 80px; }
+
+.ac-hero { text-align: center; padding: 80px 0 60px; }
+.ac-badge { display: inline-block; padding: 6px 18px; border-radius: 100px; font-size: 0.8rem; font-weight: 700; color: var(--green); background: var(--green-glow); border: 1px solid var(--green-border); margin-bottom: 24px; letter-spacing: 1px; text-transform: uppercase; }
+.ac-hero-title { font-size: clamp(1.8rem, 4.5vw, 2.8rem); font-weight: 800; margin-bottom: 16px; }
+.ac-hero-sub { font-size: 1.05rem; color: var(--text-secondary); max-width: 520px; margin: 0 auto; }
+
+.ac-section-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; }
+
+/* Packs */
+.ac-packs { margin-bottom: 48px; }
+.ac-packs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.ac-pack { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 20px 20px; display: flex; flex-direction: column; gap: 10px; transition: all 0.3s ease; text-align: center; }
+.ac-pack:hover { border-color: var(--green-border); transform: translateY(-4px); box-shadow: 0 8px 32px rgba(24, 168, 74, 0.1); }
+.ac-pack--highlight { border: 2px solid var(--green); background: linear-gradient(180deg, rgba(24, 168, 74, 0.06) 0%, var(--bg-card) 40%); }
+
+.ac-pack-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); padding: 3px 12px; border-radius: 100px; font-size: 0.65rem; font-weight: 800; color: var(--bg-primary); background: var(--green); letter-spacing: 0.5px; white-space: nowrap; }
+.ac-pack-name { font-size: 1.05rem; font-weight: 700; }
+.ac-pack-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+
+.ac-pack-pricing { display: flex; align-items: baseline; justify-content: center; gap: 8px; }
+.ac-pack-prix { font-family: var(--font-display); font-size: 1.2rem; font-weight: 800; color: var(--green); }
+.ac-pack-barre { font-size: 0.8rem; color: var(--text-muted); text-decoration: line-through; }
+.ac-pack-eco { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: var(--green); background: var(--green-glow); }
+
+.ac-pack-cta { display: block; text-align: center; padding: 10px; border-radius: var(--radius-sm); font-size: 0.88rem; font-weight: 700; background: var(--green); color: var(--bg-primary); transition: all 0.2s ease; margin-top: auto; }
+.ac-pack-cta:hover { opacity: 0.9; box-shadow: 0 4px 16px rgba(24, 168, 74, 0.25); }
+
+/* Filters */
+.ac-filters { margin-bottom: 32px; }
+.ac-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.ac-filter { padding: 8px 18px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); transition: all 0.2s ease; }
+.ac-filter:hover { color: var(--text-primary); border-color: var(--green-border); background: var(--green-glow); }
+.ac-filter--active { color: var(--green); background: var(--green-glow); border-color: var(--green-border); }
+
+/* Cards */
+.ac-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+.ac-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: all 0.3s ease; display: flex; flex-direction: column; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.ac-card:hover { border-color: var(--green-border); transform: translateY(-6px); box-shadow: 0 12px 40px rgba(24, 168, 74, 0.12), 0 0 0 1px var(--green-border); }
+
+.ac-card-img { position: relative; display: block; }
+.ac-card-corriges { padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; color: var(--green); background: var(--bg-primary); opacity: 0.8; backdrop-filter: blur(8px); }
+
+.ac-card-body { padding: 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.ac-card-tags { display: flex; gap: 6px; }
+.ac-card-cat { font-size: 0.7rem; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.5px; }
+.ac-card-serie { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); padding: 1px 8px; border-radius: 4px; background: var(--bg-secondary); }
+.ac-card-title { font-size: 1rem; font-weight: 700; line-height: 1.3; }
+.ac-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+.ac-card-pages { font-size: 0.75rem; color: var(--text-muted); }
+
+.ac-card-pricing { display: flex; align-items: baseline; gap: 8px; }
+.ac-card-prix { font-family: var(--font-display); font-size: 1.05rem; font-weight: 800; color: var(--green); }
+.ac-card-barre { font-size: 0.78rem; color: var(--text-muted); text-decoration: line-through; }
+
+.ac-card-cta { display: block; text-align: center; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 700; background: var(--green); color: var(--bg-primary); transition: all 0.2s ease; margin-top: auto; }
+.ac-card-cta:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(24, 168, 74, 0.25); }
+
+.ac-card-actions { display: flex; gap: 8px; margin-top: auto; }
+.ac-card-actions .ac-card-cta { flex: 1; cursor: pointer; font-family: var(--font-body); border: none; }
+.ac-card-wa { flex-shrink: 0; text-align: center; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--border); transition: all 0.2s; }
+.ac-card-wa:hover { color: var(--whatsapp); border-color: var(--whatsapp); }
+
+.ac-pack-btns { display: flex; gap: 8px; margin-top: auto; }
+.ac-pack-pay { flex: 1; text-align: center; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 700; background: var(--green); color: var(--bg-primary); border: none; cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+.ac-pack-pay:hover { opacity: 0.9; box-shadow: 0 4px 12px rgba(24,168,74,0.25); }
+.ac-pack-wa { flex-shrink: 0; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); border: 1px solid var(--border); transition: all 0.2s; text-align: center; }
+.ac-pack-wa:hover { color: var(--whatsapp); border-color: var(--whatsapp); }
+.ac-card-serie-badge { position: absolute; top: 10px; right: 10px; padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; color: var(--bg-primary); background: var(--green); }
+.ac-card-ch { font-size: 0.7rem; color: var(--text-muted); padding: 1px 8px; border-radius: 4px; background: var(--bg-secondary); }
+
+.ac-filter-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ac-filter-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-right: 4px; }
+.ac-filter-count { font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px; }
+
+/* Modal */
+.ac-modal-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.ac-modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; max-width: 420px; width: 100%; text-align: center; position: relative; }
+.ac-modal-close { position: absolute; top: 12px; right: 16px; font-size: 1.5rem; color: var(--text-muted); background: none; border: none; cursor: pointer; }
+.ac-modal-price { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; color: var(--green); margin: 12px 0; }
+.ac-modal-wa { display: inline-block; padding: 12px 28px; border-radius: var(--radius-sm); background: var(--whatsapp); color: #fff; font-weight: 700; transition: all 0.2s; }
+.ac-modal-wa:hover { background: #20bd5a; }
+
+@media (max-width: 900px) {
+  .ac-packs-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .ac-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .ac-grid { grid-template-columns: 1fr; }
+  .ac-filter-bar { gap: 6px; }
+  .ac-filter { padding: 6px 12px; font-size: 0.8rem; }
+}
+
+.ac-placeholder { text-align: center; padding: 80px 24px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: var(--radius-lg); margin-bottom: 32px; grid-column: 1 / -1; }
+.ac-placeholder h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 12px; color: var(--green); }
+.ac-placeholder p { font-size: 1rem; color: var(--text-secondary); max-width: 400px; margin: 0 auto; }
+.ac-placeholder::before { content: '📚'; font-size: 3.5rem; display: block; margin-bottom: 16px; opacity: 0.5; }
+

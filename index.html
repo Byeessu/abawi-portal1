@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- Primary meta -->
+    <title>ABAWI — Guides Premium, Outils IA et Académie Business pour l'Afrique</title>
+    <meta name="description" content="Portail premium africain : guides business, outils IA (CV, business plan, finance, juridique), académie Bac, actualités économiques. Créez vos documents professionnels en 5 minutes." />
+    <meta name="keywords" content="ABAWI, business plan Afrique, CV Sénégal, outils IA, OHADA, SYSCOHADA, académie Bac, guides business, fintech, entrepreneuriat africain, UEMOA, BCEAO" />
+    <meta name="author" content="ABAWI SN" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+    <link rel="canonical" href="https://abawi-portal.netlify.app/" />
+
+    <!-- Icons / PWA -->
+    <link rel="icon" type="image/png" href="/favicon-symbol.png" />
+    <link rel="apple-touch-icon" href="/abawi-symbol.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#F0B429" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ABAWI" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="ABAWI Portal" />
+
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ABAWI" />
+    <meta property="og:title" content="ABAWI — Guides Premium, Outils IA et Académie Business pour l'Afrique" />
+    <meta property="og:description" content="Portail premium africain : guides business, outils IA (CV, business plan, finance, juridique), académie Bac, actualités économiques." />
+    <meta property="og:url" content="https://abawi-portal.netlify.app/" />
+    <meta property="og:image" content="https://abawi-portal.netlify.app/abawi-logo.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="fr_SN" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ABAWI — Excellence Africaine" />
+    <meta name="twitter:description" content="Guides, outils IA et académie business pour l'Afrique de l'Ouest." />
+    <meta name="twitter:image" content="https://abawi-portal.netlify.app/abawi-logo.png" />
+
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ABAWI SN",
+      "url": "https://abawi-portal.netlify.app/",
+      "logo": "https://abawi-portal.netlify.app/abawi-logo.png",
+      "description": "Portail premium africain de guides business, outils IA, académie Bac et actualités économiques.",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "VDN Liberté 6 Extension",
+        "addressLocality": "Dakar",
+        "addressCountry": "SN"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+221775185050",
+        "contactType": "customer service",
+        "areaServed": "SN",
+        "availableLanguage": ["French", "English"]
+      },
+      "sameAs": [
+        "https://www.instagram.com/abawi",
+        "https://www.facebook.com/abawi",
+        "https://www.tiktok.com/@abawi_sn"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ABAWI",
+      "url": "https://abawi-portal.netlify.app/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://abawi-portal.netlify.app/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.groq.com" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[SW] Registered:', reg.scope))
+            .catch(err => console.log('[SW] Error:', err))
+        })
+      }
+    </script>
+  </body>
+</html>

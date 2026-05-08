@@ -1,0 +1,361 @@
+/* ============================================
+   ELITE COMPONENTS - Premium UI Kit
+   ============================================ */
+
+/* ─── Glass Card ─── */
+.elite-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.elite-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+  pointer-events: none;
+}
+
+.elite-glass--elevated {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.elite-glass--flat {
+  background: var(--t360-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.elite-glass--hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.elite-glass--hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.elite-glass--glow::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.1) 0%,
+    transparent 70%
+  );
+  animation: elite-glow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes elite-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.1); }
+}
+
+/* ─── Animated Counter ─── */
+.elite-counter {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ─── Elite Toast ─── */
+.elite-toast {
+  position: fixed;
+  z-index: 99999;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: elite-toast-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.elite-toast--success {
+  background: var(--t360-accent-success, #18A84A);
+  color: #fff;
+}
+
+.elite-toast--error {
+  background: var(--t360-accent-danger, #ef4444);
+  color: #fff;
+}
+
+.elite-toast--warning {
+  background: var(--t360-accent-warning, #F0B429);
+  color: #0D1117;
+}
+
+.elite-toast--info {
+  background: var(--t360-accent-info, #3B82F6);
+  color: #fff;
+}
+
+.elite-toast--br { bottom: 24px; right: 24px; }
+.elite-toast--bl { bottom: 24px; left: 24px; }
+.elite-toast--tr { top: 24px; right: 24px; }
+.elite-toast--tl { top: 24px; left: 24px; }
+
+.elite-toast__icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+@keyframes elite-toast-in {
+  from {
+    transform: translateX(100%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ─── Elite Button ─── */
+.elite-btn {
+  position: relative;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  color: var(--t360-text-primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.elite-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.05));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.elite-btn:hover::before {
+  opacity: 1;
+}
+
+.elite-btn--primary {
+  background: linear-gradient(135deg, var(--t360-accent-success), #15903f);
+  border: none;
+  color: #fff;
+}
+
+.elite-btn--primary:hover {
+  box-shadow: 0 8px 20px rgba(24, 168, 74, 0.3);
+  transform: translateY(-2px);
+}
+
+.elite-btn--glow {
+  animation: elite-btn-glow 2s ease-in-out infinite;
+}
+
+@keyframes elite-btn-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(139, 92, 246, 0.5); }
+}
+
+/* ─── Elite Badge ─── */
+.elite-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.elite-badge--success {
+  background: rgba(24, 168, 74, 0.15);
+  color: var(--t360-accent-success);
+  border: 1px solid rgba(24, 168, 74, 0.2);
+}
+
+.elite-badge--gold {
+  background: rgba(240, 180, 41, 0.15);
+  color: #F0B429;
+  border: 1px solid rgba(240, 180, 41, 0.2);
+}
+
+.elite-badge--purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8B5CF6;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* ─── Elite Input ─── */
+.elite-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--t360-text-primary);
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.elite-input:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.elite-input::placeholder {
+  color: var(--t360-text-muted);
+}
+
+/* ─── Loading Spinner ─── */
+.elite-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--t360-accent-success);
+  border-radius: 50%;
+  animation: elite-spin 0.8s linear infinite;
+}
+
+@keyframes elite-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Shimmer Effect ─── */
+.elite-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: elite-shimmer 2s infinite;
+}
+
+@keyframes elite-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Hover Lift ─── */
+.elite-lift {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.elite-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Pulse Animation ─── */
+.elite-pulse {
+  animation: elite-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes elite-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ─── Fade In ─── */
+.elite-fade-in {
+  animation: elite-fade-in 0.5s ease-out;
+}
+
+@keyframes elite-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Slide In ─── */
+.elite-slide-in {
+  animation: elite-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes elite-slide-in {
+  from { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+/* ─── Scale In ─── */
+.elite-scale-in {
+  animation: elite-scale-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes elite-scale-in {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+/* ─── Ripple Effect ─── */
+.elite-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.elite-ripple::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.3) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.elite-ripple:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}

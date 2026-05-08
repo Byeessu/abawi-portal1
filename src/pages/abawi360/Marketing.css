@@ -1,0 +1,399 @@
+/* ============================================
+   MARKETING - Theme CSS
+   ============================================ */
+
+/* ─── Calendrier Container ─── */
+.marketing-calendar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.marketing-calendar__header {
+  background: var(--bg-primary);
+}
+
+.marketing-calendar__day-label {
+  padding: 10px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+}
+
+.marketing-calendar__day {
+  min-height: 90px;
+  padding: 6px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.marketing-calendar__day--today {
+  background: rgba(236, 72, 153, 0.06);
+}
+
+.marketing-calendar__day-number {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.marketing-calendar__day-number--today {
+  font-weight: 800;
+  color: #EC4899;
+}
+
+.marketing-calendar__more {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+/* ─── Navigation ─── */
+.marketing-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.marketing-nav__btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.marketing-nav__btn:hover {
+  border-color: var(--text-secondary);
+}
+
+.marketing-nav__date {
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 1.1rem;
+  min-width: 140px;
+  text-align: center;
+}
+
+/* ─── Post Item ─── */
+.marketing-post {
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.marketing-post:hover {
+  opacity: 0.9;
+}
+
+/* ─── Modal ─── */
+.marketing-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.marketing-modal__content {
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 32px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.marketing-modal__title {
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 24px;
+  margin-top: 0;
+}
+
+.marketing-modal__preview {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.marketing-modal__preview-title {
+  margin-top: 0;
+  color: var(--text-primary);
+}
+
+.marketing-modal__preview-meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+}
+
+.marketing-modal__preview-box {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.marketing-modal__preview-box strong {
+  color: var(--text-primary);
+}
+
+/* ─── Form Elements ─── */
+.marketing-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.marketing-form-title {
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 4px;
+  margin-top: 0;
+}
+
+/* ─── Platform Selector ─── */
+.marketing-platforms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.marketing-platform-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.marketing-platform-btn:hover {
+  border-color: var(--text-secondary);
+}
+
+/* ─── Content Types ─── */
+.marketing-content-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.marketing-content-btn {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s;
+}
+
+.marketing-content-btn:hover {
+  border-color: var(--text-secondary);
+}
+
+/* ─── Status Selector ─── */
+.marketing-status {
+  display: flex;
+  gap: 8px;
+}
+
+.marketing-status__btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.marketing-status__btn:hover {
+  opacity: 0.8;
+}
+
+/* ─── Buttons ─── */
+.marketing-btn {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.15s;
+}
+
+.marketing-btn--preview {
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  color: #60A5FA;
+}
+
+.marketing-btn--preview:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.marketing-btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--red);
+}
+
+.marketing-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.marketing-btn--secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.marketing-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--text-secondary);
+}
+
+.marketing-btn--primary {
+  background: linear-gradient(135deg, #EC4899, #be185d);
+  color: #fff;
+  flex: 1;
+}
+
+.marketing-btn--primary:hover {
+  opacity: 0.9;
+}
+
+.marketing-btn--add {
+  padding: 9px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #EC4899, #be185d);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.marketing-btn--add:hover {
+  opacity: 0.9;
+}
+
+/* ─── Generator Section ─── */
+.marketing-generator {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .marketing-generator {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Character Counter ─── */
+.marketing-char-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.marketing-char-count--warning {
+  color: var(--red);
+}
+
+.marketing-char-count--ok {
+  color: var(--green);
+}
+
+/* ─── Main Container ─── */
+.marketing-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* ─── Header ─── */
+.marketing-header {
+  margin-bottom: 24px;
+}
+
+.marketing-header__title {
+  color: var(--text-primary);
+  font-weight: 800;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.marketing-header__subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ─── Tabs ─── */
+.marketing-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.marketing-tab {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.marketing-tab:hover {
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.marketing-tab--active {
+  background: var(--bg-primary);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
