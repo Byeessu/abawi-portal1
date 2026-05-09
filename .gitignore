@@ -41,3 +41,6 @@ test-results
 
 # Local generated dumps
 code_complet.txt
+
+# Local Netlify folder
+.netlify
