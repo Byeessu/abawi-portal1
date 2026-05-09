@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abawi-abavie-v5'
+const CACHE_NAME = 'abawi-abavie-v6'
 const STATIC_ASSETS = [
   '/', '/digital', '/academy', '/podcasts', '/outils', '/news',
   '/manifest.json', '/abavie',
@@ -45,7 +45,13 @@ self.addEventListener('fetch', (e) => {
 
   // Network first for everything else
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request).then(response => {
+      // Ne pas mettre en cache les erreurs
+      if (!response || response.status >= 400) {
+        return caches.match(e.request).then(cached => cached || response)
+      }
+      return response
+    }).catch(() => caches.match(e.request))
   )
 })
 
