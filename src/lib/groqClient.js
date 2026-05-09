@@ -60,10 +60,13 @@ async function withRetry(fn, attempts = 3) {
 }
 
 async function callProxy(payload) {
-  const res = await fetch('/.netlify/functions/groq-chat?t=' + Date.now(), {
+  // Utiliser l'URL absolue pour éviter les problèmes de routing SPA
+  const base = typeof window !== 'undefined' ? window.location.origin : ''
+  const res = await fetch(`${base}/.netlify/functions/groq-chat?t=${Date.now()}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    cache: 'no-store',
   })
   if (!res.ok) {
     const txt = await res.text().catch(() => '')
