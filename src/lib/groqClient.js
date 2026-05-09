@@ -60,7 +60,7 @@ async function withRetry(fn, attempts = 3) {
 }
 
 async function callProxy(payload) {
-  const res = await fetch('/.netlify/functions/groq-chat', {
+  const res = await fetch('/.netlify/functions/groq-chat?t=' + Date.now(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
