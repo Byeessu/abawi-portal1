@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abawi-abavie-v4'
+const CACHE_NAME = 'abawi-abavie-v5'
 const STATIC_ASSETS = [
   '/', '/digital', '/academy', '/podcasts', '/outils', '/news',
   '/manifest.json', '/abavie',
