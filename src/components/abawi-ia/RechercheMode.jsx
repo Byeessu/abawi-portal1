@@ -313,13 +313,22 @@ export default function RechercheMode() {
   ];
 
   return (
-    <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
-      {/* ── Barre d'actions conversations ─────────────────────────── */}
+    <div style={{
+      maxWidth: '1040px', margin: '0 auto',
+      // Conteneur principal en colonne flex à hauteur stable
+      display: 'flex', flexDirection: 'column',
+      height: 'min(78vh, 760px)',
+      minHeight: 460,
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border)', borderRadius: 16,
+      overflow: 'hidden', position: 'relative',
+    }}>
+      {/* ── Barre d'actions conversations (sticky top) ────────────── */}
       <div style={{
         display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
-        marginBottom: 12, padding: '8px 12px',
-        background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 12,
+        padding: '10px 14px',
+        background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)',
+        flexShrink: 0,
       }}>
         <button
           onClick={() => startNewConversation()}
@@ -328,57 +337,88 @@ export default function RechercheMode() {
             background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: '#fff',
             cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700,
             display: 'inline-flex', alignItems: 'center', gap: 6,
+            whiteSpace: 'nowrap',
           }}
           title="Démarrer une nouvelle conversation"
         >
-          ＋ Nouvelle conversation
+          ＋ Nouvelle
         </button>
 
         <button
           onClick={() => setShowSidebar(v => !v)}
           style={{
             padding: '8px 12px', borderRadius: 10,
-            border: '1px solid var(--border)', background: 'transparent',
-            color: 'var(--text-primary)', cursor: 'pointer',
+            border: '1px solid var(--border)',
+            background: showSidebar ? 'rgba(59,130,246,0.1)' : 'transparent',
+            color: showSidebar ? '#3B82F6' : 'var(--text-primary)', cursor: 'pointer',
             fontSize: '0.8rem', fontWeight: 600,
             display: 'inline-flex', alignItems: 'center', gap: 6,
+            whiteSpace: 'nowrap',
           }}
           title="Voir l'historique de mes conversations"
         >
-          🗂️ Historique ({store.conversations.length})
+          🗂️ {store.conversations.length}
         </button>
 
         {activeConv && (
           <div style={{
-            flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6,
+            flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4,
             color: 'var(--text-muted)', fontSize: '0.78rem',
-            paddingLeft: 8, borderLeft: '1px solid var(--border)',
+            paddingLeft: 10, borderLeft: '1px solid var(--border)',
           }}>
-            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Active :</span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              fontWeight: 600, color: 'var(--text-primary)', flex: 1,
+            }}>
               {activeConv.title}
             </span>
             <button
               onClick={() => startRename(activeConv.id, activeConv.title)}
-              style={{ padding: '2px 6px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.78rem' }}
+              style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem' }}
               title="Renommer"
             >✏️</button>
             <button
               onClick={() => deleteConversation(activeConv.id)}
-              style={{ padding: '2px 6px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: '#EF4444', fontSize: '0.78rem' }}
+              style={{ padding: '4px 8px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: '#EF4444', fontSize: '0.85rem' }}
               title="Supprimer cette conversation"
             >🗑️</button>
           </div>
         )}
       </div>
 
-      {/* ── Sidebar / liste des conversations (déroulant) ──────────── */}
+      {/* ── Drawer historique (overlay, ne pousse pas le layout) ──── */}
       {showSidebar && (
-        <div style={{
-          marginBottom: 12, background: 'var(--bg-card)',
-          border: '1px solid var(--border)', borderRadius: 12,
-          maxHeight: 320, overflowY: 'auto',
-        }}>
+        <>
+          {/* backdrop */}
+          <div
+            onClick={() => setShowSidebar(false)}
+            style={{
+              position: 'absolute', inset: 0, zIndex: 5,
+              background: 'rgba(0,0,0,0.35)',
+            }}
+          />
+          {/* drawer panel */}
+          <aside style={{
+            position: 'absolute', top: 0, bottom: 0, left: 0,
+            width: 'min(320px, 85%)', zIndex: 6,
+            background: 'var(--bg-primary)', borderRight: '1px solid var(--border)',
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '4px 0 20px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '12px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0,
+            }}>
+              <strong style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                Mes conversations
+              </strong>
+              <button
+                onClick={() => setShowSidebar(false)}
+                style={{ padding: '4px 10px', borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}
+                aria-label="Fermer"
+              >✕</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
           {sortedConversations.length === 0 ? (
             <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
               Aucune conversation enregistrée. Posez une question pour démarrer.
@@ -465,11 +505,16 @@ export default function RechercheMode() {
               </div>
             </>
           )}
-        </div>
+            </div>
+          </aside>
+        </>
       )}
 
-      {/* ── Fil de la conversation active ─────────────────────────── */}
-      <div style={{ maxHeight: 'clamp(300px, 55vh, 520px)', overflowY: 'auto', marginBottom: '16px', paddingRight: 4, overscrollBehavior: 'contain' }}>
+      {/* ── Fil de la conversation active (flex:1, scroll interne) ── */}
+      <div style={{
+        flex: 1, minHeight: 0, overflowY: 'auto',
+        padding: '16px 16px 8px', overscrollBehavior: 'contain',
+      }}>
         {history.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔍</div>
@@ -515,7 +560,11 @@ export default function RechercheMode() {
         <div ref={bottomRef} />
       </div>
 
-      {/* ── Pièces jointes ────────────────────────────────────────── */}
+      {/* ── Footer composer (pièces jointes + saisie, fixe en bas) ─ */}
+      <div style={{
+        flexShrink: 0, padding: '10px 14px 14px',
+        borderTop: '1px solid var(--border)', background: 'var(--bg-primary)',
+      }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
         <label style={{
           display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
@@ -564,6 +613,7 @@ export default function RechercheMode() {
           fontSize: 'clamp(0.9rem,2vw,1.1rem)',
           minWidth: 44, minHeight: 44,
         }}>{loading ? '…' : '→'}</button>
+      </div>
       </div>
     </div>
   );
