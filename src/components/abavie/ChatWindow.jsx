@@ -322,6 +322,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
       created_at: now.toISOString(),
       read: false,
       expires_at: expiresAt ? expiresAt.toISOString() : null,
+      metadata: opts.metadata || null,
     };
 
     // E2E encryption

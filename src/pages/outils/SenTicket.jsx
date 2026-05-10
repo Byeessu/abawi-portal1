@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { uploadFile } from '../../lib/uploadFile';
 
 // =====================================================================
 // SenTicket — Plateforme de billetterie événementielle ABAWI
@@ -12,6 +13,9 @@ const VILLES = ['Toutes', 'Dakar', 'Thiès', 'Saint-Louis', 'Kaolack', 'Ziguinch
 const STORAGE_KEY = 'senticket_cart';
 const ORDERS_KEY = 'senticket_orders';
 const EVENTS_KEY = 'senticket_events';
+const WITHDRAWALS_KEY = 'senticket_withdrawals';
+
+const COMMISSION_RATE = 0.07; // 7% commission SenTicket
 
 function loadLocalEvents() {
   try {
@@ -37,6 +41,7 @@ function defaultEvents() {
       lieu: 'Stade Iba Mar Diop',
       categorie: 'Concert',
       image: '🎤',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Standard', prix: 5000, places: 500, vendus: 320 },
         { id: 'b2', nom: 'VIP', prix: 15000, places: 150, vendus: 89 },
@@ -57,6 +62,7 @@ function defaultEvents() {
       lieu: 'CICAD',
       categorie: 'Business',
       image: '💼',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Pass Jour 1', prix: 10000, places: 300, vendus: 180 },
         { id: 'b2', nom: 'Pass Complet 2J', prix: 18000, places: 200, vendus: 95 },
@@ -76,6 +82,7 @@ function defaultEvents() {
       lieu: 'Centre-ville & Faidherbe',
       categorie: 'Festival',
       image: '🎭',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Pass Jour', prix: 3000, places: 1000, vendus: 600 },
         { id: 'b2', nom: 'Pass 3J + Logement', prix: 25000, places: 100, vendus: 45 },
@@ -94,6 +101,7 @@ function defaultEvents() {
       lieu: 'Stade L.S. Senghor',
       categorie: 'Sport',
       image: '⚽',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Tribune Populaire', prix: 2000, places: 8000, vendus: 5200 },
         { id: 'b2', nom: 'Tribune Honneur', prix: 8000, places: 2000, vendus: 1100 },
@@ -113,6 +121,7 @@ function defaultEvents() {
       lieu: 'Campus ABAWI, VDN',
       categorie: 'Workshop',
       image: '🤖',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Étudiant', prix: 15000, places: 30, vendus: 18 },
         { id: 'b2', nom: 'Pro', prix: 35000, places: 40, vendus: 22 },
@@ -132,6 +141,7 @@ function defaultEvents() {
       lieu: 'Hôtel Terrou-Bi',
       categorie: 'Gala',
       image: '👑',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Donateur Standard', prix: 25000, places: 200, vendus: 140 },
         { id: 'b2', nom: 'Donateur Or', prix: 100000, places: 50, vendus: 28 },
@@ -151,6 +161,7 @@ function defaultEvents() {
       lieu: 'Théâtre M. Gueye',
       categorie: 'Théâtre',
       image: '🎭',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Standard', prix: 2000, places: 300, vendus: 150 },
         { id: 'b2', nom: 'VIP', prix: 8000, places: 50, vendus: 22 },
@@ -169,6 +180,7 @@ function defaultEvents() {
       lieu: 'Radisson Blu',
       categorie: 'Conférence',
       image: '👩‍💼',
+      cover_url: '',
       billets: [
         { id: 'b1', nom: 'Pass Standard', prix: 5000, places: 400, vendus: 220 },
         { id: 'b2', nom: 'Pass VIP', prix: 20000, places: 50, vendus: 31 },
@@ -190,6 +202,18 @@ function loadOrders() {
 
 function saveOrders(orders) {
   try { localStorage.setItem(ORDERS_KEY, JSON.stringify(orders)); } catch {}
+}
+
+function loadWithdrawals() {
+  try {
+    const raw = localStorage.getItem(WITHDRAWALS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+function saveWithdrawals(w) {
+  try { localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(w)); } catch {}
 }
 
 function genQRCodeData(orderId, eventId, billetId, email) {
@@ -224,11 +248,13 @@ export default function SenTicket() {
   const [sortBy, setSortBy] = useState('date');
   const [notification, setNotification] = useState(null);
   const [organizerTab, setOrganizerTab] = useState('creer'); // creer | stats
+  const [withdrawals, setWithdrawals] = useState(() => loadWithdrawals());
   const nav = useNavigate();
 
   // Persistance
   useEffect(() => { saveLocalEvents(events); }, [events]);
   useEffect(() => { saveOrders(orders); }, [orders]);
+  useEffect(() => { saveWithdrawals(withdrawals); }, [withdrawals]);
 
   // Notification auto-clear
   useEffect(() => {
@@ -257,7 +283,7 @@ export default function SenTicket() {
     if (exists) {
       setCart(cart.map(c => c.eventId === event.id && c.billetId === billet.id ? { ...c, qty: c.qty + qty } : c));
     } else {
-      setCart([...cart, { eventId: event.id, eventTitre: event.titre, billetId: billet.id, billetNom: billet.nom, prix: billet.prix, qty, date: event.date, ville: event.ville, image: event.image }]);
+      setCart([...cart, { eventId: event.id, eventTitre: event.titre, billetId: billet.id, billetNom: billet.nom, prix: billet.prix, qty, date: event.date, ville: event.ville, image: event.image, cover_url: event.cover_url }]);
     }
     setNotification({ type: 'success', msg: `${qty}× ${billet.nom} ajouté au panier` });
   }
@@ -273,21 +299,27 @@ export default function SenTicket() {
   const cartTotal = cart.reduce((s, c) => s + c.prix * c.qty, 0);
 
   function confirmPurchase(paymentMethod, buyerInfo) {
-    const newOrders = cart.map(item => ({
-      id: newId('ORD'),
-      eventId: item.eventId,
-      eventTitre: item.eventTitre,
-      billetId: item.billetId,
-      billetNom: item.billetNom,
-      prixUnitaire: item.prix,
-      qty: item.qty,
-      total: item.prix * item.qty,
-      acheteur: buyerInfo,
-      paymentMethod,
-      dateAchat: new Date().toISOString(),
-      statut: 'confirmé',
-      qrData: genQRCodeData(newId('ORD'), item.eventId, item.billetId, buyerInfo.email),
-    }));
+    const newOrders = cart.map(item => {
+      const total = item.prix * item.qty;
+      const commission = Math.round(total * COMMISSION_RATE);
+      return {
+        id: newId('ORD'),
+        eventId: item.eventId,
+        eventTitre: item.eventTitre,
+        billetId: item.billetId,
+        billetNom: item.billetNom,
+        prixUnitaire: item.prix,
+        qty: item.qty,
+        total,
+        commission,
+        netOrganisateur: total - commission,
+        acheteur: buyerInfo,
+        paymentMethod,
+        dateAchat: new Date().toISOString(),
+        statut: 'confirmé',
+        qrData: genQRCodeData(newId('ORD'), item.eventId, item.billetId, buyerInfo.email),
+      };
+    });
 
     // Mettre à jour les ventes dans les événements
     const updatedEvents = events.map(e => {
@@ -534,9 +566,17 @@ export default function SenTicket() {
             {view === 'mes-events' && (
               <MesEventsView
                 events={events.filter(e => e.createur === 'Moi')}
+                orders={orders}
+                withdrawals={withdrawals}
                 onBack={() => setView('organiser')}
                 onDelete={deleteEvent}
                 onViewDetail={evt => { setSelectedEvent(evt); setView('detail'); }}
+                onRequestWithdrawal={(montant) => {
+                  if (!confirm(`Confirmer la demande de reversement de ${formatPrix(montant)} ?`)) return;
+                  const w = { id: newId('WTH'), montant, date: new Date().toISOString(), statut: 'En cours' };
+                  setWithdrawals([w, ...withdrawals]);
+                  setNotification({ type: 'success', msg: `Demande de reversement de ${formatPrix(montant)} envoyée !` });
+                }}
               />
             )}
           </>
@@ -556,10 +596,11 @@ function EventCard({ event, onClick }) {
   return (
     <div className="st-card st-anim" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{
-        height: 140, background: 'linear-gradient(135deg, #1a103c, #2d1b69, #1a103c)',
+        height: 140,
+        background: event.cover_url ? `url(${event.cover_url}) center/cover no-repeat` : 'linear-gradient(135deg, #1a103c, #2d1b69, #1a103c)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', position: 'relative',
       }}>
-        {event.image}
+        {!event.cover_url && event.image}
         {event.featured && (
           <span style={{
             position: 'absolute', top: 10, left: 10,
@@ -598,10 +639,11 @@ function EventDetail({ event, onBack, onAddToCart, onGoPanier }) {
 
       <div className="st-card" style={{ marginBottom: 20 }}>
         <div style={{
-          height: 220, background: 'linear-gradient(135deg, #1a103c, #2d1b69, #1a103c)',
+          height: 220,
+          background: event.cover_url ? `url(${event.cover_url}) center/cover no-repeat` : 'linear-gradient(135deg, #1a103c, #2d1b69, #1a103c)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', position: 'relative',
         }}>
-          {event.image}
+          {!event.cover_url && event.image}
         </div>
         <div style={{ padding: '22px 24px' }}>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -708,7 +750,11 @@ function PanierView({ cart, total, onRemove, onClear, onContinue, onBack }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
         {cart.map((item, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-            <div style={{ fontSize: '2rem' }}>{item.image}</div>
+            <div style={{
+              width: 48, height: 48, borderRadius: 10, flexShrink: 0,
+              background: item.cover_url ? `url(${item.cover_url}) center/cover no-repeat` : 'linear-gradient(135deg, #1a103c, #2d1b69)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem',
+            }}>{!item.cover_url && (item.image || '🎫')}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{item.eventTitre}</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{item.billetNom} × {item.qty} · {formatDate(item.date)} · {item.ville}</div>
@@ -739,6 +785,8 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
   const [method, setMethod] = useState('wave');
   const [processing, setProcessing] = useState(false);
 
+  const commission = Math.round(total * COMMISSION_RATE);
+  const totalTTC = total + commission;
   const canSubmit = buyer.nom && buyer.prenom && buyer.email && buyer.tel;
 
   async function handlePay() {
@@ -765,10 +813,21 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
               <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>{formatPrix(item.prix * item.qty)}</span>
             </div>
           ))}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '2px solid var(--border)' }}>
-            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Total</span>
-            <span style={{ fontWeight: 800, color: '#8B5CF6', fontSize: '1.15rem' }}>{formatPrix(total)}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed var(--border)' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Sous-total billets</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.85rem' }}>{formatPrix(total)}</span>
           </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed var(--border)' }}>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Frais de service SenTicket (7%)</span>
+            <span style={{ fontWeight: 600, color: '#F59E0B', fontSize: '0.85rem' }}>+ {formatPrix(commission)}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '2px solid var(--border)' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Total à payer</span>
+            <span style={{ fontWeight: 800, color: '#8B5CF6', fontSize: '1.15rem' }}>{formatPrix(totalTTC)}</span>
+          </div>
+          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 8, lineHeight: 1.4 }}>
+            💡 La commission couvre les frais de transaction mobile money et le service de la plateforme. L'organisateur reçoit le net après déduction.
+          </p>
         </div>
 
         {/* Formulaire */}
@@ -811,7 +870,7 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
             disabled={!canSubmit || processing}
             style={{ width: '100%', padding: '14px', fontSize: '1rem', opacity: !canSubmit || processing ? 0.6 : 1 }}
           >
-            {processing ? 'Traitement... ⏳' : `Payer ${formatPrix(total)}`}
+            {processing ? 'Traitement... ⏳' : `Payer ${formatPrix(totalTTC)}`}
           </button>
           <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 10 }}>🔒 Paiement sécurisé · Vos données sont cryptées</p>
         </div>
@@ -917,9 +976,24 @@ function QRCodeDisplay({ data, size = 90 }) {
 function OrganizerView({ onCreate, onViewEvents }) {
   const [form, setForm] = useState({
     titre: '', description: '', date: '', heure: '', ville: 'Dakar', lieu: '',
-    categorie: 'Concert', image: '🎤',
+    categorie: 'Concert', image: '🎤', cover_url: '',
     billets: [{ id: newId('bt'), nom: 'Standard', prix: '', places: '' }],
   });
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef(null);
+
+  async function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file, 'images', 'senticket');
+      setForm({ ...form, cover_url: url });
+    } catch (err) {
+      alert('Erreur upload : ' + err.message);
+    }
+    setUploading(false);
+  }
 
   function addBillet() {
     setForm({ ...form, billets: [...form.billets, { id: newId('bt'), nom: '', prix: '', places: '' }] });
@@ -952,7 +1026,8 @@ function OrganizerView({ onCreate, onViewEvents }) {
       ville: form.ville,
       lieu: form.lieu,
       categorie: form.categorie,
-      image: form.image,
+      image: form.cover_url ? '📷' : form.image,
+      cover_url: form.cover_url,
       billets,
     });
   }
@@ -985,10 +1060,19 @@ function OrganizerView({ onCreate, onViewEvents }) {
             <select className="st-select" value={form.categorie} onChange={e => setForm({ ...form, categorie: e.target.value })}>
               {CATEGORIES.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <select className="st-select" value={form.image} onChange={e => setForm({ ...form, image: e.target.value })}>
-              {['🎤','🎭','⚽','💼','🤖','👑','🎨','🎵','🎬','🎪','🎫','🎊'].map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input className="st-input" placeholder="URL image (optionnel)" value={form.cover_url} onChange={e => setForm({ ...form, cover_url: e.target.value })} style={{ flex: 1 }} />
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUpload} />
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} style={{
+                padding: '7px 12px', borderRadius: 10, whiteSpace: 'nowrap',
+                background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)',
+                color: '#8B5CF6', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
+              }}>{uploading ? '⏳' : '📁 Upload'}</button>
+            </div>
           </div>
+          {form.cover_url && (
+            <img src={form.cover_url} alt="Aperçu" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--border)' }} />
+          )}
         </div>
 
         <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>Catégories de billets</h3>
@@ -1012,7 +1096,7 @@ function OrganizerView({ onCreate, onViewEvents }) {
   );
 }
 
-function MesEventsView({ events, onBack, onDelete, onViewDetail }) {
+function MesEventsView({ events, orders, withdrawals, onBack, onDelete, onViewDetail, onRequestWithdrawal }) {
   if (events.length === 0) {
     return (
       <div className="st-anim" style={{ textAlign: 'center', padding: 60 }}>
@@ -1023,28 +1107,61 @@ function MesEventsView({ events, onBack, onDelete, onViewDetail }) {
     );
   }
 
+  // Agrégation globale
+  const globalCA = events.reduce((s, e) => s + e.billets.reduce((s2, b) => s2 + b.prix * b.vendus, 0), 0);
+  const globalComm = Math.round(globalCA * COMMISSION_RATE);
+  const globalNet = globalCA - globalComm;
+  const globalRetire = withdrawals.reduce((s, w) => s + w.montant, 0);
+  const globalDispo = globalNet - globalRetire;
+
   return (
     <div className="st-anim">
       <button onClick={onBack} style={{ marginBottom: 16, padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>← Créer un événement</button>
+
+      {/* Dashboard financier global */}
+      <div className="st-card" style={{ padding: '20px', marginBottom: 20 }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 14 }}>💰 Dashboard Organisateur</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
+          <DashBox label="CA Brut" value={formatPrix(globalCA)} color="#3B82F6" />
+          <DashBox label={`Commission (${(COMMISSION_RATE*100).toFixed(0)}%)`} value={formatPrix(globalComm)} color="#F59E0B" />
+          <DashBox label="Net Organisateur" value={formatPrix(globalNet)} color="#8B5CF6" />
+          <DashBox label="Déjà retiré" value={formatPrix(globalRetire)} color="#00c853" />
+          <DashBox label="Disponible" value={formatPrix(globalDispo)} color={globalDispo > 0 ? '#18A84A' : '#EF4444'} />
+        </div>
+        {globalDispo > 0 && (
+          <button className="st-btn-gold" onClick={() => onRequestWithdrawal(globalDispo)} style={{ width: '100%', marginTop: 14, padding: '12px' }}>
+            💸 Demander un reversement de {formatPrix(globalDispo)}
+          </button>
+        )}
+        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 10 }}>
+          Les reversements se font par virement bancaire ou Mobile Money Business une fois l'événement terminé.
+        </p>
+      </div>
+
       <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 16 }}>📋 Mes événements ({events.length})</h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {events.map(evt => {
           const totalPlaces = evt.billets.reduce((s, b) => s + b.places, 0);
           const totalVendus = evt.billets.reduce((s, b) => s + b.vendus, 0);
-          const chiffre = evt.billets.reduce((s, b) => s + b.prix * b.vendus, 0);
+          const ca = evt.billets.reduce((s, b) => s + b.prix * b.vendus, 0);
+          const comm = Math.round(ca * COMMISSION_RATE);
+          const net = ca - comm;
           return (
             <div key={evt.id} className="st-card" style={{ padding: '18px 20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem', marginBottom: 4 }}>{evt.titre}</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 8 }}>📅 {formatDate(evt.date)} · {evt.ville} · {evt.categorie}</div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                     <span className="st-badge" style={{ background: 'rgba(0,200,83,0.12)', color: '#00c853' }}>{totalVendus} / {totalPlaces} vendus</span>
-                    <span className="st-badge" style={{ background: 'rgba(245,197,24,0.12)', color: '#D4A017' }}>{formatPrix(chiffre)}</span>
+                    <span className="st-badge" style={{ background: 'rgba(59,130,246,0.1)', color: '#3B82F6' }}>CA {formatPrix(ca)}</span>
+                    <span className="st-badge" style={{ background: 'rgba(245,197,24,0.1)', color: '#D4A017' }}>Comm {formatPrix(comm)}</span>
+                    <span className="st-badge" style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}>Net {formatPrix(net)}</span>
                   </div>
+                  {evt.cover_url && <img src={evt.cover_url} alt="" style={{ width: '100%', maxHeight: 100, objectFit: 'cover', borderRadius: 8, marginTop: 4 }} />}
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <button onClick={() => onViewDetail(evt)} className="st-btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Voir</button>
                   <button onClick={() => onDelete(evt.id)} style={{ padding: '6px 12px', borderRadius: 10, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#EF4444', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>🗑️</button>
                 </div>
@@ -1053,6 +1170,36 @@ function MesEventsView({ events, onBack, onDelete, onViewDetail }) {
           );
         })}
       </div>
+
+      {/* Historique des retraits */}
+      {withdrawals.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>📤 Historique des reversements</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {withdrawals.map(w => (
+              <div key={w.id} className="st-card" style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.88rem' }}>{formatPrix(w.montant)}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{formatDate(w.date)} · {w.statut}</div>
+                </div>
+                <span className="st-badge" style={{
+                  background: w.statut === 'Traité' ? 'rgba(0,200,83,0.12)' : 'rgba(245,197,24,0.1)',
+                  color: w.statut === 'Traité' ? '#00c853' : '#D4A017'
+                }}>{w.statut}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DashBox({ label, value, color }) {
+  return (
+    <div style={{ padding: '12px', borderRadius: 10, background: 'var(--bg-primary)', border: '1px solid var(--border)', textAlign: 'center' }}>
+      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontWeight: 800, color, fontSize: '0.95rem' }}>{value}</div>
     </div>
   );
 }

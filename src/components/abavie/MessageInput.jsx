@@ -197,6 +197,7 @@ export default function MessageInput({ onSend, replyTo, editMessage, onCancelRep
   }
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const formatDuration = formatTime;
 
   return (
     <div className="abv-input-wrapper">
