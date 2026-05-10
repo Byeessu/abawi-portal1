@@ -4,12 +4,10 @@ import { supabase } from '../../lib/supabase';
 import { uploadFile } from '../../lib/uploadFile';
 import { useAuth } from '../../context/AuthContext';
 import {
-  fetchEvents, createEvent as dbCreateEvent, updateEvent as dbUpdateEvent, deleteEvent as dbDeleteEvent,
+  fetchEvents, createEvent as dbCreateEvent, deleteEvent as dbDeleteEvent,
   fetchOrders, createOrder, updateTicketSales,
   fetchFavorites, toggleFavorite,
-  fetchReviews, upsertReview,
   fetchWithdrawals, createWithdrawal,
-  bumpView as dbBumpView, fetchViewCount,
   fetchOrderByQr, markOrderScanned,
   sendTicketEmail,
 } from '../../lib/senticketDb';

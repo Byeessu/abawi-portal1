@@ -68,7 +68,9 @@ export async function createInvoice({
   const methodMap = {
     'abawi-pay':    'wave_senegal',
     'wave':         'wave_senegal',
+    'orange':       'orange_money_senegal',
     'orange-money': 'orange_money_senegal',
+    'free':         'free_money_senegal',
     'free-money':   'free_money_senegal',
     'card':         'card',
   }
