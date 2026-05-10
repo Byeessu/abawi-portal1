@@ -264,24 +264,30 @@ export default function JuridiqueElite() {
       setShowPayment(true)
       return
     }
-    if (!tool.unlimited) {
-      const res = await tool.debit()
-      if (!res.ok) { setShowPayment(true); return }
+    try {
+      await genererDocument()
+      if (!tool.unlimited) {
+        const res = await tool.debit()
+        if (!res.ok) { setShowPayment(true); return }
+      }
+    } catch (e) {
+      // Génération échouée, pas de débit
     }
-    genererDocument()
   }
 
   function handlePaymentSuccess() {
     if (pendingGenerate) {
       setPendingGenerate(false)
-      setTimeout(genererDocument, 100)
+      setTimeout(() => handleGenerate(), 100)
     }
   }
 
   async function handleExportPDF() {
     if (!tool.allowed) { setShowPayment(true); return }
-    if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { setShowPayment(true); return } }
-    await exportToPDF('doc-juridique-preview', `${currentDoc.label.replace(/\s+/g, '_')}_${Date.now()}`)
+    try {
+      await exportToPDF('doc-juridique-preview', `${currentDoc.label.replace(/\s+/g, '_')}_${Date.now()}`)
+      if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { setShowPayment(true); return } }
+    } catch (e) { alert('Erreur export PDF') }
   }
 
   const displayContent = editMode ? editContent : docContent

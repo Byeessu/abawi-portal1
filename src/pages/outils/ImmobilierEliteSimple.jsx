@@ -265,23 +265,25 @@ export default function ImmobilierEliteSimple() {
 
   const exportPDF = async () => {
     if (!tool.allowed) { setShowPayment(true); return }
-    if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
     try {
       const content = document.getElementById('immo-content')
       if (!content) { alert('Contenu non trouvé pour export PDF'); return }
       await bgJob.run(
         async () => await exportToPDF(content, { filename: `immobilier-elite-${section}-${Date.now()}.pdf`, includeHeader: true, includeFooter: true }),
-        { onDone: () => alert('PDF exporté avec succès'), onError: (error) => alert(`Erreur export PDF: ${error.message}`) }
+        { onError: (error) => alert(`Erreur export PDF: ${error.message}`) }
       )
+      if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
+      alert('PDF exporté avec succès')
     } catch (error) { alert(`Erreur export PDF: ${error.message}`) }
   }
 
   const exportExcel = async () => {
     if (!tool.allowed) { setShowPayment(true); return }
-    if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
     try {
       const data = { simulation: sim, simulation_locative: simLoc, simulation_construction: simConst, annonces, comparatif, financement, estimation, contrat_bail: contratBail, business_plan: businessPlan }
       await exportToExcel(data, { filename: `immobilier-elite-${section}-${Date.now()}.xlsx`, sheetName: 'Immobilier Élite' })
+      if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
+      alert('Excel exporté avec succès')
     } catch (error) { alert(`Erreur export Excel: ${error.message}`) }
   }
 

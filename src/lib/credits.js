@@ -64,6 +64,16 @@ export async function rechargeCredits(email, packId) {
   return { ok: true, solde: newCredits, credits_ajoutes: totalCredits }
 }
 
+export async function refundCredits(email, type, montant, produitId = '') {
+  if (!email || !montant || montant <= 0) return { ok: false, reason: 'Parametres invalides' }
+  const { data: membre } = await supabase.from('membres').select('credits').eq('email', email).single()
+  if (!membre) return { ok: false, reason: 'Membre non trouve' }
+  const newCredits = (membre.credits || 0) + montant
+  await supabase.from('membres').update({ credits: newCredits }).eq('email', email)
+  await supabase.from('credit_transactions').insert({ email, type: 'refund', montant, solde_avant: membre.credits || 0, solde_apres: newCredits, description: `Remboursement ${type}`, produit_id: produitId, produit_type: type })
+  return { ok: true, solde: newCredits, credits_rembourses: montant }
+}
+
 export async function getCredits(email) {
   const { data } = await supabase.from('membres').select('credits, plan').eq('email', email).single()
   return data?.credits || 0

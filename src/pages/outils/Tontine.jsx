@@ -970,20 +970,22 @@ export default function Tontine() {
   ════════════════════════════════════════════════════════════════ */
   const exportToCSV = async (data, filename) => {
     if (!tool.allowed) { alert('Accès réservé. Connectez-vous ou rechargez des crédits.'); return }
-    if (!tool.unlimited) {
-      const res = await tool.debit()
-      if (!res.ok) { alert('Crédits insuffisants pour exporter'); return }
-    }
-    const headers = Object.keys(data[0] || {}).join(';')
-    const rows = data.map(row => Object.values(row).map(v =>
-      typeof v === 'string' && v.includes(';') ? `"${v}"` : v
-    ).join(';')).join('\n')
-    const csv = `${headers}\n${rows}`
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = `${filename}.csv`
-    link.click()
+    try {
+      const headers = Object.keys(data[0] || {}).join(';')
+      const rows = data.map(row => Object.values(row).map(v =>
+        typeof v === 'string' && v.includes(';') ? `"${v}"` : v
+      ).join(';')).join('\n')
+      const csv = `${headers}\n${rows}`
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `${filename}.csv`
+      link.click()
+      if (!tool.unlimited) {
+        const res = await tool.debit()
+        if (!res.ok) { alert('Crédits insuffisants'); return }
+      }
+    } catch (e) { alert('Erreur export CSV') }
   }
 
   const genererRapportPDF = () => {

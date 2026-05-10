@@ -100,12 +100,15 @@ function Membre() {
   const [editProfile, setEditProfile] = useState(false)
   const [profileData, setProfileData] = useState({})
   const [savingProfile, setSavingProfile] = useState(false)
+  const [creditTxs, setCreditTxs] = useState([])
+  const [creditTxsLoading, setCreditTxsLoading] = useState(false)
 
   // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: review hook dependencies
   useEffect(() => { refreshMembre() }, [])
 
   useEffect(() => {
     if (tab === 'achats' && membre) loadPurchases()
+    if (tab === 'credits' && membre) loadCreditTxs()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: review hook dependencies
   }, [tab, membre])
 
@@ -119,6 +122,19 @@ function Membre() {
       .order('created_at', { ascending: false })
     setPurchases(data || [])
     setPurchasesLoading(false)
+  }
+
+  async function loadCreditTxs() {
+    if (!membre?.email) return
+    setCreditTxsLoading(true)
+    const { data } = await supabase
+      .from('credit_transactions')
+      .select('*')
+      .eq('email', membre.email)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setCreditTxs(data || [])
+    setCreditTxsLoading(false)
   }
 
   async function saveProfile() {
@@ -146,6 +162,7 @@ function Membre() {
     { key: 'espace', label: 'Mon espace', icon: '🏠' },
     { key: 'acces', label: 'Mes accès', icon: '🔑' },
     { key: 'achats', label: 'Mes achats', icon: '🛒' },
+    { key: 'credits', label: 'Mes crédits', icon: '💰' },
     { key: 'profil', label: 'Mon profil', icon: '👤' },
   ]
 
@@ -366,6 +383,69 @@ function Membre() {
                     </div>
                     <span style={{ padding: '4px 12px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700, background: `${sc}15`, color: sc }}>
                       {p.statut === 'paid' ? '✅ Payé' : p.statut === 'pending' ? '⏳ En attente' : '❌ Échoué'}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ TAB: MES CRÉDITS ══ */}
+      {tab === 'credits' && (
+        <div style={{ maxWidth: 720 }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#F0F2F5', marginBottom: 24 }}>💰 Mes crédits</h3>
+
+          {/* Solde */}
+          <div style={{ padding: 24, borderRadius: 16, background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', marginBottom: 24, textAlign: 'center' }}>
+            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', fontWeight: 700, marginBottom: 8 }}>Solde disponible</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff' }}>{membre?.credits || 0}</div>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>crédits</div>
+            {isAdmin && (
+              <div style={{ marginTop: 12, fontSize: '0.78rem', color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: 100, display: 'inline-block' }}>
+                ⚙️ Admin — accès illimité
+              </div>
+            )}
+            {!isAdmin && (
+              <Link to="/plans" style={{ marginTop: 16, display: 'inline-block', padding: '10px 24px', borderRadius: 10, background: '#fff', color: '#7C3AED', fontWeight: 800, fontSize: '0.88rem', textDecoration: 'none' }}>
+                ➕ Recharger mes crédits
+              </Link>
+            )}
+          </div>
+
+          {/* Historique */}
+          <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#F0F2F5', marginBottom: 14 }}>Historique</h4>
+          {creditTxsLoading ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Chargement...</p>
+          ) : creditTxs.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Aucune transaction pour le moment.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {creditTxs.map((tx) => {
+                const isDebit = tx.type === 'debit'
+                const isRecharge = tx.type === 'recharge'
+                const color = isDebit ? '#ef4444' : isRecharge ? '#18A84A' : '#F0B429'
+                const sign = isDebit ? '-' : '+'
+                return (
+                  <div key={tx.id} style={{
+                    padding: '14px 18px', borderRadius: 12,
+                    background: '#0D1117', border: '1px solid #1A2332',
+                    display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+                  }}>
+                    <div style={{ flex: 1, minWidth: 200 }}>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#F0F2F5', marginBottom: 4 }}>
+                        {tx.description}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 800, color }}>
+                      {sign}{tx.montant}
+                    </div>
+                    <span style={{ padding: '4px 12px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700, background: `${color}15`, color }}>
+                      {isDebit ? 'Débit' : isRecharge ? 'Recharge' : tx.type === 'refund' ? 'Remboursement' : tx.type === 'bonus' ? 'Bonus' : tx.type}
                     </span>
                   </div>
                 )

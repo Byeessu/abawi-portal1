@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { resolveToolAccess } from '../lib/permissions'
-import { debitCredits, CREDIT_COSTS } from '../lib/credits'
+import { debitCredits, refundCredits, CREDIT_COSTS } from '../lib/credits'
 
 /**
  * Hook unifié pour la gestion des accès outils (plan + crédits)
@@ -60,6 +60,15 @@ export function useToolAccess(toolName, creditType) {
     return result
   }
 
+  async function refund(montant) {
+    if (!membre || state.unlimited) return { ok: false }
+    const result = await refundCredits(membre.email, creditType, montant)
+    if (result.ok) {
+      setState(s => ({ ...s, solde: result.solde || 0 }))
+    }
+    return result
+  }
+
   return {
     allowed: state.allowed,
     loading: state.loading,
@@ -69,6 +78,7 @@ export function useToolAccess(toolName, creditType) {
     unlimited: state.unlimited,
     manquant: state.manquant || 0,
     debit,
+    refund,
     checkAccess,
   }
 }

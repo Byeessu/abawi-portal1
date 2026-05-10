@@ -368,10 +368,6 @@ export default function FinanceEliteSimple() {
 
   const exportPDF = async () => {
     if (!tool.allowed) { setShowPayment(true); return }
-    if (!tool.unlimited) {
-      const res = await tool.debit()
-      if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return }
-    }
     try {
       const content = containerRef.current
       if (!content) { alert('Contenu non trouvé pour export PDF'); return }
@@ -380,26 +376,29 @@ export default function FinanceEliteSimple() {
           filename: `rapport-finance-elite-${entreprise.nom.replace(/\s+/g, '-')}.pdf`,
           includeHeader: true, includeFooter: true,
         }),
-        {
-          onDone: () => alert('PDF exporté avec succès'),
-          onError: (error) => alert(`Erreur export PDF: ${error.message}`),
-        }
+        { onError: (error) => alert(`Erreur export PDF: ${error.message}`) }
       )
+      if (!tool.unlimited) {
+        const res = await tool.debit()
+        if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return }
+      }
+      alert('PDF exporté avec succès')
     } catch (e) { alert(`Erreur: ${e.message}`) }
   }
 
   const exportExcel = async () => {
     if (!tool.allowed) { setShowPayment(true); return }
-    if (!tool.unlimited) {
-      const res = await tool.debit()
-      if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return }
-    }
     try {
       const data = { entreprise, compte_resultat: compteResultat, bilan, tresorerie, ratios, valorisation }
       await exportToExcel(data, {
         filename: `finance-elite-${entreprise.nom.replace(/\s+/g, '-')}.xlsx`,
         sheetName: 'Rapport Finance Élite'
       })
+      if (!tool.unlimited) {
+        const res = await tool.debit()
+        if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return }
+      }
+      alert('Excel exporté avec succès')
     } catch (error) { alert(`Erreur export Excel: ${error.message}`) }
   }
 

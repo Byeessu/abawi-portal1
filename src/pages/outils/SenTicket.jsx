@@ -547,13 +547,6 @@ export default function SenTicket() {
       setNotification({ type: 'error', msg: `Création d'événement : ${tool.error === 'non_connecte' ? 'Connectez-vous' : tool.error === 'credits_insuffisants' ? `Il manque ${tool.manquant} crédits` : 'Accès réservé'}` });
       return;
     }
-    if (!tool.unlimited) {
-      const res = await tool.debit();
-      if (!res.ok) {
-        setNotification({ type: 'error', msg: 'Crédits insuffisants pour créer un événement' });
-        return;
-      }
-    }
     const billets = evtData.billets || [];
     const payload = {
       event: {
@@ -571,18 +564,26 @@ export default function SenTicket() {
       },
       billets: billets.map(b => ({ nom: b.nom, prix: b.prix, places: b.places, vendus: 0 })),
     };
-    const evId = await dbCreateEvent(payload);
-    if (evId) {
-      const fresh = await fetchEvents();
-      if (fresh) setEvents(fresh);
+    try {
+      const evId = await dbCreateEvent(payload);
+      if (evId) {
+        const fresh = await fetchEvents();
+        if (fresh) setEvents(fresh);
+      } else {
+        const newEvent = { id: newId('evt'), ...evtData, vendus: 0, featured: false, statut: 'actif', createur: 'Moi' };
+        setEvents([newEvent, ...events]);
+      }
+      if (!tool.unlimited) {
+        const res = await tool.debit();
+        if (!res.ok) {
+          setNotification({ type: 'error', msg: 'Crédits insuffisants pour créer un événement' });
+          return;
+        }
+      }
       setView('mes-events');
       setNotification({ type: 'success', msg: `Événement « ${evtData.titre} » créé avec succès !` });
-    } else {
-      // fallback local
-      const newEvent = { id: newId('evt'), ...evtData, vendus: 0, featured: false, statut: 'actif', createur: 'Moi' };
-      setEvents([newEvent, ...events]);
-      setView('mes-events');
-      setNotification({ type: 'success', msg: `Événement créé (local) !` });
+    } catch (e) {
+      setNotification({ type: 'error', msg: 'Erreur lors de la création de l\'événement' });
     }
   }
 
