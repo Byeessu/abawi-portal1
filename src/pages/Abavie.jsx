@@ -3,6 +3,7 @@ import SEO from '../components/SEO';
 import ChatSidebar from '../components/abavie/ChatSidebar';
 import ChatWindow from '../components/abavie/ChatWindow';
 import ExternalSend from '../components/abavie/ExternalSend';
+import GlobalSearch from '../components/abavie/GlobalSearch';
 import { abavieSettings } from '../lib/abavieSettings';
 import './Abavie.css';
 export { AbavieLogoSVG } from '../components/abavie/AbavieLogoSVG';
@@ -26,6 +27,8 @@ export default function Abavie() {
   const [externalBody, setExternalBody] = useState('');
   const [themeColor, setThemeColor] = useState(() => abavieSettings.get('theme_color'));
   const [wallpaper, setWallpaper] = useState(() => abavieSettings.get('chat_wallpaper'));
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+  const [jumpTo, setJumpTo] = useState(null);
 
   useEffect(() => {
     const handler = () => {
@@ -46,6 +49,18 @@ export default function Abavie() {
     setShowExternal(true);
   }
 
+  function handleJumpToMessage(convId, msgId) {
+    // Triggered by global search: select conversation then scroll to message
+    setJumpTo({ convId, msgId });
+  }
+
+  useEffect(() => {
+    if (!jumpTo) return;
+    // Load conversation then open it and pass jump target
+    // In practice, ChatWindow should receive a jumpToMessageId prop
+    // and scroll after messages load.
+  }, [jumpTo]);
+
   const pageStyle = wallpaper && WALLPAPER_STYLES[wallpaper]
     ? { background: WALLPAPER_STYLES[wallpaper] }
     : {};
@@ -53,9 +68,10 @@ export default function Abavie() {
   return (
     <div className={`abv-page abv-theme--${themeColor || 'green'}`} style={pageStyle}>
       <SEO title="ABAWI — Messagerie" description="Messagerie sécurisée nouvelle génération pour les membres ABAWI." />
-      <ChatSidebar activeChat={activeChat} onSelectChat={handleSelectChat} hidden={showChat} />
-      <ChatWindow conversation={activeChat} visible={showChat} onBack={() => setShowChat(false)} onOpenExternal={handleOpenExternal} />
+      <ChatSidebar activeChat={activeChat} onSelectChat={handleSelectChat} hidden={showChat} onOpenGlobalSearch={() => setShowGlobalSearch(true)} />
+      <ChatWindow conversation={activeChat} visible={showChat} onBack={() => setShowChat(false)} onOpenExternal={handleOpenExternal} jumpTo={jumpTo} />
       {showExternal && <ExternalSend body={externalBody} onClose={() => setShowExternal(false)} />}
+      <GlobalSearch visible={showGlobalSearch} onClose={() => setShowGlobalSearch(false)} onJumpToMessage={handleJumpToMessage} />
     </div>
   );
 }

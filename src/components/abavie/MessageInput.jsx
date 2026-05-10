@@ -130,22 +130,70 @@ export default function MessageInput({ onSend, replyTo, editMessage, onCancelRep
     }, 0);
   }
 
-  function startRecording() {
-    setIsRecording(true);
-    setRecordingTime(0);
-    recordingInterval.current = setInterval(() => {
-      setRecordingTime(t => t + 1);
-    }, 1000);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : '';
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+        const secs = recordingTime;
+        if (secs > 0) {
+          const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+          const url = await uploadFile(file);
+          if (url) {
+            onSend(formatDuration(secs), 'audio', url, { metadata: { isVoice: true, duration: secs } });
+          }
+        }
+        stream.getTracks().forEach(t => t.stop());
+        setRecordingTime(0);
+      };
+
+      recorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      recordingInterval.current = setInterval(() => {
+        setRecordingTime(t => t + 1);
+      }, 1000);
+    } catch (e) {
+      console.error('Mic access denied', e);
+      alert('Accès au micro refusé ou indisponible.');
+    }
   }
 
   function stopRecording() {
     setIsRecording(false);
     if (recordingInterval.current) clearInterval(recordingInterval.current);
-    // Simulate voice message
-    if (recordingTime > 1) {
-      onSend(`🎤 Message vocal (${recordingTime}s)`, 'audio', null);
+    mediaRecorderRef.current?.stop();
+  }
+
+  async function sendLocation() {
+    if (!navigator.geolocation) {
+      alert('Géolocalisation non supportée.');
+      return;
     }
-    setRecordingTime(0);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        onSend('📍 Localisation partagée', 'location', null, { metadata: { lat: latitude, lng: longitude } });
+      },
+      () => alert('Impossible de récupérer la position.'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -191,6 +239,9 @@ export default function MessageInput({ onSend, replyTo, editMessage, onCancelRep
         </button>
         <button className={`abv-attach-btn${scheduledSend ? ' abv-icon-btn--active' : ''}`} onClick={() => {}} disabled={isRecording} title="Programmer (+1h)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </button>
+        <button className="abv-attach-btn" onClick={sendLocation} disabled={isRecording} title="Partager la localisation">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         </button>
 
         <div className="abv-input-wrap">

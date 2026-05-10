@@ -84,6 +84,7 @@ const MaxAvisPublicForm = lazy(() => import('./pages/MaxAvisPublicForm'))
 const StudioDesignPro = lazy(() => import('./pages/outils/StudioLogoIA'))
 const Credits = lazy(() => import('./pages/Credits'))
 const AbawiPay = lazy(() => import('./pages/AbawiPay'))
+const SenTicket = lazy(() => import('./pages/outils/SenTicket'))
 const Abavie = lazy(() => import('./pages/Abavie'))
 const AbawiBank = lazy(() => import('./pages/AbawiBank'))
 const Abawi360 = lazy(() => import('./pages/Abawi360'))
@@ -234,6 +235,7 @@ function App() {
           <Route path="/outils/tontine" element={<Tontine />} />
           <Route path="/credits" element={<Credits />} />
           <Route path="/abawi-pay" element={<AbawiPay />} />
+          <Route path="/outils/senticket" element={<SenTicket />} />
           <Route path="/abavie" element={<Abavie />} />
           <Route path="/abawi-bank" element={<AbawiBank />} />
           <Route path="/abawi360" element={<Abawi360 />} />

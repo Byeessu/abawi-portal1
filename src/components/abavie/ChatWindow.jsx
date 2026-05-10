@@ -11,6 +11,9 @@ import ForwardModal from './ForwardModal';
 import PollMessage from './PollMessage';
 import GroupInfo from './GroupInfo';
 import MeetingRoom from './MeetingRoom';
+import VoiceMessagePlayer from './VoiceMessagePlayer';
+import LocationMessage from './LocationMessage';
+import GiftPanel from './GiftPanel';
 
 function initials(name) {
   if (!name) return '?';
@@ -87,6 +90,9 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
 
   // Forward modal
   const [forwardMessage, setForwardMessage] = useState(null);
+
+  // Gift panel
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
 
   // Disappearing messages timer (per conversation)
   const [disappearingTimer, setDisappearingTimer] = useState(() => {
@@ -202,6 +208,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
       const decrypted = await decryptE2EMessages(data)
       setMessages(decrypted)
       markAsRead(data)
+      loadReads(data.map(m => m.id))
       cacheMessages(decrypted)
     }
   }
@@ -221,10 +228,30 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
     } catch { return msgs; }
   }
 
+  const [readsMap, setReadsMap] = useState({});
+
   async function markAsRead(data) {
-    const unread = data.filter(m => m.sender_id !== membre.id && !m.read);
+    const unread = data.filter(m => m.sender_id !== membre.id);
     if (unread.length === 0) return;
-    await supabase.from('messages').update({ read: true }).in('id', unread.map(m => m.id));
+    const now = new Date().toISOString();
+    const rows = unread.map(m => ({ message_id: m.id, user_id: membre.id, read_at: now }));
+    await supabase.from('message_reads').upsert(rows, { onConflict: 'message_id, user_id' });
+  }
+
+  async function loadReads(messageIds) {
+    if (!messageIds.length) return;
+    const { data } = await supabase
+      .from('message_reads')
+      .select('message_id, user_id, read_at')
+      .in('message_id', messageIds);
+    if (data) {
+      const map = {};
+      data.forEach(r => {
+        if (!map[r.message_id]) map[r.message_id] = [];
+        map[r.message_id].push(r);
+      });
+      setReadsMap(prev => ({ ...prev, ...map }));
+    }
   }
 
   async function loadOtherUser() {
@@ -600,6 +627,9 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             </button>
           )}
+          <button className="abv-icon-btn" title="Envoyer un cadeau" onClick={() => setShowGiftPanel(true)}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 15v7"/><circle cx="12" cy="5" r="3"/><path d="M17 5h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2"/></svg>
+          </button>
           <button className="abv-icon-btn" title="Plus" onClick={() => setSelectionMode(v => !v)}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
           </button>
@@ -683,7 +713,11 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
                   <img src={mediaSrc[m.id] || m.file_url} alt="image" className="abv-msg-image" loading="lazy" />
                 )}
                 {m.type === 'audio' && (mediaSrc[m.id] || m.file_url) && (
-                  <audio controls src={mediaSrc[m.id] || m.file_url} className="abv-msg-audio" />
+                  m.metadata?.isVoice ? (
+                    <VoiceMessagePlayer src={mediaSrc[m.id] || m.file_url} duration={m.metadata?.duration || 0} />
+                  ) : (
+                    <audio controls src={mediaSrc[m.id] || m.file_url} className="abv-msg-audio" />
+                  )
                 )}
                 {m.type === 'video' && (mediaSrc[m.id] || m.file_url) && (
                   <video controls src={mediaSrc[m.id] || m.file_url} className="abv-msg-video" />
@@ -693,6 +727,9 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     <span>{m.content || 'Document'}</span>
                   </a>
+                )}
+                {m.type === 'location' && m.metadata?.lat != null && m.metadata?.lng != null && (
+                  <LocationMessage lat={m.metadata.lat} lng={m.metadata.lng} address={m.metadata.address} />
                 )}
                 {m.type === 'poll' && pollsMap[m.metadata?.pollId] && (
                   <PollMessage
@@ -726,14 +763,23 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
                 <div className="abv-bubble-footer">
                   <div className="abv-bubble-time">
                     {formatTime(m.created_at)}
-                    {isMine && (
-                      <span className={`abv-read-status${m.read ? ' abv-read-status--read' : ''}`}>
-                        {m.read
-                          ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/><polyline points="15 6 9 17 4 12"/></svg>
-                          : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                        }
-                      </span>
-                    )}
+                    {isMine && (() => {
+                      const others = (conversation.participants || []).filter(p => p !== m.sender_id);
+                      const readers = (readsMap[m.id] || []).map(r => r.user_id);
+                      const allRead = others.length > 0 && others.every(p => readers.includes(p));
+                      const someRead = others.some(p => readers.includes(p));
+                      return (
+                        <span className={`abv-read-status${allRead ? ' abv-read-status--read' : ''}`}>
+                          {allRead ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/><polyline points="15 6 9 17 4 12"/></svg>
+                          ) : someRead ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/><polyline points="15 6 9 17 4 12"/></svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                          )}
+                        </span>
+                      );
+                    })()}
                   </div>
                   {/* Quick reaction on hover */}
                   <div className="abv-quick-reactions">
@@ -948,6 +994,14 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
             setShowMeetingRoom(false);
             setMeetingRoomId(null);
           }}
+        />
+      )}
+
+      {/* Gift Panel */}
+      {showGiftPanel && (
+        <GiftPanel
+          recipientId={otherUser?.id || conversation?.participants?.find(p => p !== membre?.id)}
+          onClose={() => setShowGiftPanel(false)}
         />
       )}
     </main>

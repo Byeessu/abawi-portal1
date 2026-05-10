@@ -6,6 +6,8 @@ import { AbavieLogoSVG } from './AbavieLogoSVG';
 import StatusViewer from './StatusViewer';
 import StatusCreator from './StatusCreator';
 import ContactsList from './ContactsList';
+import CommunitiesPanel from './CommunitiesPanel';
+import CommunityFeed from './CommunityFeed';
 import { abavieSettings } from '../../lib/abavieSettings';
 
 function timeAgo(iso) {
@@ -22,7 +24,7 @@ function initials(name) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
-export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
+export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGlobalSearch }) {
   const { membre } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState([]);
@@ -60,6 +62,8 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState(() => abavieSettings.get());
   const [statuses, setStatuses] = useState([]);
+  const [showCommunities, setShowCommunities] = useState(false);
+  const [activeCommunity, setActiveCommunity] = useState(null);
   const csvRef = useRef(null);
   const backupFileRef = useRef(null);
 
@@ -289,6 +293,12 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
           <span className="abv-logo-text">Ab<span>avie</span></span>
         </div>
         <div className="abv-sidebar-actions">
+          <button className="abv-icon-btn" title="Recherche globale" onClick={onOpenGlobalSearch}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </button>
+          <button className="abv-icon-btn" title="Communautés" onClick={() => setShowCommunities(true)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
           <button className="abv-icon-btn" title="Contacts" onClick={() => setShowContacts(true)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </button>
@@ -795,6 +805,23 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden }) {
             navigator.clipboard.writeText(`Rejoins-moi sur Abavie ! ${link}`);
             alert('Lien copié !');
           }}
+        />
+      )}
+
+      {/* Communities */}
+      {showCommunities && (
+        <CommunitiesPanel
+          onClose={() => setShowCommunities(false)}
+          onSelectCommunity={c => {
+            setActiveCommunity(c);
+            setShowCommunities(false);
+          }}
+        />
+      )}
+      {activeCommunity && (
+        <CommunityFeed
+          community={activeCommunity}
+          onClose={() => setActiveCommunity(null)}
         />
       )}
     </aside>

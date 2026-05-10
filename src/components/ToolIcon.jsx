@@ -60,6 +60,7 @@ const TOOL_TONE = {
   'abawi-pay':     'amber',
   'tontine':       'emerald',
   'maxavis':       'blue',
+  'senticket':     'purple',
 }
 
 function Frame({ id, tone = 'gold', children, withRing = true, withGlow = true }) {
@@ -473,6 +474,24 @@ function Lib({ name, id, tone }) {
           {/* Checkmark validation */}
           <circle cx="25" cy="24" r="4" fill={g} />
           <path d="M23 24l1.5 1.5L27 22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      )
+    case 'senticket':
+      return (
+        <g>
+          {/* Ticket recto */}
+          <rect x="5" y="8" width="22" height="16" rx="3" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.5" />
+          <path d="M5 16h22" stroke={s} strokeWidth="1.2" strokeDasharray="3 2" />
+          {/* QR simplifié */}
+          <rect x="8" y="11" width="7" height="7" rx="1" fill={g} />
+          <path d="M10 13h3M10 15h3" stroke="#fff" strokeWidth="1" strokeLinecap="round" />
+          {/* Texte infos */}
+          <path d="M17 12h8M17 15h6M17 18h8" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6" />
+          {/* Scallops bordures ticket */}
+          <circle cx="5" cy="12" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
+          <circle cx="5" cy="20" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
+          <circle cx="27" cy="12" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
+          <circle cx="27" cy="20" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
         </g>
       )
     default:

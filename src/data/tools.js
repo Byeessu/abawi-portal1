@@ -113,4 +113,14 @@ export const TOOLS_ELITE = [
     access: 'outils-elite',
     tags: ['Sondages illimités', 'Pétitions en ligne', 'Millions de réponses', 'Rapports IA', 'Analytics temps réel'],
   },
+  {
+    id: 'senticket',
+    title: 'SenTicket',
+    desc: 'Billetterie événementielle complète : création d\'événements, vente de tickets, préventes, passes VIP, QR codes, paiement mobile money, dashboard organisateur.',
+    prix: 7900,
+    iconKey: 'senticket',
+    path: '/outils/senticket',
+    access: 'outils-elite',
+    tags: ['Billetterie', 'QR Code', 'Paiement mobile', 'Dashboard', 'Preventes'],
+  },
 ];
