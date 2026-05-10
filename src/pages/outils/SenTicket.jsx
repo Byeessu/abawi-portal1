@@ -1523,7 +1523,7 @@ function OrganizerView({ onCreate, onViewEvents }) {
     if (!file) return;
     setUploading(true);
     try {
-      const url = await uploadFile(file, 'images', 'senticket');
+      const url = await uploadFile(file, 'covers', 'senticket');
       setForm({ ...form, cover_url: url });
     } catch (err) {
       alert('Erreur upload : ' + err.message);
