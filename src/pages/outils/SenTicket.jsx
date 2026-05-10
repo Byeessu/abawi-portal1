@@ -19,6 +19,41 @@ const COMMISSION_RATE = 0.07; // 7% commission SenTicket
 
 const FAVORITES_KEY = 'senticket_favorites';
 const VIEWS_KEY = 'senticket_views';
+const REVIEWS_KEY = 'senticket_reviews';
+
+const VALID_COUPONS = {
+  'SENTICKET10': { type: 'percent', value: 10 },
+  'SENTICKET20': { type: 'percent', value: 20 },
+  'ABAWI500': { type: 'fixed', value: 500 },
+  'WELCOME1000': { type: 'fixed', value: 1000 },
+};
+
+function loadReviews() {
+  try {
+    const raw = localStorage.getItem(REVIEWS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+function saveReviews(obj) {
+  try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(obj)); } catch {}
+}
+function useCountdown(targetDate) {
+  const [left, setLeft] = useState(() => Math.max(0, new Date(targetDate) - Date.now()));
+  useEffect(() => {
+    const t = setInterval(() => setLeft(Math.max(0, new Date(targetDate) - Date.now())), 1000);
+    return () => clearInterval(t);
+  }, [targetDate]);
+  const days = Math.floor(left / 86400000);
+  const hours = Math.floor((left % 86400000) / 3600000);
+  const minutes = Math.floor((left % 3600000) / 60000);
+  const seconds = Math.floor((left % 60000) / 1000);
+  return { days, hours, minutes, seconds, expired: left === 0 };
+}
+function openMaps(event) {
+  const q = encodeURIComponent(`${event.lieu}, ${event.ville}, Sénégal`);
+  window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
+}
 
 function loadFavorites() {
   try {
@@ -320,6 +355,8 @@ export default function SenTicket() {
   const [withdrawals, setWithdrawals] = useState(() => loadWithdrawals());
   const [favorites, setFavorites] = useState(() => loadFavorites());
   const [views] = useState(() => loadViews());
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [reviews, setReviews] = useState(() => loadReviews());
   const nav = useNavigate();
 
   // Persistance
@@ -337,6 +374,7 @@ export default function SenTicket() {
 
   const filteredEvents = events
     .filter(e => e.statut === 'actif')
+    .filter(e => !showFavoritesOnly || favorites.has(e.id))
     .filter(e => filterCat === 'Tous' || e.categorie === filterCat)
     .filter(e => filterVille === 'Toutes' || e.ville === filterVille)
     .filter(e => !searchQuery || e.titre.toLowerCase().includes(searchQuery.toLowerCase()) || e.ville.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -370,10 +408,11 @@ export default function SenTicket() {
 
   const cartTotal = cart.reduce((s, c) => s + c.prix * c.qty, 0);
 
-  function confirmPurchase(paymentMethod, buyerInfo) {
+  function confirmPurchase(paymentMethod, buyerInfo, meta = {}) {
     const newOrders = cart.map(item => {
       const total = item.prix * item.qty;
       const commission = Math.round(total * COMMISSION_RATE);
+      const discount = meta.discount || 0;
       return {
         id: newId('ORD'),
         eventId: item.eventId,
@@ -383,10 +422,13 @@ export default function SenTicket() {
         prixUnitaire: item.prix,
         qty: item.qty,
         total,
+        discount,
         commission,
-        netOrganisateur: total - commission,
+        netOrganisateur: total - commission - discount,
         acheteur: buyerInfo,
         paymentMethod,
+        couponCode: meta.couponCode || null,
+        groupEmails: meta.groupEmails || [],
         dateAchat: new Date().toISOString(),
         statut: 'confirmé',
         qrData: genQRCodeData(newId('ORD'), item.eventId, item.billetId, buyerInfo.email),
@@ -558,10 +600,17 @@ export default function SenTicket() {
                     <option value="prix">Prix croissant</option>
                     <option value="popularite">Popularité</option>
                   </select>
+                  <button onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} style={{
+                    padding: '8px 14px', borderRadius: 100, border: `2px solid ${showFavoritesOnly ? '#EF4444' : 'var(--border)'}`,
+                    background: showFavoritesOnly ? 'rgba(239,68,68,0.1)' : 'transparent',
+                    color: showFavoritesOnly ? '#EF4444' : 'var(--text-secondary)',
+                    cursor: 'pointer', fontWeight: showFavoritesOnly ? 700 : 500,
+                    fontSize: '0.82rem', transition: 'all 0.2s', whiteSpace: 'nowrap',
+                  }}>{showFavoritesOnly ? '❤️ Mes favoris' : '🤍 Mes favoris'}</button>
                 </div>
 
                 {/* En vedette */}
-                {featuredEvents.length > 0 && !searchQuery && filterCat === 'Tous' && filterVille === 'Toutes' && (
+                {featuredEvents.length > 0 && !searchQuery && filterCat === 'Tous' && filterVille === 'Toutes' && !showFavoritesOnly && (
                   <div style={{ marginBottom: 28 }}>
                     <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>⭐ En vedette</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -633,7 +682,7 @@ export default function SenTicket() {
 
         {/* ── HISTORIQUE ── */}
         {view === 'historique' && (
-          <HistoriqueView orders={orders} onBack={() => setView('explorer')} />
+          <HistoriqueView orders={orders} events={events} reviews={reviews} setReviews={setReviews} onBack={() => setView('explorer')} />
         )}
 
         {/* ── ORGANISER ── */}
@@ -756,13 +805,19 @@ function EventDetail({ event, events, isFavorite, viewCount, onBack, onAddToCart
               cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
             }}>{isFavorite ? '❤️ Favori' : '🤍 Ajouter aux favoris'}</button>
           </div>
+
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>{event.titre}</h2>
+
+          {/* Compte à rebours */}
+          <CountdownBox targetDate={`${event.date}T${event.heure || '00:00'}`} />
+
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>{event.description}</p>
 
           {/* Actions rapides */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
             <ActionBtn label="📅 Calendrier" onClick={() => downloadICS(event)} />
             <ActionBtn label="🔗 Copier lien" onClick={() => copyLink(event)} />
+            <ActionBtn label="🗺️ Itinéraire" onClick={() => openMaps(event)} />
             <ActionBtn label="📘 Facebook" onClick={() => shareEvent(event, 'facebook')} />
             <ActionBtn label="🐦 X/Twitter" onClick={() => shareEvent(event, 'twitter')} />
             <ActionBtn label="💬 WhatsApp" onClick={() => shareEvent(event, 'whatsapp')} />
@@ -860,6 +915,29 @@ function ActionBtn({ label, onClick }) {
   );
 }
 
+function CountdownBox({ targetDate }) {
+  const { days, hours, minutes, seconds, expired } = useCountdown(targetDate);
+  if (expired) return (
+    <div style={{ marginBottom: 16, padding: '10px 16px', borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#EF4444' }}>⏰ L'événement a commencé ou est terminé</span>
+    </div>
+  );
+  const blocks = [
+    { v: days, l: 'J' }, { v: hours, l: 'H' }, { v: minutes, l: 'M' }, { v: seconds, l: 'S' },
+  ];
+  return (
+    <div style={{ marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
+      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>⏳ Début dans</span>
+      {blocks.map(b => (
+        <div key={b.l} style={{ padding: '6px 10px', borderRadius: 8, background: 'var(--bg-primary)', border: '1px solid var(--border)', textAlign: 'center', minWidth: 36 }}>
+          <div style={{ fontWeight: 800, color: '#8B5CF6', fontSize: '0.95rem' }}>{String(b.v).padStart(2, '0')}</div>
+          <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{b.l}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function InfoBox({ icon, label, value }) {
   return (
     <div style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-primary)', border: '1px solid var(--border)', textAlign: 'center' }}>
@@ -924,16 +1002,35 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
   const [buyer, setBuyer] = useState({ nom: '', prenom: '', email: '', tel: '' });
   const [method, setMethod] = useState('wave');
   const [processing, setProcessing] = useState(false);
+  const [coupon, setCoupon] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [groupEmails, setGroupEmails] = useState('');
 
   const commission = Math.round(total * COMMISSION_RATE);
-  const totalTTC = total + commission;
+
+  let discount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percent') discount = Math.round(total * (appliedCoupon.value / 100));
+    else discount = Math.min(appliedCoupon.value, total);
+  }
+  const totalTTC = total + commission - discount;
+
   const canSubmit = buyer.nom && buyer.prenom && buyer.email && buyer.tel;
+
+  function applyCoupon() {
+    const code = coupon.trim().toUpperCase();
+    if (VALID_COUPONS[code]) {
+      setAppliedCoupon({ code, ...VALID_COUPONS[code] });
+    } else {
+      setAppliedCoupon(null);
+    }
+  }
 
   async function handlePay() {
     if (!canSubmit) return;
     setProcessing(true);
     await new Promise(r => setTimeout(r, 2000));
-    onConfirm(method, buyer);
+    onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
     setProcessing(false);
   }
 
@@ -961,6 +1058,12 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Frais de service SenTicket (7%)</span>
             <span style={{ fontWeight: 600, color: '#F59E0B', fontSize: '0.85rem' }}>+ {formatPrix(commission)}</span>
           </div>
+          {discount > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px dashed var(--border)' }}>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Code promo ({appliedCoupon.code})</span>
+              <span style={{ fontWeight: 600, color: '#00c853', fontSize: '0.85rem' }}>- {formatPrix(discount)}</span>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '2px solid var(--border)' }}>
             <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Total à payer</span>
             <span style={{ fontWeight: 800, color: '#8B5CF6', fontSize: '1.15rem' }}>{formatPrix(totalTTC)}</span>
@@ -978,6 +1081,20 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
             <input className="st-input" placeholder="Nom" value={buyer.nom} onChange={e => setBuyer({ ...buyer, nom: e.target.value })} />
             <input className="st-input" placeholder="Email" type="email" value={buyer.email} onChange={e => setBuyer({ ...buyer, email: e.target.value })} />
             <input className="st-input" placeholder="Téléphone (Wave/OM/Free)" value={buyer.tel} onChange={e => setBuyer({ ...buyer, tel: e.target.value })} />
+          </div>
+
+          {/* Code promo */}
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>🎟️ Code promo</h3>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input className="st-input" placeholder="Saisissez un code (ex: SENTICKET10)" value={coupon} onChange={e => setCoupon(e.target.value)} style={{ flex: 1 }} />
+            <button onClick={applyCoupon} className="st-btn-primary" style={{ padding: '8px 16px', fontSize: '0.82rem' }}>Appliquer</button>
+          </div>
+
+          {/* Partage groupe */}
+          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>🧑‍🤝‍🧑 Acheter pour un groupe</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            <textarea className="st-input" placeholder="Emails des participants (séparés par des virgules, optionnel)" rows={2} value={groupEmails} onChange={e => setGroupEmails(e.target.value)} />
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Les billets seront envoyés à ces emails après confirmation du paiement.</p>
           </div>
 
           <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 10 }}>Moyen de paiement</h3>
@@ -1019,7 +1136,7 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
   );
 }
 
-function HistoriqueView({ orders, onBack }) {
+function HistoriqueView({ orders, events, reviews, setReviews, onBack }) {
   if (orders.length === 0) {
     return (
       <div className="st-anim" style={{ textAlign: 'center', padding: 80 }}>
@@ -1062,38 +1179,78 @@ function HistoriqueView({ orders, onBack }) {
     URL.revokeObjectURL(url);
   }
 
+  function isPastEvent(eventDate) {
+    return new Date(eventDate) < new Date();
+  }
+
   return (
     <div className="st-anim">
       <button onClick={onBack} style={{ marginBottom: 16, padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>← Explorer</button>
       <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 16 }}>🎫 Mes billets ({orders.length})</h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {orders.map(o => (
-          <div key={o.id} className="st-card" style={{ padding: '18px 20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem', marginBottom: 4 }}>{o.eventTitre}</div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  {o.billetNom} × {o.qty} · {formatPrix(o.total)}
+        {orders.map(o => {
+          const evt = events.find(e => e.id === o.eventId);
+          const past = evt && isPastEvent(evt.date);
+          const review = reviews[o.eventId];
+          return (
+            <div key={o.id} className="st-card" style={{ padding: '18px 20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem', marginBottom: 4 }}>{o.eventTitre}</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 6 }}>
+                    {o.billetNom} × {o.qty} · {formatPrix(o.total)}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <span className="st-badge" style={{ background: 'rgba(0,200,83,0.12)', color: '#00c853' }}>✓ {o.statut}</span>
+                    <span className="st-badge" style={{ background: 'rgba(59,130,246,0.1)', color: '#3B82F6' }}>{formatDate(o.dateAchat)}</span>
+                    <span className="st-badge" style={{ background: 'var(--bg-primary)', color: 'var(--text-muted)' }}>{o.paymentMethod}</span>
+                    {o.couponCode && <span className="st-badge" style={{ background: 'rgba(245,197,24,0.1)', color: '#D4A017' }}>🎟 {o.couponCode}</span>}
+                    {past && <span className="st-badge" style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}>✅ Terminé</span>}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <span className="st-badge" style={{ background: 'rgba(0,200,83,0.12)', color: '#00c853' }}>✓ {o.statut}</span>
-                  <span className="st-badge" style={{ background: 'rgba(59,130,246,0.1)', color: '#3B82F6' }}>{formatDate(o.dateAchat)}</span>
-                  <span className="st-badge" style={{ background: 'var(--bg-primary)', color: 'var(--text-muted)' }}>{o.paymentMethod}</span>
-                </div>
+                <QRCodeDisplay data={o.qrData} size={90} />
               </div>
-              <QRCodeDisplay data={o.qrData} size={90} />
+              {past && (
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                  {!review ? (
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 6 }}>⭐ Noter cet événement</div>
+                      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                        {[1,2,3,4,5].map(star => (
+                          <button key={star} onClick={() => { const next = { ...reviews, [o.eventId]: { stars: star, text: '', date: new Date().toISOString() } }; setReviews(next); saveReviews(next); }} style={{
+                            fontSize: '1.4rem', background: 'none', border: 'none', cursor: 'pointer', color: '#F5C518',
+                          }}>⭐</button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>⭐ Votre avis</div>
+                      <div style={{ fontSize: '1.2rem', marginBottom: 4 }}>{'⭐'.repeat(review.stars)}</div>
+                      {!review.text ? (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <input className="st-input" placeholder="Décrivez votre expérience..." value={review.draft || ''} onChange={e => { const next = { ...reviews, [o.eventId]: { ...review, draft: e.target.value } }; setReviews(next); }} style={{ flex: 1, fontSize: '0.78rem', padding: '6px 10px' }} />
+                          <button onClick={() => { const next = { ...reviews, [o.eventId]: { ...review, text: review.draft || '', draft: '' } }; setReviews(next); saveReviews(next); }} className="st-btn-primary" style={{ padding: '6px 12px', fontSize: '0.72rem' }}>Envoyer</button>
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>"{review.text}"</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ID : {o.id} · Présentez ce QR code à l'entrée</span>
+                <button onClick={() => exportTicket(o)} style={{
+                  padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border)',
+                  background: 'var(--bg-card)', color: 'var(--text-secondary)', cursor: 'pointer',
+                  fontSize: '0.72rem', fontWeight: 600,
+                }}>📥 Télécharger le billet</button>
+              </div>
             </div>
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ID : {o.id} · Présentez ce QR code à l'entrée</span>
-              <button onClick={() => exportTicket(o)} style={{
-                padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border)',
-                background: 'var(--bg-card)', color: 'var(--text-secondary)', cursor: 'pointer',
-                fontSize: '0.72rem', fontWeight: 600,
-              }}>📥 Télécharger le billet</button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
