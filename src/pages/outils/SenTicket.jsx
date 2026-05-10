@@ -12,6 +12,7 @@ import {
   bumpView as dbBumpView, fetchViewCount,
   fetchOrderByQr, markOrderScanned,
   sendTicketEmail,
+  initiatePayment, verifyPayment,
 } from '../../lib/senticketDb';
 
 // =====================================================================
@@ -1158,37 +1159,56 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
     }
   }
 
-  const [step, setStep] = useState('form'); // form | confirm | success
-  const [confirmCountdown, setConfirmCountdown] = useState(5);
+  const [step, setStep] = useState('form'); // form | processing | success | error
+  const [payError, setPayError] = useState('');
+
+  // Vérifier retour PayDunya (token dans URL)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setStep('processing');
+      verifyPayment(token).then(res => {
+        if (res?.success && res.status === 'completed') {
+          onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
+          setStep('success');
+          // Nettoyer l'URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          setPayError('Le paiement n\'a pas été confirmé. Veuillez réessayer.');
+          setStep('error');
+        }
+      });
+    }
+  }, []);
 
   async function handlePay() {
     if (!canSubmit) return;
-    setStep('confirm');
-    setConfirmCountdown(5);
+    setStep('processing');
+    const orderId = `senticket_${Date.now()}`;
+    const returnUrl = `${window.location.origin}${window.location.pathname}`;
+    const payment = await initiatePayment({
+      amount: totalTTC,
+      description: `Billet SenTicket — ${cart.map(c => c.eventTitre).join(', ')}`,
+      orderId,
+      returnUrl,
+      buyerEmail: buyer.email,
+      buyerPhone: buyer.tel,
+    });
+    if (payment?.paymentUrl) {
+      window.location.href = payment.paymentUrl;
+    } else {
+      setPayError(payment?.error || 'Impossible d\'initier le paiement. Vérifiez votre connexion ou contactez le support.');
+      setStep('error');
+    }
   }
 
-  useEffect(() => {
-    if (step !== 'confirm') return;
-    if (confirmCountdown <= 0) {
-      onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
-      setStep('success');
-      return;
-    }
-    const t = setTimeout(() => setConfirmCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [step, confirmCountdown]);
-
-  if (step === 'confirm') {
+  if (step === 'processing') {
     return (
       <div className="st-anim" style={{ textAlign: 'center', padding: '60px 20px' }}>
         <div style={{ fontSize: '4rem', marginBottom: 20 }}>📲</div>
-        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Paiement en cours...</h2>
-        <p style={{ color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
-          Une demande de paiement a été envoyée à votre téléphone <strong>{buyer.tel}</strong> via {method === 'wave' ? 'Wave' : method === 'orange' ? 'Orange Money' : method === 'free' ? 'Free Money' : 'Carte bancaire'}.<br/><br/>
-          Veuillez confirmer la transaction sur votre appareil.
-        </p>
-        <div style={{ fontSize: '2rem', fontWeight: 800, color: '#8B5CF6' }}>{confirmCountdown}s</div>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 12 }}>Simulation de confirmation automatique dans {confirmCountdown} secondes...</p>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Connexion à PayDunya...</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>Veuillez patienter pendant l'initialisation du paiement.</p>
       </div>
     );
   }
@@ -1199,6 +1219,17 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
         <div style={{ fontSize: '4rem', marginBottom: 20 }}>✅</div>
         <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00c853', marginBottom: 12 }}>Paiement confirmé !</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Vos billets ont été générés et envoyés par email.</p>
+      </div>
+    );
+  }
+
+  if (step === 'error') {
+    return (
+      <div className="st-anim" style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ fontSize: '4rem', marginBottom: 20 }}>❌</div>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#EF4444', marginBottom: 12 }}>Erreur de paiement</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>{payError}</p>
+        <button className="st-btn-primary" onClick={() => setStep('form')}>Réessayer</button>
       </div>
     );
   }
@@ -1278,7 +1309,8 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
                 key={p.id}
                 onClick={() => setMethod(p.id)}
                 style={{
-                  padding: '12px 14px', borderRadius: 12, border: `2px solid ${method === p.id ? p.color : 'var(--border')}`,
+                  padding: '12px 14px', borderRadius: 12, border: `2px solid ${method === p.id ? p.color : 'var(--border)'}`,
+
                   background: method === p.id ? `${p.color}08` : 'var(--bg-card)', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}
