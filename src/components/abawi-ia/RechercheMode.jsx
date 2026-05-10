@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cleanIAText, cleanIATextLight } from '../../lib/cleanText';
 import { callGroq, extractTextFromAnyFile } from '../../lib/abawi-ia';
@@ -6,109 +6,245 @@ import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
 
-const RECHERCHE_KEY = 'abawi_recherche_history'
+// =====================================================================
+// Stockage multi-conversations (ChatGPT/Claude-like)
+// =====================================================================
+// Schéma:
+//   {
+//     conversations: [{ id, title, history: [{q,a}], createdAt, updatedAt }],
+//     activeId: string | null
+//   }
+// Limite: 50 conversations (FIFO sur les plus anciennes).
+
+const STORE_KEY = 'abawi_recherche_conversations'
+const LEGACY_KEY = 'abawi_recherche_history'
+const MAX_CONVERSATIONS = 50
+
+function newId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
+}
+
+function makeConversation(history = []) {
+  const now = Date.now()
+  return {
+    id: newId(),
+    title: history[0]?.q?.slice(0, 60) || 'Nouvelle conversation',
+    history,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+function loadStore() {
+  // 1) Lire le nouveau format
+  try {
+    const raw = localStorage.getItem(STORE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed && Array.isArray(parsed.conversations)) {
+        return {
+          conversations: parsed.conversations,
+          activeId: parsed.activeId || parsed.conversations[0]?.id || null,
+        }
+      }
+    }
+  } catch {}
+  // 2) Migration depuis l'ancienne clé (historique unique)
+  try {
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || '[]')
+    if (Array.isArray(legacy) && legacy.length > 0) {
+      const conv = makeConversation(legacy)
+      return { conversations: [conv], activeId: conv.id }
+    }
+  } catch {}
+  return { conversations: [], activeId: null }
+}
+
+function saveStore(store) {
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(store))
+    // Nettoie la legacy après migration réussie
+    localStorage.removeItem(LEGACY_KEY)
+  } catch {}
+}
+
+function formatRelativeTime(ts) {
+  const diff = Date.now() - ts
+  const min = 60 * 1000
+  const hour = 60 * min
+  const day = 24 * hour
+  if (diff < min) return "à l'instant"
+  if (diff < hour) return `il y a ${Math.floor(diff / min)} min`
+  if (diff < day) return `il y a ${Math.floor(diff / hour)} h`
+  if (diff < 7 * day) return `il y a ${Math.floor(diff / day)} j`
+  return new Date(ts).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+}
+
+// =====================================================================
+// Fallback local quand l'IA est indispo
+// =====================================================================
 
 function buildLocalFallbackAnswer(question, files = []) {
   const cleanQuestion = (question || 'Analyse stratégique demandée').trim()
   const normalized = cleanQuestion.toLowerCase()
   const shortPolite = ['ok', 'merci', 'thanks', 'thx', 'daccord', "d'accord", 'oui', 'non', 'test']
   if (shortPolite.includes(normalized) || cleanQuestion.length < 12) {
-    return `Service IA temporairement limite (quota). Message bien recu: "${cleanQuestion}". Reessaie dans quelques secondes avec une question plus precise (objectif + contexte) pour obtenir une reponse complete.`
+    return `Service IA temporairement limité (quota). Message bien reçu : "${cleanQuestion}". Réessayez dans quelques secondes avec une question plus précise (objectif + contexte) pour obtenir une réponse complète.`
   }
+  const filesNote = files.length
+    ? `\n\n**Documents reçus** : ${files.map(f => f.name).join(', ')}.`
+    : ''
+  return `## Synthèse rapide
+Le service IA distant est momentanément indisponible (quota ou rate-limit). Voici une trame d'analyse à activer dès que la connexion revient.
 
-  const filesPart = files.length
-    ? `Documents pris en compte: ${files.map(f => f.name).slice(0, 5).join(', ')}.`
-    : 'Aucun document joint.'
+## Cadrage proposé
+- **Question** : ${cleanQuestion}
+- **Angle d'analyse** : enjeux ABAWI / contexte africain / OHADA si pertinent.
+- **Livrables attendus** : note synthétique structurée + recommandations actionnables.${filesNote}
 
-  return `## ANALYSE RAPIDE (MODE SECOURS)
-
-Le service IA externe est temporairement saturé, donc je bascule en mode local pour éviter le blocage.
-
-## CONTEXTE
-Question: ${cleanQuestion}
-${filesPart}
-
-## LECTURE STRATÉGIQUE PRÉLIMINAIRE
-- Clarifier l'objectif prioritaire (croissance, rentabilité, conformité, exécution).
-- Identifier 3 hypothèses critiques à valider rapidement.
-- Isoler les contraintes fortes (budget, délais, réglementation, ressources).
-
-## PLAN D'ACTION IMMÉDIAT (7 JOURS)
-1. Formaliser le problème en 5 lignes avec KPI cible.
-2. Produire un mini-diagnostic: causes, impact, risques.
-3. Tester une action à faible coût et forte probabilité d'impact.
-4. Mesurer les résultats puis décider scale / arrêt.
-
-## DONNÉES À AJOUTER POUR UNE ANALYSE IA COMPLÈTE
-- Chiffres actuels (CA, coûts, marge, conversion, churn).
-- Horizon temporel visé (30/90/180 jours).
-- Contraintes non négociables.
-- Résultat attendu chiffré.
-
-## RECOMMANDATION
-Relancer l'analyse IA dans quelques minutes avec une question plus ciblée et un contexte plus court (1 objectif + 3 KPI), pour obtenir une recommandation plus précise et actionnable.`
+## Action recommandée
+Réessayez dans 1 à 2 minutes. Si l'erreur persiste, simplifiez la question ou réduisez les pièces jointes.`
 }
 
+// =====================================================================
+// Composant principal
+// =====================================================================
+
 export default function RechercheMode() {
+  const location = useLocation();
+  const inputRef = useRef(null);
+  const bottomRef = useRef(null);
+
+  // Store complet
+  const [store, setStore] = useState(() => loadStore());
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  // État de la conversation courante
   const [query, setQuery] = useState('');
-  const [history, setHistory] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(RECHERCHE_KEY) || 'null') || [] } catch { return [] }
-  });
   const [loading, setLoading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [fileContext, setFileContext] = useState('');
   const [fileLoading, setFileLoading] = useState(false);
-  const [rateLimitedUntil, setRateLimitedUntil] = useState(0);
-  const inputRef = useRef(null);
-  const bottomRef = useRef(null);
 
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const q = params.get('q');
-      if (q) {
-        setQuery(q);
-        setTimeout(() => inputRef.current?.focus(), 60);
-      }
-    } catch {}
-  }, []);
+  // Conversation active dérivée du store
+  const activeConv = useMemo(
+    () => store.conversations.find(c => c.id === store.activeId) || null,
+    [store]
+  );
+  const history = activeConv?.history || [];
 
-  const prevHistoryLength = useRef(0);
+  // Persistance + tri par updatedAt desc
   useEffect(() => {
-    if (history.length > prevHistoryLength.current) {
-      setTimeout(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }, 100);
-      // Persist history (max 20 entries)
-      try { localStorage.setItem(RECHERCHE_KEY, JSON.stringify(history.slice(-20))) } catch {}
+    saveStore(store);
+  }, [store]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [history, loading]);
+
+  // Pré-remplit la question via location.state (ex: depuis Hero)
+  useEffect(() => {
+    const stateQuery = location.state?.query;
+    if (stateQuery) {
+      setQuery(stateQuery);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
-    prevHistoryLength.current = history.length;
-  }, [history]);
+  }, [location.state]);
 
+  // ── Helpers store ───────────────────────────────────────────────────
+  function startNewConversation(focus = true) {
+    const conv = makeConversation([]);
+    setStore(s => ({
+      conversations: [conv, ...s.conversations].slice(0, MAX_CONVERSATIONS),
+      activeId: conv.id,
+    }));
+    setQuery('');
+    setUploadedFiles([]);
+    setFileContext('');
+    setShowSidebar(false);
+    if (focus) setTimeout(() => inputRef.current?.focus(), 100);
+  }
+
+  function selectConversation(id) {
+    setStore(s => ({ ...s, activeId: id }));
+    setShowSidebar(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }
+
+  function deleteConversation(id) {
+    if (!confirm('Supprimer définitivement cette conversation ?')) return;
+    setStore(s => {
+      const conversations = s.conversations.filter(c => c.id !== id);
+      const activeId = s.activeId === id
+        ? (conversations[0]?.id || null)
+        : s.activeId;
+      return { conversations, activeId };
+    });
+  }
+
+  function deleteAllConversations() {
+    if (!confirm('Supprimer TOUTES les conversations ? Cette action est irréversible.')) return;
+    setStore({ conversations: [], activeId: null });
+  }
+
+  function startRename(id, currentTitle) {
+    setRenamingId(id);
+    setRenameValue(currentTitle);
+  }
+  function commitRename() {
+    if (!renamingId) return;
+    const title = renameValue.trim().slice(0, 100) || 'Sans titre';
+    setStore(s => ({
+      ...s,
+      conversations: s.conversations.map(c =>
+        c.id === renamingId ? { ...c, title, updatedAt: Date.now() } : c
+      ),
+    }));
+    setRenamingId(null);
+    setRenameValue('');
+  }
+  function cancelRename() {
+    setRenamingId(null);
+    setRenameValue('');
+  }
+
+  // ── Pièces jointes ──────────────────────────────────────────────────
   async function handleFiles(files) {
-    if (!files?.length) return;
+    if (!files || files.length === 0) return;
     setFileLoading(true);
-    const list = Array.from(files);
-    setUploadedFiles(list);
-    const combined = [];
-    for (const f of list) {
-      const text = await extractTextFromAnyFile(f);
-      if (text) combined.push(`=== ${f.name} ===\n${cleanIAText(text.slice(0, 2500))}`);
-    }
-    setFileContext(combined.join('\n\n'));
+    try {
+      const arr = Array.from(files);
+      setUploadedFiles(arr);
+      const contents = await Promise.all(arr.map(async (f) => {
+        try {
+          const text = await extractTextFromAnyFile(f);
+          return `--- ${f.name} ---\n${text.slice(0, 8000)}`;
+        } catch {
+          return `--- ${f.name} ---\n[impossible de lire ce fichier]`;
+        }
+      }));
+      setFileContext(contents.join('\n\n'));
+    } catch {}
     setFileLoading(false);
   }
 
+  // ── Recherche IA ────────────────────────────────────────────────────
   async function search() {
-    const now = Date.now();
-    if (now < rateLimitedUntil) {
-      const remaining = Math.ceil((rateLimitedUntil - now) / 1000);
-      setHistory(h => [...h, { q: query.trim() || 'Nouvelle demande', a: `Limite de debit atteinte. Reessayez dans ${remaining}s.` }]);
-      return;
-    }
-    const q = query.trim();
+    const q = (query || '').trim();
     if (!q && !fileContext) return;
     setLoading(true);
+
+    // Si pas de conversation active, en créer une à la volée
+    let convId = store.activeId;
+    if (!convId) {
+      const conv = makeConversation([]);
+      convId = conv.id;
+      setStore(s => ({
+        conversations: [conv, ...s.conversations].slice(0, MAX_CONVERSATIONS),
+        activeId: conv.id,
+      }));
+    }
+
     setQuery('');
 
     const userContent = fileContext
@@ -134,39 +270,212 @@ export default function RechercheMode() {
         { role: 'user', content: userContent },
       ];
       const answer = cleanIATextLight(await callGroq(messages, 900));
-      setHistory(h => [...h, { q: q || `Analyse: ${uploadedFiles.map(f => f.name).join(', ')}`, a: answer }]);
+      const newEntry = { q: q || `Analyse: ${uploadedFiles.map(f => f.name).join(', ')}`, a: answer };
+      appendToConversation(convId, newEntry);
       if (fileContext) { setFileContext(''); setUploadedFiles([]); }
-    } catch (e) {
-      const isRateLimit = String(e?.message || '').toUpperCase().includes('RATE_LIMIT');
-      const friendlyError = toUserFriendlyAIError(e, `Erreur: ${e.message || 'inconnue'}`);
-      if (isRateLimit) {
-        setRateLimitedUntil(Date.now() + 15000);
-        const offlineAnswer = buildLocalFallbackAnswer(q, uploadedFiles);
-        setHistory(h => [...h, { q: q || 'Upload fichiers', a: offlineAnswer }]);
-      } else {
-        setHistory(h => [...h, { q: q || 'Upload fichiers', a: friendlyError }]);
-      }
+    } catch (err) {
+      const friendly = toUserFriendlyAIError(err);
+      const fallback = friendly && friendly.length > 0
+        ? `${friendly}\n\n---\n\n${buildLocalFallbackAnswer(q, uploadedFiles)}`
+        : buildLocalFallbackAnswer(q, uploadedFiles);
+      appendToConversation(convId, { q: q || `Analyse: ${uploadedFiles.map(f => f.name).join(', ')}`, a: cleanIAText(fallback) });
     }
     setLoading(false);
-    setTimeout(() => inputRef.current?.focus(), 100);
   }
 
+  function appendToConversation(convId, entry) {
+    setStore(s => {
+      const conversations = s.conversations.map(c => {
+        if (c.id !== convId) return c;
+        const history = [...c.history, entry];
+        const title = c.history.length === 0 && entry.q
+          ? entry.q.slice(0, 60)
+          : c.title;
+        return { ...c, history, title, updatedAt: Date.now() };
+      });
+      return { ...s, conversations };
+    });
+  }
+
+  // Conversations triées par updatedAt desc pour la sidebar
+  const sortedConversations = useMemo(
+    () => [...store.conversations].sort((a, b) => b.updatedAt - a.updatedAt),
+    [store.conversations]
+  );
+
   const SUGGESTIONS = [
-    'Comment créer une SARL au Sénégal ?',
-    'Comment calculer la TVA ?',
-    'Meilleure stratégie marketing PME africaine',
-    'Comment rédiger un contrat de travail OHADA ?',
+    "Comment créer une SARL au Sénégal ?",
+    "Comment calculer la TVA ?",
+    "Meilleure stratégie marketing PME africaine",
+    "Comment rédiger un contrat de travail OHADA ?",
     "Analyse SWOT d'une startup tech africaine",
     "Comment lever des fonds pour une startup ?",
   ];
 
   return (
     <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
+      {/* ── Barre d'actions conversations ─────────────────────────── */}
+      <div style={{
+        display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
+        marginBottom: 12, padding: '8px 12px',
+        background: 'var(--bg-card)', border: '1px solid var(--border)',
+        borderRadius: 12,
+      }}>
+        <button
+          onClick={() => startNewConversation()}
+          style={{
+            padding: '8px 14px', borderRadius: 10, border: 'none',
+            background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: '#fff',
+            cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}
+          title="Démarrer une nouvelle conversation"
+        >
+          ＋ Nouvelle conversation
+        </button>
+
+        <button
+          onClick={() => setShowSidebar(v => !v)}
+          style={{
+            padding: '8px 12px', borderRadius: 10,
+            border: '1px solid var(--border)', background: 'transparent',
+            color: 'var(--text-primary)', cursor: 'pointer',
+            fontSize: '0.8rem', fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}
+          title="Voir l'historique de mes conversations"
+        >
+          🗂️ Historique ({store.conversations.length})
+        </button>
+
+        {activeConv && (
+          <div style={{
+            flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6,
+            color: 'var(--text-muted)', fontSize: '0.78rem',
+            paddingLeft: 8, borderLeft: '1px solid var(--border)',
+          }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Active :</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {activeConv.title}
+            </span>
+            <button
+              onClick={() => startRename(activeConv.id, activeConv.title)}
+              style={{ padding: '2px 6px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.78rem' }}
+              title="Renommer"
+            >✏️</button>
+            <button
+              onClick={() => deleteConversation(activeConv.id)}
+              style={{ padding: '2px 6px', borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: '#EF4444', fontSize: '0.78rem' }}
+              title="Supprimer cette conversation"
+            >🗑️</button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Sidebar / liste des conversations (déroulant) ──────────── */}
+      {showSidebar && (
+        <div style={{
+          marginBottom: 12, background: 'var(--bg-card)',
+          border: '1px solid var(--border)', borderRadius: 12,
+          maxHeight: 320, overflowY: 'auto',
+        }}>
+          {sortedConversations.length === 0 ? (
+            <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              Aucune conversation enregistrée. Posez une question pour démarrer.
+            </div>
+          ) : (
+            <>
+              {sortedConversations.map(c => {
+                const isActive = c.id === store.activeId;
+                const isRenaming = renamingId === c.id;
+                return (
+                  <div
+                    key={c.id}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 12px',
+                      borderBottom: '1px solid var(--border)',
+                      background: isActive ? 'rgba(59,130,246,0.08)' : 'transparent',
+                      cursor: isRenaming ? 'default' : 'pointer',
+                    }}
+                    onClick={() => !isRenaming && selectConversation(c.id)}
+                  >
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {isRenaming ? (
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onChange={e => setRenameValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') commitRename();
+                            else if (e.key === 'Escape') cancelRename();
+                          }}
+                          onBlur={commitRename}
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            width: '100%', padding: '6px 8px', borderRadius: 6,
+                            border: '1px solid #3B82F6', background: 'var(--bg-primary)',
+                            color: 'var(--text-primary)', fontSize: '0.85rem',
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <div style={{
+                            fontSize: '0.86rem', fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {c.title}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                            {c.history.length} message{c.history.length > 1 ? 's' : ''} · {formatRelativeTime(c.updatedAt)}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {!isRenaming && (
+                      <>
+                        <button
+                          onClick={e => { e.stopPropagation(); startRename(c.id, c.title); }}
+                          style={{ padding: 4, borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem' }}
+                          title="Renommer"
+                        >✏️</button>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteConversation(c.id); }}
+                          style={{ padding: 4, borderRadius: 6, border: 'none', background: 'transparent', cursor: 'pointer', color: '#EF4444', fontSize: '0.85rem' }}
+                          title="Supprimer"
+                        >🗑️</button>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+              <div style={{ padding: 10, textAlign: 'center' }}>
+                <button
+                  onClick={deleteAllConversations}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8,
+                    border: '1px solid rgba(239,68,68,0.3)', background: 'transparent',
+                    color: '#EF4444', cursor: 'pointer', fontSize: '0.76rem', fontWeight: 600,
+                  }}
+                >
+                  🗑️ Supprimer toutes les conversations
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── Fil de la conversation active ─────────────────────────── */}
       <div style={{ maxHeight: 'clamp(300px, 55vh, 520px)', overflowY: 'auto', marginBottom: '16px', paddingRight: 4, overscrollBehavior: 'contain' }}>
         {history.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
             <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔍</div>
-            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: 16 }}>Posez votre question ou uploadez des fichiers pour les analyser</p>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-secondary)', marginBottom: 16 }}>
+              Posez votre question ou uploadez des fichiers pour les analyser
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
               {SUGGESTIONS.map(s => (
                 <button key={s} onClick={() => setQuery(s)} style={{ padding: '7px 14px', borderRadius: '100px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', color: '#3B82F6', cursor: 'pointer', fontSize: '0.78rem', fontFamily: 'Outfit,sans-serif' }}>
@@ -206,6 +515,7 @@ export default function RechercheMode() {
         <div ref={bottomRef} />
       </div>
 
+      {/* ── Pièces jointes ────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
         <label style={{
           display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
@@ -228,13 +538,14 @@ export default function RechercheMode() {
         )}
       </div>
 
+      {/* ── Champ de saisie ──────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '8px' }}>
         <input
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); search() } }}
-          placeholder="Posez votre question..."
+          placeholder={activeConv ? "Continuez la conversation..." : "Posez votre question..."}
           style={{
             flex: 1, padding: 'clamp(11px,2vw,14px) clamp(12px,2.5vw,18px)',
             borderRadius: '12px', background: 'var(--bg-card)',
@@ -244,15 +555,15 @@ export default function RechercheMode() {
             minWidth: 0,
           }}
         />
-        <button onClick={search} disabled={!query.trim() && !fileContext} style={{
+        <button onClick={search} disabled={loading || (!query.trim() && !fileContext)} style={{
           padding: 'clamp(11px,2vw,14px) clamp(16px,3vw,22px)',
           borderRadius: '12px', border: 'none', flexShrink: 0,
-          background: (!query.trim() && !fileContext) ? 'var(--bg-card)' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
-          color: (!query.trim() && !fileContext) ? 'var(--text-muted)' : '#fff',
-          cursor: (!query.trim() && !fileContext) ? 'not-allowed' : 'pointer', fontWeight: 800,
+          background: (loading || (!query.trim() && !fileContext)) ? 'var(--bg-card)' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
+          color: (loading || (!query.trim() && !fileContext)) ? 'var(--text-muted)' : '#fff',
+          cursor: (loading || (!query.trim() && !fileContext)) ? 'not-allowed' : 'pointer', fontWeight: 800,
           fontSize: 'clamp(0.9rem,2vw,1.1rem)',
           minWidth: 44, minHeight: 44,
-        }}>→</button>
+        }}>{loading ? '…' : '→'}</button>
       </div>
     </div>
   );
