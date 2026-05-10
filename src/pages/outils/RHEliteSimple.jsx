@@ -5,6 +5,7 @@ import { useBackgroundJob } from '../../hooks/useBackgroundJob'
 import { cleanIATextLight } from '../../lib/cleanText'
 import { useAuth } from '../../context/AuthContext'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
+import { useToolAccess } from '../../hooks/useToolAccess'
 
 import { callGroq as groqCall } from '../../lib/groqClient'
 import SEO from '../../components/SEO'
@@ -38,8 +39,8 @@ const SECTIONS = [
 // Élite RH Component
 export default function RHEliteSimple() {
   const { membre } = useAuth()
+  const tool = useToolAccess('rh', 'rh_elite')
   const [section, setSection] = useState('fiche_poste')
-  const [paid, setPaid] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [docGenere, setDocGenere] = useState('')
@@ -266,35 +267,16 @@ export default function RHEliteSimple() {
   }
 
   const exportPDF = async () => {
+    if (!tool.allowed) { setShowPayment(true); return }
+    if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
     try {
       const content = document.getElementById('rh-content')
-      if (!content) {
-        alert('Contenu non trouvé pour export PDF')
-        return
-      }
-      
+      if (!content) { alert('Contenu non trouvé pour export PDF'); return }
       await bgJob.run(
-        async () => {
-          return await exportToPDF(content, {
-            filename: `rh-elite-${section}-${Date.now()}.pdf`,
-            includeHeader: true,
-            includeFooter: true,
-            headerText: `RH Élite - ${SECTIONS.find(s => s.id === section)?.label}`,
-            footerText: 'Généré avec Abawi IA'
-          })
-        },
-        {
-          onDone: () => {
-            alert('PDF exporté avec succès')
-          },
-          onError: (error) => {
-            alert(`Erreur export PDF: ${error.message}`)
-          }
-        }
+        async () => await exportToPDF(content, { filename: `rh-elite-${section}-${Date.now()}.pdf`, includeHeader: true, includeFooter: true }),
+        { onDone: () => alert('PDF exporté avec succès'), onError: (error) => alert(`Erreur export PDF: ${error.message}`) }
       )
-    } catch (error) {
-      alert(`Erreur: ${error.message}`)
-    }
+    } catch (error) { alert(`Erreur export PDF: ${error.message}`) }
   }
 
   // Élite Render

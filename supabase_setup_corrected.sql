@@ -231,6 +231,51 @@ BEGIN
   END LOOP;
 END $$;
 
+-- ── CREDIT PACKS ──────────────────────────
+CREATE TABLE IF NOT EXISTS credit_packs (
+  id TEXT PRIMARY KEY,
+  nom TEXT NOT NULL,
+  credits INTEGER NOT NULL DEFAULT 0,
+  bonus_credits INTEGER NOT NULL DEFAULT 0,
+  prix INTEGER NOT NULL DEFAULT 0,
+  description TEXT DEFAULT '',
+  actif BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+INSERT INTO credit_packs (id, nom, credits, bonus_credits, prix, description, actif) VALUES
+  ('starter_100', 'Starter', 100, 0, 4900, '100 crédits pour démarrer', true),
+  ('pro_500', 'Pro', 500, 50, 9900, '500 crédits + 50 bonus', true),
+  ('elite_2000', 'Elite', 2000, 300, 19900, '2000 crédits + 300 bonus', true),
+  ('vip_10000', 'VIP', 10000, 2000, 49900, '10000 crédits + 2000 bonus', true)
+ON CONFLICT (id) DO UPDATE SET
+  nom=EXCLUDED.nom, credits=EXCLUDED.credits, bonus_credits=EXCLUDED.bonus_credits,
+  prix=EXCLUDED.prix, description=EXCLUDED.description, actif=EXCLUDED.actif;
+
+-- ── CREDIT TRANSACTIONS ───────────────────
+CREATE TABLE IF NOT EXISTS credit_transactions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  email TEXT NOT NULL REFERENCES membres(email) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('debit','recharge','refund','bonus')),
+  montant INTEGER NOT NULL DEFAULT 0,
+  solde_avant INTEGER DEFAULT 0,
+  solde_apres INTEGER DEFAULT 0,
+  description TEXT DEFAULT '',
+  produit_id TEXT DEFAULT '',
+  produit_type TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_email ON credit_transactions(email);
+CREATE INDEX IF NOT EXISTS idx_credit_transactions_type ON credit_transactions(type);
+ALTER TABLE membres ADD COLUMN IF NOT EXISTS credits INTEGER DEFAULT 0;
+ALTER TABLE membres ADD COLUMN IF NOT EXISTS credits_total_utilises INTEGER DEFAULT 0;
+
+-- ── RLS CREDIT TRANSACTIONS ─────────────
+ALTER TABLE credit_transactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own transactions" ON credit_transactions;
+CREATE POLICY "Users read own transactions" ON credit_transactions FOR SELECT USING (email = current_setting('app.current_email', true) OR auth.uid() IS NOT NULL);
+DROP POLICY IF EXISTS "Admin all transactions" ON credit_transactions;
+CREATE POLICY "Admin all transactions" ON credit_transactions FOR ALL USING (auth.uid() IN (SELECT id FROM membres WHERE role='admin'));
+
 -- ── SENTICKET EVENTS ──────────────────────
 CREATE TABLE IF NOT EXISTS senticket_events (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,

@@ -127,9 +127,27 @@ export function checkToolAccess(toolName, membre) {
 }
 
 /**
+ * Résolution unifiée : plan inclusif OU crédits suffisants
+ * Retourne { ok, reason, cost, unlimited }
+ */
+export function resolveToolAccess(membre, toolName, creditCost = 0) {
+  if (!membre) return { ok: false, reason: 'non_connecte', cost: creditCost }
+  if (isSystemAdmin(membre) || hasAllInclusiveAccess(membre)) {
+    return { ok: true, reason: 'plan_inclusif', cost: 0, unlimited: true }
+  }
+  const isExpired = membre.date_fin && new Date(membre.date_fin) < new Date()
+  if (membre.statut !== 'actif' || isExpired) {
+    return { ok: false, reason: 'abonnement_inactif', cost: creditCost }
+  }
+  const solde = membre.credits || 0
+  if (creditCost > 0 && solde < creditCost) {
+    return { ok: false, reason: 'credits_insuffisants', cost: creditCost, solde, manquant: creditCost - solde }
+  }
+  return { ok: true, reason: 'credits', cost: creditCost, solde }
+}
+
+/**
  * Vérifie si le membre est en cours de chargement (null/undefined)
- * @param {Object} membre - Objet membre du AuthContext
- * @returns {boolean}
  */
 export function isMemberLoading(membre) {
   return membre === null || membre === undefined;

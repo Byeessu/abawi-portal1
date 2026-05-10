@@ -20,6 +20,7 @@ import { useState, useEffect, useMemo } from 'react'
 import '../../components/elite/elite.css'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import { useToolAccess } from '../../hooks/useToolAccess'
 
 // ═══════════════════════════════════════════════════════════════
 // ICONES SVG PROFESSIONNELS - Remplacent les emojis
@@ -748,6 +749,7 @@ function useLocalStorage(key, initialValue) {
    COMPOSANT PRINCIPAL
 ═══════════════════════════════════════════════════════════════ */
 export default function Tontine() {
+  const tool = useToolAccess('tontine', 'tontine')
   // Inject styles
   useEffect(() => {
     const style = document.createElement('style')
@@ -966,20 +968,22 @@ export default function Tontine() {
   /* ═══════════════════════════════════════════════════════════════
      EXPORT DES DONNÉES
   ════════════════════════════════════════════════════════════════ */
-  const exportToCSV = (data, filename) => {
+  const exportToCSV = async (data, filename) => {
+    if (!tool.allowed) { alert('Accès réservé. Connectez-vous ou rechargez des crédits.'); return }
+    if (!tool.unlimited) {
+      const res = await tool.debit()
+      if (!res.ok) { alert('Crédits insuffisants pour exporter'); return }
+    }
     const headers = Object.keys(data[0] || {}).join(';')
-    const rows = data.map(row => Object.values(row).map(v => 
+    const rows = data.map(row => Object.values(row).map(v =>
       typeof v === 'string' && v.includes(';') ? `"${v}"` : v
     ).join(';')).join('\n')
-    
     const csv = `${headers}\n${rows}`
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = url
-    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`
+    link.href = URL.createObjectURL(blob)
+    link.download = `${filename}.csv`
     link.click()
-    URL.revokeObjectURL(url)
   }
 
   const genererRapportPDF = () => {

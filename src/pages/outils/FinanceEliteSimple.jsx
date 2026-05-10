@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useBackgroundJob } from '../../hooks/useBackgroundJob'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
+import { useToolAccess } from '../../hooks/useToolAccess'
 
 import { callGroq as groqCall } from '../../lib/groqClient'
 import { buildSystemPrompt } from '../../lib/writingModes'
@@ -43,8 +44,8 @@ const SECTIONS = [
 // Élite Finance Component
 export default function FinanceEliteSimple() {
   const { membre } = useAuth()
+  const tool = useToolAccess('finance', 'finance_elite')
   const [section, setSection] = useState('entreprise')
-  const [paid, setPaid] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [rapport, setRapport] = useState('')
@@ -366,55 +367,40 @@ export default function FinanceEliteSimple() {
   }
 
   const exportPDF = async () => {
+    if (!tool.allowed) { setShowPayment(true); return }
+    if (!tool.unlimited) {
+      const res = await tool.debit()
+      if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return }
+    }
     try {
       const content = containerRef.current
-      if (!content) {
-        alert('Contenu non trouvé pour export PDF')
-        return
-      }
-      
+      if (!content) { alert('Contenu non trouvé pour export PDF'); return }
       await bgJob.run(
-        async () => {
-          return await exportToPDF(content, {
-            filename: `rapport-finance-elite-${entreprise.nom.replace(/\s+/g, '-')}.pdf`,
-            includeHeader: true,
-            includeFooter: true,
-            headerText: `Rapport Financier Élite - ${entreprise.nom}`,
-            footerText: 'Généré avec Abawi IA'
-          })
-        },
+        async () => await exportToPDF(content, {
+          filename: `rapport-finance-elite-${entreprise.nom.replace(/\s+/g, '-')}.pdf`,
+          includeHeader: true, includeFooter: true,
+        }),
         {
-          onDone: () => {
-            alert('PDF exporté avec succès')
-          },
-          onError: (error) => {
-            alert(`Erreur export PDF: ${error.message}`)
-          }
+          onDone: () => alert('PDF exporté avec succès'),
+          onError: (error) => alert(`Erreur export PDF: ${error.message}`),
         }
       )
-    } catch (error) {
-      alert(`Erreur: ${error.message}`)
-    }
+    } catch (e) { alert(`Erreur: ${e.message}`) }
   }
 
   const exportExcel = async () => {
+    if (!tool.allowed) { setShowPayment(true); return }
+    if (!tool.unlimited) {
+      const res = await tool.debit()
+      if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return }
+    }
     try {
-      const data = {
-        entreprise,
-        compte_resultat: compteResultat,
-        bilan: bilan,
-        tresorerie: tresorerie,
-        ratios: ratios,
-        valorisation: valorisation
-      }
-      
+      const data = { entreprise, compte_resultat: compteResultat, bilan, tresorerie, ratios, valorisation }
       await exportToExcel(data, {
         filename: `finance-elite-${entreprise.nom.replace(/\s+/g, '-')}.xlsx`,
         sheetName: 'Rapport Finance Élite'
       })
-    } catch (error) {
-      alert(`Erreur export Excel: ${error.message}`)
-    }
+    } catch (error) { alert(`Erreur export Excel: ${error.message}`) }
   }
 
   // Auto-calculs

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useBackgroundJob } from '../../hooks/useBackgroundJob'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
+import { useToolAccess } from '../../hooks/useToolAccess'
 
 import { callGroq as groqCall } from '../../lib/groqClient'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
@@ -36,8 +37,8 @@ const SECTIONS = [
 // Élite Consultant Component
 export default function ConsultantEliteSimple() {
   const { membre } = useAuth()
+  const tool = useToolAccess('consultant', 'consultant_elite')
   const [section, setSection] = useState('proposition')
-  const [paid, setPaid] = useState(false)
   const [showPayment, setShowPayment] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [docGenere, setDocGenere] = useState('')
@@ -220,35 +221,16 @@ export default function ConsultantEliteSimple() {
   }
 
   const exportPDF = async () => {
+    if (!tool.allowed) { setShowPayment(true); return }
+    if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
     try {
       const content = containerRef.current
-      if (!content) {
-        alert('Contenu non trouvé pour export PDF')
-        return
-      }
-      
+      if (!content) { alert('Contenu non trouvé pour export PDF'); return }
       await bgJob.run(
-        async () => {
-          return await exportToPDF(content, {
-            filename: `${section}-elite-${Date.now()}.pdf`,
-            includeHeader: true,
-            includeFooter: true,
-            headerText: `${sectionLabel} Élite`,
-            footerText: 'Généré avec Abawi IA'
-          })
-        },
-        {
-          onDone: () => {
-            alert('PDF exporté avec succès')
-          },
-          onError: (error) => {
-            alert(`Erreur export PDF: ${error.message}`)
-          }
-        }
+        async () => await exportToPDF(content, { filename: `${section}-elite-${Date.now()}.pdf`, includeHeader: true, includeFooter: true }),
+        { onDone: () => alert('PDF exporté avec succès'), onError: (error) => alert(`Erreur export PDF: ${error.message}`) }
       )
-    } catch (error) {
-      alert(`Erreur: ${error.message}`)
-    }
+    } catch (error) { alert(`Erreur export PDF: ${error.message}`) }
   }
 
   // Élite Render

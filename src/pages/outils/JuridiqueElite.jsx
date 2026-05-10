@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { hasAllInclusiveAccess } from '../../lib/permissions'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
+import { useToolAccess } from '../../hooks/useToolAccess'
 import { callGroq as groqClientCall } from '../../lib/groqClient'
 import SEO from '../../components/SEO'
 import GradientOrbs from '../../components/premium/GradientOrbs'
@@ -192,12 +193,12 @@ Pays: Sénégal — Droit applicable: OHADA + Code du Travail sénégalais${uplo
 
 export default function JuridiqueElite() {
   const { membre } = useAuth()
+  const tool = useToolAccess('juridique', 'juridique_elite')
   const [docType, setDocType] = useState('statuts_sarl')
   const [formData, setFormData] = useState({})
   const [docContent, setDocContent] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [paid, setPaid] = useState(false)
   const [pendingGenerate, setPendingGenerate] = useState(false)
   const [editMode, setEditMode] = useState(false)
   const [editContent, setEditContent] = useState('')
@@ -222,8 +223,8 @@ export default function JuridiqueElite() {
   )
 
   useEffect(() => {
-    if (hasAllInclusiveAccess(membre)) setPaid(true)
-  }, [membre])
+    if (tool.allowed) setShowPayment(false)
+  }, [tool.allowed])
 
   const currentDoc = DOC_TYPES.find(d => d.id === docType)
   const fields = FIELDS_BY_TYPE[docType] || []
@@ -257,16 +258,20 @@ export default function JuridiqueElite() {
     }
   }
 
-  function handleGenerate() {
-    if (!paid) {
+  async function handleGenerate() {
+    if (!tool.allowed) {
       setPendingGenerate(true)
-    } else {
-      genererDocument()
+      setShowPayment(true)
+      return
     }
+    if (!tool.unlimited) {
+      const res = await tool.debit()
+      if (!res.ok) { setShowPayment(true); return }
+    }
+    genererDocument()
   }
 
   function handlePaymentSuccess() {
-    setPaid(true)
     if (pendingGenerate) {
       setPendingGenerate(false)
       setTimeout(genererDocument, 100)
@@ -274,6 +279,8 @@ export default function JuridiqueElite() {
   }
 
   async function handleExportPDF() {
+    if (!tool.allowed) { setShowPayment(true); return }
+    if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { setShowPayment(true); return } }
     await exportToPDF('doc-juridique-preview', `${currentDoc.label.replace(/\s+/g, '_')}_${Date.now()}`)
   }
 

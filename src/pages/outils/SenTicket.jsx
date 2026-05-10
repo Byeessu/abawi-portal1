@@ -12,6 +12,7 @@ import {
   sendTicketEmail,
 } from '../../lib/senticketDb';
 import { createInvoice, isPaydunyaConfigured } from '../../config/paydunya';
+import { useToolAccess } from '../../hooks/useToolAccess';
 
 // =====================================================================
 // SenTicket — Plateforme de billetterie événementielle ABAWI
@@ -354,6 +355,7 @@ export default function SenTicket() {
   const { membre } = useAuth();
   const userId = membre?.id || null;
   const isLoggedIn = !!userId;
+  const tool = useToolAccess('senticket', 'senticket_create');
 
   const [events, setEvents] = useState(() => loadLocalEvents());
   const [view, setView] = useState('explorer'); // explorer | detail | panier | checkout | billet | historique | organiser | mes-events | scanner
@@ -541,6 +543,17 @@ export default function SenTicket() {
   }
 
   async function createEvent(evtData) {
+    if (!tool.allowed) {
+      setNotification({ type: 'error', msg: `Création d'événement : ${tool.error === 'non_connecte' ? 'Connectez-vous' : tool.error === 'credits_insuffisants' ? `Il manque ${tool.manquant} crédits` : 'Accès réservé'}` });
+      return;
+    }
+    if (!tool.unlimited) {
+      const res = await tool.debit();
+      if (!res.ok) {
+        setNotification({ type: 'error', msg: 'Crédits insuffisants pour créer un événement' });
+        return;
+      }
+    }
     const billets = evtData.billets || [];
     const payload = {
       event: {
