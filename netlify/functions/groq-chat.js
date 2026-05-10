@@ -6,6 +6,10 @@ const MAX_MSG_CHARS  = 16_000          // par message
 const MAX_TOKENS_CAP = 4000
 
 // ── Détection endpoint + modèle selon format de clé ──────────────
+// Détecte les valeurs masquées (Netlify Secrets Scanner remplace par ****)
+function isMasked(v) { return !v || typeof v !== 'string' || /\*{4,}/.test(v) || !v.trim() }
+function safe(v, fallback) { return isMasked(v) ? fallback : v }
+
 function resolveEndpoint(key) {
   if (!key) return 'https://api.groq.com/openai/v1/chat/completions'
   if (key.startsWith('AIzaSy')) return 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions'
@@ -15,9 +19,9 @@ function resolveEndpoint(key) {
 
 function defaultModel(key) {
   if (!key) return 'llama-3.3-70b-versatile'
-  if (key.startsWith('AIzaSy')) return process.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash'
+  if (key.startsWith('AIzaSy')) return safe(process.env.VITE_GEMINI_MODEL, 'gemini-2.0-flash')
   if (key.startsWith('xai-'))   return 'grok-3'
-  return process.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
+  return safe(process.env.VITE_GROQ_MODEL, 'llama-3.3-70b-versatile')
 }
 
 function out(statusCode, message, json = false) {
@@ -58,12 +62,12 @@ exports.handler = async function handler(event) {
   const messages = sanitizeMessages(body.messages)
   if (!messages.length) return out(400, 'messages required')
 
-  const apiKey = process.env.GROQ_API_KEY || process.env.VITE_GROQ_API_KEY || process.env.VITE_GROK_LLAMA_API_KEY || ''
+  const apiKey = safe(process.env.GROQ_API_KEY, '') || safe(process.env.VITE_GROQ_API_KEY, '') || safe(process.env.VITE_GROK_LLAMA_API_KEY, '') || ''
   if (!apiKey) return out(500, 'AI service not configured')
 
   const endpoint = resolveEndpoint(apiKey)
   const payload = {
-    model: body.model || defaultModel(apiKey),
+    model: safe(body.model, defaultModel(apiKey)),
     messages,
     max_tokens: Math.min(Number(body.max_tokens) || 1200, MAX_TOKENS_CAP),
     temperature: Math.max(0, Math.min(2, Number(body.temperature) || 0.7)),

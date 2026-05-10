@@ -4,6 +4,16 @@ const DEFAULT_GROQ_BASE_URL = 'https://api.groq.com/openai/v1'
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile'
 const GROQ_MODEL_FALLBACKS = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768']
 
+// Détecte les valeurs masquées par Netlify Secrets Scanner ou autre middleware
+// (ex: "****************tile" au lieu de "llama-3.3-70b-versatile")
+function isMaskedValue(v) {
+  if (!v || typeof v !== 'string') return true
+  return /\*{4,}/.test(v) || v.trim() === ''
+}
+function safeEnv(value, fallback) {
+  return isMaskedValue(value) ? fallback : value
+}
+
 function normalizeModelId(value, fallback = DEFAULT_GROQ_MODEL) {
   if (!value || typeof value !== 'string') return fallback
   let model = value.trim()
@@ -27,7 +37,7 @@ function resolveProvider(key) {
   if (key.startsWith('AIzaSy')) {
     return {
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
-      model: normalizeModelId(import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.0-flash', 'gemini-2.0-flash'),
+      model: normalizeModelId(safeEnv(import.meta.env.VITE_GEMINI_MODEL, 'gemini-2.0-flash'), 'gemini-2.0-flash'),
     }
   }
 
@@ -40,20 +50,21 @@ function resolveProvider(key) {
   }
 
   // Groq (gsk_...) ou clé inconnue → Groq par défaut
+  // safeEnv ignore les valeurs masquées par Netlify (***) et utilise le fallback
   return {
-    baseUrl: import.meta.env.VITE_GROQ_BASE_URL || DEFAULT_GROQ_BASE_URL,
-    model: normalizeModelId(import.meta.env.VITE_GROQ_MODEL || DEFAULT_GROQ_MODEL),
+    baseUrl: safeEnv(import.meta.env.VITE_GROQ_BASE_URL, DEFAULT_GROQ_BASE_URL),
+    model: normalizeModelId(safeEnv(import.meta.env.VITE_GROQ_MODEL, DEFAULT_GROQ_MODEL)),
   }
 }
 
 function getGroqBrowserKey() {
   return resolveRuntimeApiKey({
     envKeys: [
-      import.meta.env.VITE_GROQ_API_KEY,
-      import.meta.env.GROQ_API_KEY,
-      import.meta.env.VITE_GROK_LLAMA_API_KEY,
-      import.meta.env.GROK_LLAMA_API_KEY,
-    ],
+      safeEnv(import.meta.env.VITE_GROQ_API_KEY, ''),
+      safeEnv(import.meta.env.GROQ_API_KEY, ''),
+      safeEnv(import.meta.env.VITE_GROK_LLAMA_API_KEY, ''),
+      safeEnv(import.meta.env.GROK_LLAMA_API_KEY, ''),
+    ].filter(Boolean),
     providerId: 'groq',
     includeAlias: true,
   })
@@ -155,9 +166,6 @@ async function callProxy(payload) {
 
 async function callDirect(payload, apiKey, baseUrl) {
   const url = `${baseUrl || DEFAULT_GROQ_BASE_URL}/chat/completions`
-  if (typeof window !== 'undefined') {
-    try { console.log('[AI direct]', url, 'model:', payload?.model, 'key:', String(apiKey).slice(0, 8) + '…') } catch {}
-  }
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -168,9 +176,6 @@ async function callDirect(payload, apiKey, baseUrl) {
   })
   if (!res.ok) {
     const txt = await res.text().catch(() => '')
-    if (typeof window !== 'undefined') {
-      try { console.log('[AI direct] ERROR', res.status, txt.slice(0, 300)) } catch {}
-    }
     throw normalizeError(res.status, txt)
   }
   return await res.json()
