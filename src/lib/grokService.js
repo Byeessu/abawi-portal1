@@ -5,12 +5,14 @@
  * @version 1.0.0
  */
 
+import { resolveRuntimeApiKey } from './runtimeApiKeys'
+
 // ========================================
 // CONFIGURATION GROK/Llama
 // ========================================
 
 const GROK_CONFIG = {
-  apiKey: import.meta.env.VITE_GROK_API_KEY || import.meta.env.VITE_GROQ_API_KEY || '',
+  apiKey: '',
   model: 'grok-beta',
   maxTokens: 4000,
   temperature: 0.7,
@@ -18,12 +20,28 @@ const GROK_CONFIG = {
 };
 
 const LLAMA_CONFIG = {
-  apiKey: '', // Pas de clé Llama pour le moment
+  apiKey: '',
   model: 'llama-3.1-70b-instruct',
   maxTokens: 4000,
   temperature: 0.7,
   baseUrl: 'https://api.together.xyz/v1'
 };
+
+function getGrokApiKey() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_GROK_API_KEY, import.meta.env.VITE_GROQ_API_KEY],
+    providerId: 'groq',
+    includeAlias: true,
+  })
+}
+
+function getLlamaApiKey() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_LLAMA_API_KEY, import.meta.env.VITE_TOGETHER_API_KEY],
+    providerId: 'llama',
+    includeAlias: true,
+  })
+}
 
 // ========================================
 // AGENTS EXPERTS GROK/Llama
@@ -439,11 +457,15 @@ Projet intéressant si :
  * Génération avec Grok API
  */
 async function generateWithGrok(content, agent, options = {}) {
+  const apiKey = getGrokApiKey()
+  if (!apiKey) {
+    throw new Error('Clé API Grok/Groq manquante')
+  }
   try {
     const response = await fetch(`${GROK_CONFIG.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${GROK_CONFIG.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -480,11 +502,15 @@ async function generateWithGrok(content, agent, options = {}) {
  * Génération avec Llama API (fallback)
  */
 async function generateWithLlama(content, agent, options = {}) {
+  const apiKey = getLlamaApiKey()
+  if (!apiKey) {
+    throw new Error('Clé API Llama manquante')
+  }
   try {
     const response = await fetch(`${LLAMA_CONFIG.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LLAMA_CONFIG.apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -528,7 +554,7 @@ export async function generateWithGrokLlama(content, agentType = 'consulting', o
     }
 
     // Essayer Grok en premier
-    if (GROK_CONFIG.apiKey) {
+    if (getGrokApiKey()) {
       try {
         return await generateWithGrok(content, agent, options);
       } catch (grokError) {
@@ -537,7 +563,7 @@ export async function generateWithGrokLlama(content, agentType = 'consulting', o
     }
     
     // Fallback vers Llama
-    if (LLAMA_CONFIG.apiKey) {
+    if (getLlamaApiKey()) {
       return await generateWithLlama(content, agent, options);
     }
     
@@ -570,11 +596,12 @@ export async function testGrokConnections() {
   };
   
   // Test Grok
-  if (GROK_CONFIG.apiKey) {
+  if (getGrokApiKey()) {
+    const grokKey = getGrokApiKey()
     try {
       const response = await fetch(`${GROK_CONFIG.baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${GROK_CONFIG.apiKey}`
+          'Authorization': `Bearer ${grokKey}`
         }
       });
       
@@ -587,11 +614,12 @@ export async function testGrokConnections() {
   }
   
   // Test Llama
-  if (LLAMA_CONFIG.apiKey) {
+  if (getLlamaApiKey()) {
+    const llamaKey = getLlamaApiKey()
     try {
       const response = await fetch(`${LLAMA_CONFIG.baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${LLAMA_CONFIG.apiKey}`
+          'Authorization': `Bearer ${llamaKey}`
         }
       });
       

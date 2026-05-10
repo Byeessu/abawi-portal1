@@ -1,0 +1,4 @@
+{
+  "summary": "Diagnostiqué un blocage global des outils IA dû à la résolution des clés API: plusieurs modules lisaient uniquement import.meta.env et ignoraient les clés enregistrées dans l\u2019Admin. Ajout d\u2019un résolveur central runtime (env + localStorage), branché sur Groq, Grok/Llama, ElevenLabs, Replicate et sur la page Studio Pro; correction du fallback Replicate/Supabase pour éviter les erreurs en cascade quand l\u2019edge function est absente ou mal configurée. Build et lint validés sans erreurs.",
+  "current_status": "Les principaux outils IA sont désormais raccordés aux clés runtime et les fallbacks critiques sont robustes; l\u2019application compile proprement. Il reste à valider en UI chaque parcours métier avec des clés réelles pour confirmer le fonctionnement de bout en bout."
+}

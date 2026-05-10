@@ -2,9 +2,51 @@ import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cleanIAText, cleanIATextLight } from '../../lib/cleanText';
 import { callGroq, extractTextFromAnyFile } from '../../lib/abawi-ia';
+import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 const RECHERCHE_KEY = 'abawi_recherche_history'
+
+function buildLocalFallbackAnswer(question, files = []) {
+  const cleanQuestion = (question || 'Analyse stratégique demandée').trim()
+  const normalized = cleanQuestion.toLowerCase()
+  const shortPolite = ['ok', 'merci', 'thanks', 'thx', 'daccord', "d'accord", 'oui', 'non', 'test']
+  if (shortPolite.includes(normalized) || cleanQuestion.length < 12) {
+    return `Service IA temporairement limite (quota). Message bien recu: "${cleanQuestion}". Reessaie dans quelques secondes avec une question plus precise (objectif + contexte) pour obtenir une reponse complete.`
+  }
+
+  const filesPart = files.length
+    ? `Documents pris en compte: ${files.map(f => f.name).slice(0, 5).join(', ')}.`
+    : 'Aucun document joint.'
+
+  return `## ANALYSE RAPIDE (MODE SECOURS)
+
+Le service IA externe est temporairement saturé, donc je bascule en mode local pour éviter le blocage.
+
+## CONTEXTE
+Question: ${cleanQuestion}
+${filesPart}
+
+## LECTURE STRATÉGIQUE PRÉLIMINAIRE
+- Clarifier l'objectif prioritaire (croissance, rentabilité, conformité, exécution).
+- Identifier 3 hypothèses critiques à valider rapidement.
+- Isoler les contraintes fortes (budget, délais, réglementation, ressources).
+
+## PLAN D'ACTION IMMÉDIAT (7 JOURS)
+1. Formaliser le problème en 5 lignes avec KPI cible.
+2. Produire un mini-diagnostic: causes, impact, risques.
+3. Tester une action à faible coût et forte probabilité d'impact.
+4. Mesurer les résultats puis décider scale / arrêt.
+
+## DONNÉES À AJOUTER POUR UNE ANALYSE IA COMPLÈTE
+- Chiffres actuels (CA, coûts, marge, conversion, churn).
+- Horizon temporel visé (30/90/180 jours).
+- Contraintes non négociables.
+- Résultat attendu chiffré.
+
+## RECOMMANDATION
+Relancer l'analyse IA dans quelques minutes avec une question plus ciblée et un contexte plus court (1 objectif + 3 KPI), pour obtenir une recommandation plus précise et actionnable.`
+}
 
 export default function RechercheMode() {
   const [query, setQuery] = useState('');
@@ -15,6 +57,7 @@ export default function RechercheMode() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [fileContext, setFileContext] = useState('');
   const [fileLoading, setFileLoading] = useState(false);
+  const [rateLimitedUntil, setRateLimitedUntil] = useState(0);
   const inputRef = useRef(null);
   const bottomRef = useRef(null);
 
@@ -49,20 +92,26 @@ export default function RechercheMode() {
     const combined = [];
     for (const f of list) {
       const text = await extractTextFromAnyFile(f);
-      if (text) combined.push(`=== ${f.name} ===\n${cleanIAText(text.slice(0, 8000))}`);
+      if (text) combined.push(`=== ${f.name} ===\n${cleanIAText(text.slice(0, 2500))}`);
     }
     setFileContext(combined.join('\n\n'));
     setFileLoading(false);
   }
 
   async function search() {
+    const now = Date.now();
+    if (now < rateLimitedUntil) {
+      const remaining = Math.ceil((rateLimitedUntil - now) / 1000);
+      setHistory(h => [...h, { q: query.trim() || 'Nouvelle demande', a: `Limite de debit atteinte. Reessayez dans ${remaining}s.` }]);
+      return;
+    }
     const q = query.trim();
     if (!q && !fileContext) return;
     setLoading(true);
     setQuery('');
 
     const userContent = fileContext
-      ? `[Documents uploadés: ${uploadedFiles.map(f => f.name).join(', ')}]\n\n${fileContext.slice(0, 14000)}\n\nMa question: ${q || 'Analyse ces documents et donne-moi un résumé expert.'}`
+      ? `[Documents uploadés: ${uploadedFiles.map(f => f.name).join(', ')}]\n\n${fileContext.slice(0, 6000)}\n\nMa question: ${q || 'Analyse ces documents et donne-moi un résumé expert.'}`
       : q;
 
     try {
@@ -90,11 +139,19 @@ PRINCIPES RÉDACTIONNELS OBLIGATOIRES :
         ])),
         { role: 'user', content: userContent },
       ];
-      const answer = cleanIATextLight(await callGroq(messages, 2500));
+      const answer = cleanIATextLight(await callGroq(messages, 900));
       setHistory(h => [...h, { q: q || `Analyse: ${uploadedFiles.map(f => f.name).join(', ')}`, a: answer }]);
       if (fileContext) { setFileContext(''); setUploadedFiles([]); }
     } catch (e) {
-      setHistory(h => [...h, { q: q || 'Upload fichiers', a: `Erreur: ${e.message}` }]);
+      const isRateLimit = String(e?.message || '').toUpperCase().includes('RATE_LIMIT');
+      const friendlyError = toUserFriendlyAIError(e, `Erreur: ${e.message || 'inconnue'}`);
+      if (isRateLimit) {
+        setRateLimitedUntil(Date.now() + 15000);
+        const offlineAnswer = buildLocalFallbackAnswer(q, uploadedFiles);
+        setHistory(h => [...h, { q: q || 'Upload fichiers', a: offlineAnswer }]);
+      } else {
+        setHistory(h => [...h, { q: q || 'Upload fichiers', a: friendlyError }]);
+      }
     }
     setLoading(false);
     setTimeout(() => inputRef.current?.focus(), 100);

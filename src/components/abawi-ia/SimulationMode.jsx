@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
+import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 export default function SimulationMode() {
@@ -40,8 +41,12 @@ RÈGLES :
 - Commence par introduire la situation et te présenter dans ton rôle`,
     };
     systemMsgRef.current = sys;
-    const intro = cleanIATextLight(await callGroq([sys, { role: 'user', content: 'Commençons la simulation.' }], 400));
-    setMessages([{ role: 'assistant', content: intro }]);
+    try {
+      const intro = cleanIATextLight(await callGroq([sys, { role: 'user', content: 'Commençons la simulation.' }], 320));
+      setMessages([{ role: 'assistant', content: intro }]);
+    } catch (e) {
+      setMessages([{ role: 'assistant', content: toUserFriendlyAIError(e, 'Simulation indisponible, réessayez dans quelques instants.') }]);
+    }
     setLoading(false);
   }
 
@@ -53,8 +58,12 @@ RÈGLES :
     setInput('');
     setLoading(true);
     const contextMessages = [systemMsgRef.current, ...newMessages.map(m => ({ role: m.role, content: m.content }))].filter(Boolean);
-    const response = cleanIATextLight(await callGroq(contextMessages, 400));
-    setMessages(m => [...m, { role: 'assistant', content: response }]);
+    try {
+      const response = cleanIATextLight(await callGroq(contextMessages, 320));
+      setMessages(m => [...m, { role: 'assistant', content: response }]);
+    } catch (e) {
+      setMessages(m => [...m, { role: 'assistant', content: toUserFriendlyAIError(e, 'Réponse indisponible momentanément.') }]);
+    }
     setLoading(false);
   }
 

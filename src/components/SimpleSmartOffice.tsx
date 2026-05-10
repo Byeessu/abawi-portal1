@@ -5,8 +5,14 @@
 
 import React, { useState, useRef } from 'react';
 import { generateWithGrokLlama, getGrokAgents } from '../lib/grokService';
+import { resolveRuntimeApiKey } from '../lib/runtimeApiKeys';
 
 export default function SimpleSmartOffice() {
+  const grokApiKey = resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_GROK_API_KEY, import.meta.env.VITE_GROQ_API_KEY],
+    providerId: 'groq',
+    includeAlias: true
+  });
   const [content, setContent] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -323,7 +329,7 @@ Veuillez analyser la rentabilité de cet investissement.`
           color: '#92400e'
         }}>
           <strong>Debug Info:</strong>
-          <br />- API Key configurée: {GROK_CONFIG.apiKey ? 'Oui' : 'Non'}
+          <br />- API Key configurée: {grokApiKey ? 'Oui' : 'Non'}
           <br />- Agent sélectionné: {selectedAgent}
           <br />- Longueur contenu: {content.length} caractères
           <br />- Statut: {loading ? 'En cours' : 'Prêt'}
@@ -339,11 +345,3 @@ Veuillez analyser la rentabilité de cet investissement.`
   );
 }
 
-// Configuration sécurisée - clés via variables d'environnement
-const GROK_CONFIG = {
-  apiKey: import.meta.env.VITE_GROK_API_KEY || import.meta.env.VITE_GROQ_API_KEY || '',
-  model: 'grok-beta',
-  maxTokens: 4000,
-  temperature: 0.7,
-  baseUrl: 'https://api.x.ai/v1'
-};

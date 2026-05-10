@@ -1,0 +1,4 @@
+{
+  "summary": "Traité le signalement 404 + RATE_LIMIT sur le module de chat: correction dans groqClient avec normalisation robuste des IDs de modèles (suppression des espaces autour des tirets et du préfixe models/), correction d\u2019une régression potentielle de base URL en appel direct, ajout d\u2019un fallback automatique vers un modèle Groq plus léger en cas de 404 modèle, et augmentation du backoff de retry sur limites de débit. Dans RechercheMode, ajout d\u2019un message utilisateur clair et d\u2019une courte temporisation anti-spam après RATE_LIMIT pour éviter la répétition des erreurs.",
+  "current_status": "Les erreurs liées au nom de modèle invalide et aux rafales RATE_LIMIT sont désormais gérées côté client; build et lints passent. Le système est plus résilient, avec fallback modèle + cooldown UI sur surcharge."
+}

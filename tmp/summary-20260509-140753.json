@@ -1,0 +1,4 @@
+{
+  "summary": "Après le retour utilisateur indiquant un modèle IA invalide/indisponible, correction du fallback dans groqClient pour le rendre provider-aware: les modèles de repli Groq ne sont plus injectés quand la clé cible xAI/Gemini, ce qui évite les erreurs de modèle incompatibles. Les essais en cas de rate-limit et de model-not-found utilisent désormais une liste de fallback dérivée du provider réel.",
+  "current_status": "Le pipeline IA est plus cohérent: fallback par fournisseur, erreurs mieux gérées, build et lints verts. Les bascules de modèle ne devraient plus casser lorsqu’un endpoint non-Groq est actif."
+}

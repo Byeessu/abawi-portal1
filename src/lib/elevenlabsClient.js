@@ -1,4 +1,12 @@
-const ELEVENLABS_BROWSER_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY || ''
+import { resolveRuntimeApiKey } from './runtimeApiKeys'
+
+function getElevenLabsBrowserKey() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_ELEVENLABS_API_KEY, import.meta.env.VITE_ELEVEN_KEY],
+    providerId: 'elevenlabs',
+    includeAlias: true,
+  })
+}
 
 function mapError(status, text = '') {
   if (status === 401) return new Error('INVALID_KEY')
@@ -64,7 +72,7 @@ export async function requestElevenLabsTTS(payload, preferredApiKey = '') {
     return await withRetry(() => callViaProxy(payload))
   } catch (e) {
     // 2) Fallback: direct browser call if key exists locally
-    const key = preferredApiKey || ELEVENLABS_BROWSER_KEY || ''
+    const key = preferredApiKey || getElevenLabsBrowserKey() || ''
     if (!key) throw e.message === 'INVALID_KEY' ? e : new Error('NO_KEY')
     return await withRetry(() => callDirect(payload, key))
   }

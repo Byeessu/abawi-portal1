@@ -1,4 +1,4 @@
-const CACHE_NAME = 'abawi-abavie-v6'
+const CACHE_NAME = 'abawi-abavie-v7'
 const STATIC_ASSETS = [
   '/', '/digital', '/academy', '/podcasts', '/outils', '/news',
   '/manifest.json', '/abavie',
@@ -24,6 +24,15 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url)
+
+  // NE PAS intercepter les appels aux fonctions Netlify, API externes, ni requêtes non-GET
+  if (
+    url.pathname.startsWith('/.netlify/') ||
+    url.origin !== self.location.origin ||
+    e.request.method !== 'GET'
+  ) {
+    return // laisse le navigateur gérer directement
+  }
 
   // Cache media files (MP3, PDF, images)
   if (url.pathname.includes('/files/') || url.pathname.includes('/storage/') || url.pathname.includes('supabase.co/storage')) {

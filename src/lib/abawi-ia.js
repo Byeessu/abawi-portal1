@@ -2,12 +2,19 @@ import { cleanIAText } from './cleanText';
 import { groqChatCompletion, getProviderInfo } from './groqClient';
 
 export async function callGroq(messages, maxTokens = 2000, jsonMode = false) {
+  const safeMessages = Array.isArray(messages)
+    ? messages.slice(-10).map((m) => ({
+        role: m?.role === 'system' || m?.role === 'assistant' ? m.role : 'user',
+        content: String(m?.content || '').slice(0, 3000),
+      }))
+    : []
+  const cappedTokens = Math.min(Number(maxTokens) || 900, 1200)
   const { model } = getProviderInfo();   // modèle auto-détecté selon la clé API
   const data = await groqChatCompletion({
     model,
-    max_tokens: maxTokens,
+    max_tokens: cappedTokens,
     temperature: jsonMode ? 0.1 : 0.7,
-    messages,
+    messages: safeMessages,
     ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
   });
   return data.choices?.[0]?.message?.content?.trim() || '';

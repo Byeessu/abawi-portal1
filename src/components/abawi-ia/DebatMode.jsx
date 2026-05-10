@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
+import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 export default function DebatMode() {
@@ -22,8 +23,12 @@ export default function DebatMode() {
       role: 'system',
       content: `Tu es un débatteur expert et rigoureux. Le sujet est: "${sujet}". Tu défends la position ${posOppose.toUpperCase()} pendant que l'utilisateur est ${position.toUpperCase()}. Tes arguments sont précis, basés sur des faits et des exemples africains. Réponds en 3-4 phrases max. Formate avec **gras** pour les arguments clés.`
     };
-    const intro = cleanIATextLight(await callGroq([sysRef.current, { role: 'user', content: 'Présente ton argument d\'ouverture.' }], 400));
-    setMessages([{ role: 'assistant', content: intro }]);
+    try {
+      const intro = cleanIATextLight(await callGroq([sysRef.current, { role: 'user', content: 'Présente ton argument d\'ouverture.' }], 350));
+      setMessages([{ role: 'assistant', content: intro }]);
+    } catch (e) {
+      setMessages([{ role: 'assistant', content: toUserFriendlyAIError(e, 'Simulation indisponible, réessayez dans quelques instants.') }]);
+    }
     setLoading(false);
   }
 
@@ -34,8 +39,12 @@ export default function DebatMode() {
     setMessages(newMsgs);
     setInput('');
     setLoading(true);
-    const response = cleanIATextLight(await callGroq([sysRef.current, ...newMsgs], 500));
-    setMessages(m => [...m, { role: 'assistant', content: response }]);
+    try {
+      const response = cleanIATextLight(await callGroq([sysRef.current, ...newMsgs], 380));
+      setMessages(m => [...m, { role: 'assistant', content: response }]);
+    } catch (e) {
+      setMessages(m => [...m, { role: 'assistant', content: toUserFriendlyAIError(e, 'Réponse indisponible momentanément.') }]);
+    }
     setLoading(false);
   }
 

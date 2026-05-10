@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { callGroq, DOMAINES } from '../../lib/abawi-ia';
+import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 
 const QUIZ_KEY = 'abawi_quiz_history'
 
@@ -23,9 +24,11 @@ export default function QuizMode() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [finished, setFinished] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   async function generateQuiz() {
     setLoading(true);
+    setErrorMsg('');
     const d = customDomaine || domaine;
     try {
       const raw = await callGroq([
@@ -47,7 +50,7 @@ Réponds avec ce JSON exact:
     }
   ]
 }`
-        }], 3000, true);
+        }], 1200, true);
       const parsed = JSON.parse(raw);
       setQuestions(parsed.questions || []);
       setCurrentQ(0);
@@ -56,7 +59,8 @@ Réponds avec ce JSON exact:
       setFinished(false);
       setSelectedAnswer(null);
       setFeedback(null);
-    } catch {
+    } catch (e) {
+      setErrorMsg(toUserFriendlyAIError(e, 'Impossible de générer le quiz pour le moment.'));
       setQuestions([]);
     }
     setLoading(false);
@@ -145,6 +149,9 @@ Réponds avec ce JSON exact:
       }}>
         🧠 Générer le quiz par IA
       </button>
+      {errorMsg && (
+        <div style={{ marginTop: 12, fontSize: '0.8rem', color: '#EF4444' }}>{errorMsg}</div>
+      )}
     </div>
   );
 

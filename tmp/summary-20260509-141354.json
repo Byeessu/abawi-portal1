@@ -1,0 +1,4 @@
+{
+  "summary": "Réparation élargie de LIA ABAWI sur les modes principaux: renforcement du client commun callGroq (cap tokens, limitation du contexte, nettoyage des messages) pour réduire les erreurs quota et payload excessif; sécurisation des modes Débat et Simulation avec try/catch et messages d\u2019erreur actionnables; amélioration du mode Annah avec gestion d\u2019erreur explicite et charge réduite; amélioration du mode Quiz avec baisse des tokens et affichage d\u2019erreur utilisateur au lieu d\u2019un échec silencieux. Validation build + lints OK.",
+  "current_status": "LIA ABAWI est désormais plus stable et résiliente sur plusieurs parcours (recherche, débat, simulation, annah, quiz) avec meilleure tolérance aux quotas/réponses API instables."
+}

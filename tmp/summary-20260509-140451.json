@@ -1,0 +1,4 @@
+{
+  "summary": "Suite au retour utilisateur sur le message RATE_LIMIT persistant, implémentation d\u2019un mode dégradé automatique dans groqClient: en cas de limitation de débit, la requête est retentée sur des modèles Groq plus légers (llama-3.1-8b-instant puis mixtral-8x7b-32768) avant échec final. Cette logique couvre proxy Netlify et appel direct, y compris les chemins de fallback existants, tout en conservant la normalisation de modèle et la gestion 404 déjà mises en place.",
+  "current_status": "Le flux IA est désormais plus résilient face au quota Groq temporaire grâce à la bascule automatique vers des modèles moins coûteux; build et lints sont verts."
+}

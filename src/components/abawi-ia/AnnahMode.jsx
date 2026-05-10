@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { speak as speakTTS, stopSpeaking } from '../../lib/ttsEngine';
+import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 const ANNAH_KEY = 'abawi_annah_messages'
@@ -52,10 +53,10 @@ export default function AnnahMode() {
 FORMAT OBLIGATOIRE : utilise ## pour les sections, **gras** pour les points clés, - pour les listes à puces. Sépare chaque paragraphe par une ligne vide. Structure toujours ta réponse avec des sections claires.`
         },
         ...newMsgs.slice(-8).map(m => ({ role: m.role, content: m.content }))
-      ], 1200));
+      ], 700));
       setMessages(m => [...m, { role: 'assistant', content: response }]);
-    } catch {
-      setMessages(m => [...m, { role: 'assistant', content: 'Désolée, une erreur est survenue. Veuillez réessayer.' }]);
+    } catch (e) {
+      setMessages(m => [...m, { role: 'assistant', content: toUserFriendlyAIError(e, 'Désolée, je suis momentanément indisponible. Réessayez dans quelques instants.') }]);
     }
     setLoading(false);
   }

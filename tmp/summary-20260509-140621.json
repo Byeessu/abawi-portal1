@@ -1,0 +1,4 @@
+{
+  "summary": "Suite au message utilisateur Réponse inattendue du service IA, amélioration de la classification derreurs dans groqClient pour éviter les retours génériques: mapping explicite 403->INVALID_KEY, 413->REQUEST_TOO_LARGE, 400->INVALID_PROMPT, 404 modèle->MODEL_NOT_FOUND, 500 non configuré->NO_KEY, tout en conservant les fallbacks déjà en place. Mise à jour des messages utilisateur dans aiErrorMessages pour renvoyer des diagnostics actionnables selon ces nouveaux codes.",
+  "current_status": "La couche IA renvoie désormais des erreurs plus précises et exploitables au lieu dun message HTTP générique; build et lints passent. Les prochains incidents devraient pointer directement vers la cause réelle (clé, taille requête, modèle, prompt, quota)."
+}

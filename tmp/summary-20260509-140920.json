@@ -1,0 +1,4 @@
+{
+  "summary": "Suite au quota IA encore présent, durcissement du module RechercheMode pour éviter le blocage utilisateur: réduction forte de la charge envoyée à l\u2019API (texte extrait par fichier et contexte total), réduction des max_tokens d\u2019appel, cooldown anti-rate-limit allongé, et ajout d\u2019un mode secours local qui fournit immédiatement une analyse structurée lorsque RATE_LIMIT survient au lieu d\u2019afficher une erreur. Validation build + lints OK.",
+  "current_status": "Le parcours Recherche est désormais résilient même sous quota Groq: soit réponse IA allégée, soit fallback local exploitable sans échec bloquant."
+}

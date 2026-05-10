@@ -1,16 +1,29 @@
 // Replicate API Client pour génération d'images
 // Utilise Supabase Edge Function pour contourner le CORS
 
+import { resolveRuntimeApiKey } from './runtimeApiKeys'
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-const REPLICATE_API_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN || ''
 
 // Edge Function URL
 const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/replicate-image`
 
+function hasValidSupabaseUrl(url) {
+  return typeof url === 'string' && /^https?:\/\//i.test(url)
+}
+
+function getReplicateToken() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_REPLICATE_API_TOKEN, import.meta.env.VITE_REPLICATE_API_KEY],
+    providerId: 'replicate',
+    includeAlias: true,
+  })
+}
+
 // Fonction de repli directe vers Replicate API (CORS possible)
 async function generateDirectReplicate(model, input) {
-  if (!REPLICATE_API_TOKEN) {
+  const token = getReplicateToken()
+  if (!token) {
     throw new Error('Clé API Replicate manquante. Ajoutez VITE_REPLICATE_API_TOKEN dans .env')
   }
 
@@ -18,7 +31,7 @@ async function generateDirectReplicate(model, input) {
     const response = await fetch(`${REPLICATE_BASE_URL}/predictions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -97,7 +110,7 @@ export async function generateContent({
   quality = 'auto',
   outputFormat = 'webp'
 }) {
-  if (!REPLICATE_API_TOKEN) {
+  if (!getReplicateToken()) {
     throw new Error('Clé API Replicate manquante. Ajoutez VITE_REPLICATE_API_TOKEN dans .env')
   }
 
@@ -158,7 +171,7 @@ export async function generateContent({
   }
 
   // Si Edge Function disponible, l'utiliser (contourne CORS)
-  if (EDGE_FUNCTION_URL) {
+  if (hasValidSupabaseUrl(SUPABASE_URL)) {
     try {
       const response = await fetch(`${EDGE_FUNCTION_URL}/predictions`, {
         method: 'POST',
@@ -172,7 +185,7 @@ export async function generateContent({
       })
 
       if (!response.ok) {
-        const error = await response.json()
+        const error = await response.json().catch(() => ({}))
         // Si erreur 401/403, fallback direct vers Replicate
         if (response.status === 401 || response.status === 403) {
           // Fallback vers API directe si auth Edge Function échoue
@@ -183,15 +196,12 @@ export async function generateContent({
 
       return await response.json()
     } catch (edgeError) {
-      // Si erreur d'auth, essayer direct
-      if (edgeError.message.includes('401') || edgeError.message.includes('403')) {
-        return await generateDirectReplicate(model, input)
-      }
-      throw new Error(`Edge Function error: ${edgeError.message}`)
+      // L'edge function peut être absente/mal configurée; fallback direct systématique.
+      return await generateDirectReplicate(model, input)
     }
   }
 
-  throw new Error('Edge Function Supabase non disponible. Vérifiez VITE_SUPABASE_URL et déployez la function replicate-image.')
+  return await generateDirectReplicate(model, input)
 }
 
 // Alias pour compatibilité
@@ -200,17 +210,17 @@ export async function generateImage(options) {
 }
 
 export async function getPredictionResult(predictionId) {
-  if (!REPLICATE_API_TOKEN) {
+  if (!getReplicateToken()) {
     throw new Error('Clé API Replicate manquante')
   }
 
   // Si Edge Function disponible, l'utiliser
-  if (EDGE_FUNCTION_URL) {
+  if (hasValidSupabaseUrl(SUPABASE_URL)) {
     try {
       const response = await fetch(`${EDGE_FUNCTION_URL}/predictions/${predictionId}`)
 
       if (!response.ok) {
-        const error = await response.json()
+        const error = await response.json().catch(() => ({}))
         // Si erreur 401/403, fallback direct
         if (response.status === 401 || response.status === 403) {
           // Fallback vers API directe si auth Edge Function échoue
@@ -235,18 +245,20 @@ export async function getPredictionResult(predictionId) {
       if (edgeError.message.includes('401') || edgeError.message.includes('403')) {
         return await getDirectPredictionResult(predictionId)
       }
+      return await getDirectPredictionResult(predictionId)
     }
   }
 
-  throw new Error('Edge Function Supabase non disponible')
+  return await getDirectPredictionResult(predictionId)
 }
 
 // Fonction de repli directe pour récupérer les résultats
 async function getDirectPredictionResult(predictionId) {
+  const token = getReplicateToken()
   try {
     const response = await fetch(`${REPLICATE_BASE_URL}/predictions/${predictionId}`, {
       headers: {
-        'Authorization': `Bearer ${REPLICATE_API_TOKEN}`,
+        'Authorization': `Bearer ${token}`,
       },
     })
 

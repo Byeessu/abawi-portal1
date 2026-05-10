@@ -5,15 +5,36 @@ import { ELEVENLABS_VOICES, VOICE_SETTINGS_PRESETS } from '../../data/voices'
 import { groqChatCompletion } from '../../lib/groqClient'
 import { requestElevenLabsTTS } from '../../lib/elevenlabsClient'
 import { REPLICATE_MODELS, generateImage, pollPrediction } from '../../lib/replicateClient'
+import { resolveRuntimeApiKey } from '../../lib/runtimeApiKeys'
 import { Link } from 'react-router-dom'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
 
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
 const GROQ_BASE_URL = import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1'
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
-const ELEVENLABS_KEY = import.meta.env.VITE_ELEVENLABS_API_KEY || ''
-const REPLICATE_TOKEN = import.meta.env.VITE_REPLICATE_API_TOKEN || ''
+function getGroqKey() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_GROQ_API_KEY, import.meta.env.VITE_GROK_LLAMA_API_KEY],
+    providerId: 'groq',
+    includeAlias: true,
+  })
+}
+
+function getElevenLabsKey() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_ELEVENLABS_API_KEY, import.meta.env.VITE_ELEVEN_KEY],
+    providerId: 'elevenlabs',
+    includeAlias: true,
+  })
+}
+
+function getReplicateToken() {
+  return resolveRuntimeApiKey({
+    envKeys: [import.meta.env.VITE_REPLICATE_API_TOKEN, import.meta.env.VITE_REPLICATE_API_KEY],
+    providerId: 'replicate',
+    includeAlias: true,
+  })
+}
 
 export default function AbawiStudioPro() {
   const [script, setScript] = useState('')
@@ -56,7 +77,8 @@ export default function AbawiStudioPro() {
 
   async function transcribeAudio() {
     if (!audioFile) return
-    if (!GROQ_KEY) {
+    const groqKey = getGroqKey()
+    if (!groqKey) {
       setStatus("Clé GROQ manquante. Ajoute VITE_GROQ_API_KEY dans l'environnement.")
       return
     }
@@ -71,7 +93,7 @@ export default function AbawiStudioPro() {
       body.append('language', 'fr')
       const res = await fetch(`${GROQ_BASE_URL}/audio/transcriptions`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}` },
+        headers: { Authorization: `Bearer ${groqKey}` },
         body,
       })
       if (!res.ok) throw new Error(`Erreur transcription (${res.status})`)
@@ -103,7 +125,8 @@ export default function AbawiStudioPro() {
 
   async function generateVoiceFromScript() {
     if (!script.trim()) return
-    if (!ELEVENLABS_KEY) {
+    const elevenLabsKey = getElevenLabsKey()
+    if (!elevenLabsKey) {
       setStatus("Cle ElevenLabs absente. Ajoute VITE_ELEVENLABS_API_KEY dans l'environnement.")
       return
     }
@@ -117,7 +140,7 @@ export default function AbawiStudioPro() {
         text: script.slice(0, 4500),
         modelId: 'eleven_multilingual_v2',
         voiceSettings: settings,
-      }, ELEVENLABS_KEY)
+      }, elevenLabsKey)
       const url = URL.createObjectURL(blob)
       setGeneratedAudioUrl((prev) => {
         if (prev) URL.revokeObjectURL(prev)
@@ -134,7 +157,8 @@ export default function AbawiStudioPro() {
   }
 
   async function generateScript() {
-    if (!GROQ_KEY) {
+    const groqKey = getGroqKey()
+    if (!groqKey) {
       setStatus("Clé GROQ manquante. Ajoute VITE_GROQ_API_KEY dans l'environnement.")
       return
     }
@@ -176,7 +200,7 @@ Contraintes:
           { role: 'system', content: 'Tu es un realisateur audio/video expert pour podcasts business premium.' },
           { role: 'user', content: prompt },
         ],
-      }, GROQ_KEY)
+      }, groqKey)
       const out = cleanIAText(data?.choices?.[0]?.message?.content || '')
       setScript(out)
       setStatus('Script studio genere. Tu peux lancer une lecture preview.')
@@ -194,7 +218,8 @@ Contraintes:
 
   async function refineScript() {
     if (!script.trim() || !editInstruction.trim()) return
-    if (!GROQ_KEY) {
+    const groqKey = getGroqKey()
+    if (!groqKey) {
       setStatus("Clé GROQ manquante. Ajoute VITE_GROQ_API_KEY dans l'environnement.")
       return
     }
@@ -219,7 +244,7 @@ Rends uniquement la version finale, claire, professionnelle, sans markdown ni sy
           { role: 'system', content: 'Tu es un editor studio exigeant et orienté impact.' },
           { role: 'user', content: prompt },
         ],
-      }, GROQ_KEY)
+      }, groqKey)
       const out = cleanIAText(data?.choices?.[0]?.message?.content || '')
       setScript(out)
       setStatus('Script retouche avec succes.')
@@ -271,7 +296,7 @@ Rends uniquement la version finale, claire, professionnelle, sans markdown ni sy
   }
 
   async function generateImageWithReplicate() {
-    if (!REPLICATE_TOKEN) {
+    if (!getReplicateToken()) {
       setStatus('❌ Clé API Replicate manquante. Ajoutez VITE_REPLICATE_API_TOKEN dans .env')
       setImageProgress('Erreur: Clé API manquante')
       return

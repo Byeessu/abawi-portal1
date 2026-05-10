@@ -1,0 +1,4 @@
+{
+  "summary": "Ajustement UX du mode secours suite au retour utilisateur: le fallback local était correct mais trop verbeux pour des messages très courts (ok/merci). Ajout d\u2019une branche concise dans buildLocalFallbackAnswer pour renvoyer une réponse courte et naturelle quand la requête est courte/polie, tout en gardant le fallback structuré pour les vraies demandes analytiques. Validation build et lint réussie.",
+  "current_status": "Le module Recherche reste résilient sous quota et fournit désormais des réponses fallback adaptées au contexte (courtes pour micro-messages, détaillées pour demandes métier)."
+}
