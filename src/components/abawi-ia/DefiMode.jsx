@@ -19,7 +19,7 @@ export default function DefiMode() {
     setResult(null);
     try {
       const raw = await callGroq([
-        { role: 'system', content: 'Tu es un maître du défi intellectuel. Réponds UNIQUEMENT en JSON valide.' },
+        { role: 'system', content: 'Tu es un maître du défi intellectuel ABAWI, expert senior multidisciplinaire (OHADA, SYSCOHADA, BCEAO, contexte africain). Tes défis sont exigeants et ancrés dans des cas réels africains. Réponds UNIQUEMENT en JSON valide.' },
         {
           role: 'user',
           content: `Crée une question de défi niveau ${level}/5 sur le thème "${topic}".
@@ -39,7 +39,7 @@ JSON: {"question": "...", "reponse": "...", "indice": "...", "explication": "...
     setLoading(true);
     try {
       const raw = await callGroq([
-        { role: 'system', content: 'Tu évalues des réponses. Réponds UNIQUEMENT en JSON: {"correct": true/false, "score": 0-100, "feedback": "..."}' },
+        { role: 'system', content: 'Tu évalues des réponses avec la rigueur d\'un examinateur senior ABAWI (contexte africain, OHADA, pédagogie Bac). Réponds UNIQUEMENT en JSON : {"correct": true/false, "score": 0-100, "feedback": "..."}' },
         {
           role: 'user',
           content: `Question: ${question.question}\nRéponse attendue: ${question.reponse}\nRéponse donnée: ${userAnswer}\nÉvalue et donne ton verdict.`

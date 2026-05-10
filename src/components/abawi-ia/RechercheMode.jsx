@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { cleanIAText, cleanIATextLight } from '../../lib/cleanText';
 import { callGroq, extractTextFromAnyFile } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
+import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 const RECHERCHE_KEY = 'abawi_recherche_history'
@@ -118,20 +119,13 @@ export default function RechercheMode() {
       const messages = [
         {
           role: 'system',
-          content: `Tu es ABAWI IA, analyste senior issu d'un cabinet international de stratégie et de conseil.
-Tu rédiges en français avec la rigueur et la densité d'une note stratégique haut de gamme.
-
-PRINCIPES RÉDACTIONNELS OBLIGATOIRES :
-- Prose analytique et directe — chaque paragraphe porte une idée centrale complète
-- Structure par sections avec ## TITRE EN MAJUSCULES, transitions logiques entre elles
-- Les listes à puces (- item) : UNIQUEMENT si les éléments ne se lisent pas bien en prose — 3 à 6 items maximum
-- Numérotation (1. 2. 3.) : STRICTEMENT pour des étapes séquentielles ou un classement hiérarchique explicite
-- Pour toute comparaison multi-dimensionnelle ou données croisées : tableau markdown | Col | Col |
-- Pour une analyse SWOT : sections ## FORCES, ## FAIBLESSES, ## OPPORTUNITÉS, ## MENACES avec contenu en puces
-- Pas d'introduction reformulant la question — commence directement par la substance
-- Pas de formule de conclusion générique ("En résumé", "Pour conclure", "J'espère que")
-- Termine par des recommandations actionnables, chiffrées si possible
-- Chiffres concrets, exemples africains si pertinent, références sectorielles précises`,
+          content: buildSystemPrompt({
+            role: "analyste senior issu d'un cabinet international de stratégie et de conseil",
+            extra: `STRUCTURE SPÉCIFIQUE :
+- Pour une analyse SWOT : sections ## FORCES, ## FAIBLESSES, ## OPPORTUNITÉS, ## MENACES.
+- Pour toute comparaison multi-dimensionnelle : utilise un tableau markdown.
+- Réponds avec la densité d'une note stratégique haut de gamme.`,
+          }),
         },
         ...history.slice(-6).flatMap(h => ([
           { role: 'user', content: h.q.slice(0, 500) },

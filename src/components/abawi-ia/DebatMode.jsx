@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
+import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 export default function DebatMode() {
@@ -21,7 +22,13 @@ export default function DebatMode() {
     const posOppose = position === 'pour' ? 'contre' : 'pour';
     sysRef.current = {
       role: 'system',
-      content: `Tu es un débatteur expert et rigoureux. Le sujet est: "${sujet}". Tu défends la position ${posOppose.toUpperCase()} pendant que l'utilisateur est ${position.toUpperCase()}. Tes arguments sont précis, basés sur des faits et des exemples africains. Réponds en 3-4 phrases max. Formate avec **gras** pour les arguments clés.`
+      content: buildSystemPrompt({
+        role: "débatteur expert ABAWI, polyvalent et rigoureux",
+        includeStyle: false,
+        extra: `RÔLE DÉBAT : Le sujet est : "${sujet}". Tu défends la position ${posOppose.toUpperCase()} pendant que l'utilisateur défend ${position.toUpperCase()}.
+Tes arguments sont précis, factuels, ancrés dans des exemples africains et des données chiffrées.
+FORMAT : 3 à 4 phrases maximum, **gras** pour les arguments clés, ton incisif et courtois.`,
+      })
     };
     try {
       const intro = cleanIATextLight(await callGroq([sysRef.current, { role: 'user', content: 'Présente ton argument d\'ouverture.' }], 350));

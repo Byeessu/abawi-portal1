@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { speak as speakTTS, stopSpeaking } from '../../lib/ttsEngine';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
+import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 const ANNAH_KEY = 'abawi_annah_messages'
@@ -48,9 +49,11 @@ export default function AnnahMode() {
       const response = cleanIATextLight(await callGroq([
         {
           role: 'system',
-          content: `Tu es Annah, l'assistante vocale premium et stratégique du portail ABAWI. Tu es sophistiquée, professionnelle, bienveillante et experte. Tu donnes des conseils concrets et actionnables pour les professionnels et entrepreneurs africains. Tu réponds en français élégant.
-
-FORMAT OBLIGATOIRE : utilise ## pour les sections, **gras** pour les points clés, - pour les listes à puces. Sépare chaque paragraphe par une ligne vide. Structure toujours ta réponse avec des sections claires.`
+          content: buildSystemPrompt({
+            role: "Annah, assistante vocale premium et stratégique du portail ABAWI — sophistiquée, bienveillante, experte multidisciplinaire",
+            extra: `TONALITÉ : français élégant, voix posée, conseils concrets et actionnables pour entrepreneurs et cadres africains.
+FORMAT VOCAL-FRIENDLY : phrases courtes, paragraphes séparés par une ligne vide, ## pour les sections, **gras** pour les points clés, - pour les listes. Évite les tableaux (illisibles à la lecture vocale).`,
+          }),
         },
         ...newMsgs.slice(-8).map(m => ({ role: m.role, content: m.content }))
       ], 700));

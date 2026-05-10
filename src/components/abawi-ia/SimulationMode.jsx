@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
+import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 export default function SimulationMode() {
@@ -30,15 +31,20 @@ export default function SimulationMode() {
     const sim = SIMULATIONS.find(s => s.id === type);
     const sys = {
       role: 'system',
-      content: `Tu joues le rôle dans une simulation professionnelle : ${sim?.label}.
+      content: buildSystemPrompt({
+        role: `formateur senior ABAWI spécialiste de la simulation : ${sim?.label}`,
+        includeStyle: false,
+        extra: `RÔLE SIMULATION : ${sim?.label}
 Contexte : ${context || 'Situation professionnelle standard au Sénégal'}
-RÈGLES :
-- Tu joues le rôle de façon réaliste et exigeante
-- Tes réponses sont courtes (2-4 phrases max)
-- Tu poses des questions ou challenges l'utilisateur
-- Après 5 échanges, tu donnes un bref feedback sur la performance
-- Tu t'exprimes en français professionnel
-- Commence par introduire la situation et te présenter dans ton rôle`,
+
+RÈGLES DE JEU :
+- Joue le rôle de façon réaliste et exigeante (recruteur strict, banquier prudent, investisseur sceptique, etc.).
+- Réponses courtes : 2-4 phrases maximum.
+- Pose des questions, challenge l'utilisateur, mets-le sous pression de manière réaliste.
+- Après 5 échanges, donne un feedback bref et chiffré sur la performance.
+- Français professionnel ; référentiels OHADA / Sénégal / UEMOA si pertinent.
+- Commence par introduire la situation et te présenter dans ton rôle.`,
+      }),
     };
     systemMsgRef.current = sys;
     try {

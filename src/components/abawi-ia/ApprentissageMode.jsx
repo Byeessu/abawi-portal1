@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
+import { buildSystemPrompt, buildJsonModePrefix } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
 
 export default function ApprentissageMode() {
@@ -16,7 +17,7 @@ export default function ApprentissageMode() {
     setLoading(true);
     try {
       const raw = await callGroq([
-        { role: 'system', content: 'Tu crées des parcours d\'apprentissage structurés. Réponds UNIQUEMENT en JSON valide.' },
+        { role: 'system', content: buildJsonModePrefix('pédagogue senior ABAWI spécialiste des parcours d\'apprentissage') + 'Tu crées des parcours d\'apprentissage structurés adaptés au contexte africain. Réponds UNIQUEMENT en JSON valide, sans aucun texte avant ou après.' },
         {
           role: 'user',
           content: `Crée un parcours d'apprentissage niveau ${niveau} sur "${topic}" avec 5 étapes.
@@ -40,7 +41,10 @@ JSON: {"titre": "...", "description": "...", "etapes": [{"titre": "...", "object
     const step = parcours.etapes[idx];
     try {
       const content = cleanIATextLight(await callGroq([
-        { role: 'system', content: 'Tu es un pédagogue expert. Formate en Markdown structuré : ## sections principales, ### sous-sections, **gras** pour les termes clés, - pour les listes, paragraphes séparés par des lignes vides. Structure claire et fluide.' },
+        { role: 'system', content: buildSystemPrompt({
+          role: 'pédagogue senior ABAWI, vulgarisateur d\'excellence',
+          extra: 'FORMAT PÉDAGOGIQUE : Markdown structuré, ## sections principales, ### sous-sections, **gras** pour les termes clés, - pour les listes, paragraphes séparés par des lignes vides. Inclus des exemples concrets africains et des analogies parlantes.',
+        }) },
         { role: 'user', content: `Explique en détail l'étape "${step.titre}" du parcours sur "${topic}" pour un apprenant niveau ${niveau}. Objectif: ${step.objectif}. Donne du contenu complet et pédagogique.` }
       ], 1500));
       setStepContent(c => ({ ...c, [idx]: content }));

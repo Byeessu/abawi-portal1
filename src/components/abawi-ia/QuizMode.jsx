@@ -34,7 +34,7 @@ export default function QuizMode() {
       const raw = await callGroq([
         {
           role: 'system',
-          content: 'Tu es un créateur de quiz expert. Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après.'
+          content: 'Tu es un créateur de quiz expert ABAWI senior multidisciplinaire (OHADA, SYSCOHADA, BCEAO, contexte africain, pédagogie Bac sénégalais). Tes questions sont rigoureuses, ancrées dans le contexte africain quand pertinent, et adaptées au niveau demandé. Réponds UNIQUEMENT avec du JSON valide, aucun texte avant ou après.'
         }, {
           role: 'user',
           content: `Crée ${nbQuestions} questions de quiz niveau ${difficulte} sur le domaine : "${d}".
