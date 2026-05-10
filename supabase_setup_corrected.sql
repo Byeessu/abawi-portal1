@@ -231,8 +231,174 @@ BEGIN
   END LOOP;
 END $$;
 
+-- ── SENTICKET EVENTS ──────────────────────
+CREATE TABLE IF NOT EXISTS senticket_events (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  titre TEXT NOT NULL DEFAULT '',
+  description TEXT DEFAULT '',
+  categorie TEXT DEFAULT 'Concert',
+  ville TEXT DEFAULT 'Dakar',
+  lieu TEXT DEFAULT '',
+  date DATE DEFAULT NULL,
+  heure TEXT DEFAULT '20:00',
+  cover_url TEXT DEFAULT '',
+  featured BOOLEAN DEFAULT false,
+  statut TEXT DEFAULT 'actif' CHECK (statut IN ('actif','annulé','terminé')),
+  organizer_id UUID REFERENCES membres(id) ON DELETE SET NULL,
+  commission_rate NUMERIC DEFAULT 0.07,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SENTICKET TICKETS (billets par événement) ──
+CREATE TABLE IF NOT EXISTS senticket_tickets (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID NOT NULL REFERENCES senticket_events(id) ON DELETE CASCADE,
+  nom TEXT NOT NULL DEFAULT '',
+  prix INTEGER NOT NULL DEFAULT 0,
+  places INTEGER NOT NULL DEFAULT 0,
+  vendus INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SENTICKET ORDERS ─────────────────────
+CREATE TABLE IF NOT EXISTS senticket_orders (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID NOT NULL REFERENCES senticket_events(id) ON DELETE CASCADE,
+  ticket_id UUID NOT NULL REFERENCES senticket_tickets(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES membres(id) ON DELETE SET NULL,
+  qty INTEGER NOT NULL DEFAULT 1,
+  prix_total INTEGER NOT NULL DEFAULT 0,
+  commission INTEGER NOT NULL DEFAULT 0,
+  discount INTEGER NOT NULL DEFAULT 0,
+  net_organisateur INTEGER NOT NULL DEFAULT 0,
+  acheteur JSONB DEFAULT '{}',
+  payment_method TEXT DEFAULT '',
+  coupon_code TEXT DEFAULT '',
+  group_emails TEXT[] DEFAULT '{}',
+  statut TEXT DEFAULT 'confirmé' CHECK (statut IN ('confirmé','annulé','remboursé')),
+  qr_data TEXT DEFAULT '',
+  scanned BOOLEAN DEFAULT false,
+  date_achat TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SENTICKET REVIEWS ────────────────────
+CREATE TABLE IF NOT EXISTS senticket_reviews (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID NOT NULL REFERENCES senticket_events(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES membres(id) ON DELETE SET NULL,
+  stars INTEGER NOT NULL DEFAULT 0 CHECK (stars >= 1 AND stars <= 5),
+  text TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SENTICKET WITHDRAWALS ────────────────
+CREATE TABLE IF NOT EXISTS senticket_withdrawals (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  organizer_id UUID NOT NULL REFERENCES membres(id) ON DELETE CASCADE,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE SET NULL,
+  montant INTEGER NOT NULL DEFAULT 0,
+  methode TEXT DEFAULT 'Wave',
+  telephone TEXT DEFAULT '',
+  statut TEXT DEFAULT 'en_attente' CHECK (statut IN ('en_attente','payé','rejeté')),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SENTICKET FAVORITES ──────────────────
+CREATE TABLE IF NOT EXISTS senticket_favorites (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES membres(id) ON DELETE CASCADE,
+  event_id UUID NOT NULL REFERENCES senticket_events(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, event_id)
+);
+
+-- ── SENTICKET VIEWS ──────────────────────
+CREATE TABLE IF NOT EXISTS senticket_views (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID NOT NULL REFERENCES senticket_events(id) ON DELETE CASCADE,
+  ip_hash TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── RLS SENTICKET ────────────────────────
+ALTER TABLE senticket_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE senticket_tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE senticket_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE senticket_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE senticket_withdrawals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE senticket_favorites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE senticket_views ENABLE ROW LEVEL SECURITY;
+
+-- Public read events
+DROP POLICY IF EXISTS "Public read senticket_events" ON senticket_events;
+CREATE POLICY "Public read senticket_events" ON senticket_events FOR SELECT USING (statut = 'actif');
+-- Admin/organizer manage events
+DROP POLICY IF EXISTS "Organizer manage senticket_events" ON senticket_events;
+CREATE POLICY "Organizer manage senticket_events" ON senticket_events FOR ALL USING (true);
+
+-- Public read tickets
+DROP POLICY IF EXISTS "Public read senticket_tickets" ON senticket_tickets;
+CREATE POLICY "Public read senticket_tickets" ON senticket_tickets FOR SELECT USING (true);
+-- Admin/organizer manage tickets
+DROP POLICY IF EXISTS "Organizer manage senticket_tickets" ON senticket_tickets;
+CREATE POLICY "Organizer manage senticket_tickets" ON senticket_tickets FOR ALL USING (true);
+
+-- Users read own orders + organizer read event orders
+DROP POLICY IF EXISTS "User read own orders" ON senticket_orders;
+CREATE POLICY "User read own orders" ON senticket_orders FOR SELECT USING (true);
+DROP POLICY IF EXISTS "User insert orders" ON senticket_orders;
+CREATE POLICY "User insert orders" ON senticket_orders FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Organizer update orders" ON senticket_orders;
+CREATE POLICY "Organizer update orders" ON senticket_orders FOR UPDATE USING (true);
+
+-- Public read reviews
+DROP POLICY IF EXISTS "Public read senticket_reviews" ON senticket_reviews;
+CREATE POLICY "Public read senticket_reviews" ON senticket_reviews FOR SELECT USING (true);
+DROP POLICY IF EXISTS "User insert reviews" ON senticket_reviews;
+CREATE POLICY "User insert reviews" ON senticket_reviews FOR INSERT WITH CHECK (true);
+
+-- Organizer read own withdrawals + admin all
+DROP POLICY IF EXISTS "Organizer read own withdrawals" ON senticket_withdrawals;
+CREATE POLICY "Organizer read own withdrawals" ON senticket_withdrawals FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Organizer insert withdrawals" ON senticket_withdrawals;
+CREATE POLICY "Organizer insert withdrawals" ON senticket_withdrawals FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Admin update withdrawals" ON senticket_withdrawals;
+CREATE POLICY "Admin update withdrawals" ON senticket_withdrawals FOR UPDATE USING (true);
+
+-- Favorites
+DROP POLICY IF EXISTS "User manage favorites" ON senticket_favorites;
+CREATE POLICY "User manage favorites" ON senticket_favorites FOR ALL USING (true);
+
+-- Views
+DROP POLICY IF EXISTS "Public insert views" ON senticket_views;
+CREATE POLICY "Public insert views" ON senticket_views FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Public read views" ON senticket_views;
+CREATE POLICY "Public read views" ON senticket_views FOR SELECT USING (true);
+
+-- ── STORAGE BUCKET SENTICKET ─────────────
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('senticket-covers','senticket-covers',true,10485760,ARRAY['image/jpeg','image/jpg','image/png','image/webp','image/gif'])
+ON CONFLICT (id) DO UPDATE SET public=EXCLUDED.public, file_size_limit=EXCLUDED.file_size_limit, allowed_mime_types=EXCLUDED.allowed_mime_types;
+
+DO $$
+DECLARE b TEXT; bl TEXT[] := ARRAY['senticket-covers'];
+BEGIN
+  FOREACH b IN ARRAY bl LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', 'Public read ' || b);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', 'Allow upload ' || b);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', 'Allow update ' || b);
+    EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', 'Allow delete ' || b);
+    EXECUTE format('CREATE POLICY %I ON storage.objects FOR SELECT USING (bucket_id = %L)', 'Public read ' || b, b);
+    EXECUTE format('CREATE POLICY %I ON storage.objects FOR INSERT WITH CHECK (bucket_id = %L)', 'Allow upload ' || b, b);
+    EXECUTE format('CREATE POLICY %I ON storage.objects FOR UPDATE USING (bucket_id = %L)', 'Allow update ' || b, b);
+    EXECUTE format('CREATE POLICY %I ON storage.objects FOR DELETE USING (bucket_id = %L)', 'Allow delete ' || b, b);
+  END LOOP;
+END $$;
+
 -- ── VÉRIFICATION ─────────────────────────
 SELECT table_name FROM information_schema.tables WHERE table_schema='public'
-AND table_name IN ('membres','payments','guides','fascicules','podcasts_db','store_products','news','user_documents','site_content')
+AND table_name IN ('membres','payments','guides','fascicules','podcasts_db','store_products','news','user_documents','site_content',
+'senticket_events','senticket_tickets','senticket_orders','senticket_reviews','senticket_withdrawals','senticket_favorites','senticket_views')
 ORDER BY table_name;
-SELECT id, name, public FROM storage.buckets WHERE id IN ('covers','guides','podcasts','audio-summaries','images','store-images');
+SELECT id, name, public FROM storage.buckets WHERE id IN ('covers','guides','podcasts','audio-summaries','images','store-images','senticket-covers');

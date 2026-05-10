@@ -2,6 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { uploadFile } from '../../lib/uploadFile';
+import { useAuth } from '../../context/AuthContext';
+import {
+  fetchEvents, createEvent as dbCreateEvent, updateEvent as dbUpdateEvent, deleteEvent as dbDeleteEvent,
+  fetchOrders, createOrder, updateTicketSales,
+  fetchFavorites, toggleFavorite,
+  fetchReviews, upsertReview,
+  fetchWithdrawals, createWithdrawal,
+  bumpView as dbBumpView, fetchViewCount,
+  fetchOrderByQr, markOrderScanned,
+  sendTicketEmail,
+} from '../../lib/senticketDb';
 
 // =====================================================================
 // SenTicket — Plateforme de billetterie événementielle ABAWI
@@ -341,8 +352,12 @@ function newId(prefix = 'st') {
 // =====================================================================
 
 export default function SenTicket() {
+  const { membre } = useAuth();
+  const userId = membre?.id || null;
+  const isLoggedIn = !!userId;
+
   const [events, setEvents] = useState(() => loadLocalEvents());
-  const [view, setView] = useState('explorer'); // explorer | detail | panier | checkout | billet | historique | organiser | mes-events
+  const [view, setView] = useState('explorer'); // explorer | detail | panier | checkout | billet | historique | organiser | mes-events | scanner
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState(() => loadOrders());
@@ -354,16 +369,51 @@ export default function SenTicket() {
   const [organizerTab, setOrganizerTab] = useState('creer'); // creer | stats
   const [withdrawals, setWithdrawals] = useState(() => loadWithdrawals());
   const [favorites, setFavorites] = useState(() => loadFavorites());
-  const [views] = useState(() => loadViews());
+  const [views, setViews] = useState(() => loadViews());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [reviews, setReviews] = useState(() => loadReviews());
+  const [dbReady, setDbReady] = useState(false);
   const nav = useNavigate();
 
-  // Persistance
+  // Chargement initial depuis Supabase (prioritaire) ou localStorage (fallback)
+  useEffect(() => {
+    let cancelled = false;
+    async function loadFromDb() {
+      const dbEvents = await fetchEvents();
+      if (!cancelled) {
+        if (dbEvents && dbEvents.length > 0) {
+          setEvents(dbEvents);
+        }
+        setDbReady(true);
+      }
+    }
+    loadFromDb();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Chargement user-specific quand connecté
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let cancelled = false;
+    async function loadUserData() {
+      const [dbOrders, dbFavs] = await Promise.all([
+        fetchOrders(userId),
+        fetchFavorites(userId),
+      ]);
+      if (!cancelled) {
+        if (dbOrders) setOrders(dbOrders);
+        if (dbFavs) setFavorites(dbFavs);
+      }
+    }
+    loadUserData();
+    return () => { cancelled = true; };
+  }, [isLoggedIn, userId]);
+
+  // Persistance fallback localStorage
   useEffect(() => { saveLocalEvents(events); }, [events]);
-  useEffect(() => { saveOrders(orders); }, [orders]);
-  useEffect(() => { saveWithdrawals(withdrawals); }, [withdrawals]);
-  useEffect(() => { saveFavorites(favorites); }, [favorites]);
+  useEffect(() => { if (!isLoggedIn) saveOrders(orders); }, [orders, isLoggedIn]);
+  useEffect(() => { if (!isLoggedIn) saveWithdrawals(withdrawals); }, [withdrawals, isLoggedIn]);
+  useEffect(() => { if (!isLoggedIn) saveFavorites(favorites); }, [favorites, isLoggedIn]);
 
   // Notification auto-clear
   useEffect(() => {
@@ -408,7 +458,7 @@ export default function SenTicket() {
 
   const cartTotal = cart.reduce((s, c) => s + c.prix * c.qty, 0);
 
-  function confirmPurchase(paymentMethod, buyerInfo, meta = {}) {
+  async function confirmPurchase(paymentMethod, buyerInfo, meta = {}) {
     const newOrders = cart.map(item => {
       const total = item.prix * item.qty;
       const commission = Math.round(total * COMMISSION_RATE);
@@ -435,7 +485,7 @@ export default function SenTicket() {
       };
     });
 
-    // Mettre à jour les ventes dans les événements
+    // Mettre à jour les ventes dans les événements (local)
     const updatedEvents = events.map(e => {
       const eventOrders = newOrders.filter(o => o.eventId === e.id);
       if (eventOrders.length === 0) return e;
@@ -445,32 +495,118 @@ export default function SenTicket() {
       });
       return { ...e, billets: newBillets };
     });
-
     setEvents(updatedEvents);
-    setOrders([...newOrders, ...orders]);
+
+    // Sauvegarder dans Supabase si connecté
+    if (isLoggedIn) {
+      for (const o of newOrders) {
+        await createOrder({
+          event_id: o.eventId,
+          ticket_id: o.billetId,
+          user_id: userId,
+          qty: o.qty,
+          prix_total: o.total,
+          commission: o.commission,
+          discount: o.discount,
+          net_organisateur: o.netOrganisateur,
+          acheteur: o.acheteur,
+          payment_method: o.paymentMethod,
+          coupon_code: o.couponCode,
+          group_emails: o.groupEmails,
+          statut: o.statut,
+          qr_data: o.qrData,
+        });
+        await updateTicketSales(o.billetId, o.qty);
+      }
+      // Refresh orders from DB
+      const freshOrders = await fetchOrders(userId);
+      if (freshOrders) setOrders(freshOrders);
+    } else {
+      setOrders([...newOrders, ...orders]);
+    }
+
+    // Envoi d'emails (acheteur + groupe)
+    for (const o of newOrders) {
+      const body = `Bonjour ${o.acheteur.prenom},\n\nVotre billet pour « ${o.eventTitre} » a été confirmé.\nBillet : ${o.billetNom} × ${o.qty}\nTotal : ${formatPrix(o.total)}\nQR : ${o.qrData}\n\nÀ bientôt,\nSenTicket`;
+      await sendTicketEmail({ to: o.acheteur.email, subject: `Votre billet ${o.eventTitre}`, body });
+      if (o.groupEmails?.length) {
+        for (const email of o.groupEmails) {
+          await sendTicketEmail({ to: email, subject: `Billet partagé : ${o.eventTitre}`, body });
+        }
+      }
+    }
+
     setCart([]);
     setView('historique');
     setNotification({ type: 'success', msg: `Achat confirmé ! ${newOrders.length} billet(s) acheté(s).` });
   }
 
-  function createEvent(evtData) {
-    const newEvent = {
-      id: newId('evt'),
-      ...evtData,
-      vendus: 0,
-      featured: false,
-      statut: 'actif',
-      createur: 'Moi',
+  async function createEvent(evtData) {
+    const billets = evtData.billets || [];
+    const payload = {
+      event: {
+        titre: evtData.titre,
+        description: evtData.description,
+        categorie: evtData.categorie,
+        ville: evtData.ville,
+        lieu: evtData.lieu,
+        date: evtData.date,
+        heure: evtData.heure,
+        cover_url: evtData.cover_url || '',
+        featured: false,
+        statut: 'actif',
+        organizer_id: userId,
+      },
+      billets: billets.map(b => ({ nom: b.nom, prix: b.prix, places: b.places, vendus: 0 })),
     };
-    setEvents([newEvent, ...events]);
-    setView('mes-events');
-    setNotification({ type: 'success', msg: `Événement « ${evtData.titre} » créé avec succès !` });
+    const evId = await dbCreateEvent(payload);
+    if (evId) {
+      const fresh = await fetchEvents();
+      if (fresh) setEvents(fresh);
+      setView('mes-events');
+      setNotification({ type: 'success', msg: `Événement « ${evtData.titre} » créé avec succès !` });
+    } else {
+      // fallback local
+      const newEvent = { id: newId('evt'), ...evtData, vendus: 0, featured: false, statut: 'actif', createur: 'Moi' };
+      setEvents([newEvent, ...events]);
+      setView('mes-events');
+      setNotification({ type: 'success', msg: `Événement créé (local) !` });
+    }
   }
 
-  function deleteEvent(id) {
+  async function deleteEvent(id) {
     if (!confirm('Supprimer cet événement ?')) return;
-    setEvents(events.filter(e => e.id !== id));
+    const ok = await dbDeleteEvent(id);
+    if (ok) {
+      const fresh = await fetchEvents();
+      if (fresh) setEvents(fresh);
+    } else {
+      setEvents(events.filter(e => e.id !== id));
+    }
     setNotification({ type: 'info', msg: 'Événement supprimé' });
+  }
+
+  async function handleToggleFavorite(eventId) {
+    const isAdding = !favorites.has(eventId);
+    const next = new Set(favorites);
+    if (isAdding) next.add(eventId); else next.delete(eventId);
+    setFavorites(next);
+    if (isLoggedIn) {
+      await toggleFavorite(userId, eventId, isAdding);
+    }
+  }
+
+  async function handleRequestWithdrawal(montant) {
+    if (!confirm(`Confirmer la demande de reversement de ${formatPrix(montant)} ?`)) return;
+    const w = { id: newId('WTH'), montant, date: new Date().toISOString(), statut: 'En cours' };
+    if (isLoggedIn) {
+      await createWithdrawal({ organizer_id: userId, montant, methode: 'Wave', telephone: membre?.telephone || '', statut: 'en_attente' });
+      const fresh = await fetchWithdrawals(userId);
+      if (fresh) setWithdrawals(fresh);
+    } else {
+      setWithdrawals([w, ...withdrawals]);
+    }
+    setNotification({ type: 'success', msg: `Demande de reversement de ${formatPrix(montant)} envoyée !` });
   }
 
   // ── Rendu ───────────────────────────────────────────────────────────
@@ -543,6 +679,7 @@ export default function SenTicket() {
             { id: 'panier', label: `🛒 Panier (${cart.length})`, active: view === 'panier' || view === 'checkout' },
             { id: 'historique', label: '🎫 Mes billets', active: view === 'historique' },
             { id: 'organiser', label: '➕ Organiser', active: view === 'organiser' || view === 'mes-events' },
+            { id: 'scanner', label: '📷 Scanner', active: view === 'scanner' },
           ].map(tab => (
             <button key={tab.id} onClick={() => setView(tab.id)} style={{
               padding: '8px 16px', borderRadius: 100,
@@ -615,7 +752,7 @@ export default function SenTicket() {
                     <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>⭐ En vedette</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                       {featuredEvents.slice(0, 3).map(evt => (
-                        <EventCard key={evt.id} event={evt} isFavorite={favorites.has(evt.id)} onClick={() => { setSelectedEvent(evt); setView('detail'); }} onToggleFavorite={() => { const next = new Set(favorites); if (next.has(evt.id)) next.delete(evt.id); else next.add(evt.id); setFavorites(next); }} />
+                        <EventCard key={evt.id} event={evt} isFavorite={favorites.has(evt.id)} onClick={() => { setSelectedEvent(evt); setView('detail'); }} onToggleFavorite={() => handleToggleFavorite(evt.id)} />
                       ))}
                     </div>
                   </div>
@@ -633,7 +770,7 @@ export default function SenTicket() {
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                     {filteredEvents.map(evt => (
-                      <EventCard key={evt.id} event={evt} isFavorite={favorites.has(evt.id)} onClick={() => { setSelectedEvent(evt); setView('detail'); }} onToggleFavorite={() => { const next = new Set(favorites); if (next.has(evt.id)) next.delete(evt.id); else next.add(evt.id); setFavorites(next); }} />
+                      <EventCard key={evt.id} event={evt} isFavorite={favorites.has(evt.id)} onClick={() => { setSelectedEvent(evt); setView('detail'); }} onToggleFavorite={() => handleToggleFavorite(evt.id)} />
                     ))}
                   </div>
                 )}
@@ -649,12 +786,7 @@ export default function SenTicket() {
                 onBack={() => setView('explorer')}
                 onAddToCart={(billet, qty) => addToCart(selectedEvent, billet, qty)}
                 onGoPanier={() => setView('panier')}
-                onToggleFavorite={() => {
-                  const next = new Set(favorites);
-                  if (next.has(selectedEvent.id)) next.delete(selectedEvent.id);
-                  else next.add(selectedEvent.id);
-                  setFavorites(next);
-                }}
+                onToggleFavorite={() => handleToggleFavorite(selectedEvent.id)}
                 onSelectEvent={evt => { setSelectedEvent(evt); bumpView(evt.id); }}
               />
             )}
@@ -696,21 +828,21 @@ export default function SenTicket() {
             )}
             {view === 'mes-events' && (
               <MesEventsView
-                events={events.filter(e => e.createur === 'Moi')}
+                events={events.filter(e => e.createur === 'Moi' || e.organizer_id === userId)}
                 orders={orders}
                 withdrawals={withdrawals}
                 onBack={() => setView('organiser')}
                 onDelete={deleteEvent}
                 onViewDetail={evt => { setSelectedEvent(evt); setView('detail'); }}
-                onRequestWithdrawal={(montant) => {
-                  if (!confirm(`Confirmer la demande de reversement de ${formatPrix(montant)} ?`)) return;
-                  const w = { id: newId('WTH'), montant, date: new Date().toISOString(), statut: 'En cours' };
-                  setWithdrawals([w, ...withdrawals]);
-                  setNotification({ type: 'success', msg: `Demande de reversement de ${formatPrix(montant)} envoyée !` });
-                }}
+                onRequestWithdrawal={handleRequestWithdrawal}
               />
             )}
           </>
+        )}
+
+        {/* ── SCANNER QR ── */}
+        {view === 'scanner' && (
+          <ScannerView onBack={() => setView('explorer')} />
         )}
       </div>
     </div>
@@ -1026,12 +1158,49 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
     }
   }
 
+  const [step, setStep] = useState('form'); // form | confirm | success
+  const [confirmCountdown, setConfirmCountdown] = useState(5);
+
   async function handlePay() {
     if (!canSubmit) return;
-    setProcessing(true);
-    await new Promise(r => setTimeout(r, 2000));
-    onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
-    setProcessing(false);
+    setStep('confirm');
+    setConfirmCountdown(5);
+  }
+
+  useEffect(() => {
+    if (step !== 'confirm') return;
+    if (confirmCountdown <= 0) {
+      onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
+      setStep('success');
+      return;
+    }
+    const t = setTimeout(() => setConfirmCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [step, confirmCountdown]);
+
+  if (step === 'confirm') {
+    return (
+      <div className="st-anim" style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ fontSize: '4rem', marginBottom: 20 }}>📲</div>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Paiement en cours...</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
+          Une demande de paiement a été envoyée à votre téléphone <strong>{buyer.tel}</strong> via {method === 'wave' ? 'Wave' : method === 'orange' ? 'Orange Money' : method === 'free' ? 'Free Money' : 'Carte bancaire'}.<br/><br/>
+          Veuillez confirmer la transaction sur votre appareil.
+        </p>
+        <div style={{ fontSize: '2rem', fontWeight: 800, color: '#8B5CF6' }}>{confirmCountdown}s</div>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 12 }}>Simulation de confirmation automatique dans {confirmCountdown} secondes...</p>
+      </div>
+    );
+  }
+
+  if (step === 'success') {
+    return (
+      <div className="st-anim" style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ fontSize: '4rem', marginBottom: 20 }}>✅</div>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#00c853', marginBottom: 12 }}>Paiement confirmé !</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>Vos billets ont été générés et envoyés par email.</p>
+      </div>
+    );
   }
 
   return (
@@ -1109,7 +1278,7 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
                 key={p.id}
                 onClick={() => setMethod(p.id)}
                 style={{
-                  padding: '12px 14px', borderRadius: 12, border: `2px solid ${method === p.id ? p.color : 'var(--border)'}`,
+                  padding: '12px 14px', borderRadius: 12, border: `2px solid ${method === p.id ? p.color : 'var(--border')}`,
                   background: method === p.id ? `${p.color}08` : 'var(--bg-card)', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 10,
                 }}
@@ -1124,10 +1293,10 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
           <button
             className="st-btn-primary"
             onClick={handlePay}
-            disabled={!canSubmit || processing}
-            style={{ width: '100%', padding: '14px', fontSize: '1rem', opacity: !canSubmit || processing ? 0.6 : 1 }}
+            disabled={!canSubmit}
+            style={{ width: '100%', padding: '14px', fontSize: '1rem', opacity: !canSubmit ? 0.6 : 1 }}
           >
-            {processing ? 'Traitement... ⏳' : `Payer ${formatPrix(totalTTC)}`}
+            {`Payer ${formatPrix(totalTTC)}`}
           </button>
           <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 10 }}>🔒 Paiement sécurisé · Vos données sont cryptées</p>
         </div>
@@ -1533,6 +1702,145 @@ function DashBox({ label, value, color }) {
     <div style={{ padding: '12px', borderRadius: 10, background: 'var(--bg-primary)', border: '1px solid var(--border)', textAlign: 'center' }}>
       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>{label}</div>
       <div style={{ fontWeight: 800, color, fontSize: '0.95rem' }}>{value}</div>
+    </div>
+  );
+}
+
+function ScannerView({ onBack }) {
+  const [qrInput, setQrInput] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
+  async function startCamera() {
+    setError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setScanning(true);
+        detectLoop();
+      }
+    } catch (e) {
+      setError('Accès caméra refusé. Utilisez la saisie manuelle ci-dessous.');
+    }
+  }
+
+  function stopCamera() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setScanning(false);
+  }
+
+  async function detectLoop() {
+    if (!scanning || !videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if ('BarcodeDetector' in window) {
+        try {
+          const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+          const codes = await detector.detect(canvas);
+          if (codes.length > 0) {
+            await handleCode(codes[0].rawValue);
+            stopCamera();
+            return;
+          }
+        } catch {}
+      }
+    }
+    requestAnimationFrame(detectLoop);
+  }
+
+  async function handleCode(rawValue) {
+    setError('');
+    const order = await fetchOrderByQr(rawValue);
+    if (!order) {
+      setError('Billet non trouvé ou invalide.');
+      setResult(null);
+      return;
+    }
+    setResult(order);
+  }
+
+  async function validateScan() {
+    if (!result) return;
+    const ok = await markOrderScanned(result.id);
+    if (ok) {
+      setResult({ ...result, scanned: true });
+      setError('');
+    } else {
+      setError('Erreur lors de la validation.');
+    }
+  }
+
+  return (
+    <div className="st-anim">
+      <button onClick={() => { stopCamera(); onBack(); }} style={{ marginBottom: 16, padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>← Retour</button>
+      <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 16 }}>📷 Scanner un billet</h2>
+
+      <div className="st-card" style={{ padding: '20px', marginBottom: 20 }}>
+        {!scanning ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+              Scannez le QR code du billet à l'entrée, ou saisissez manuellement le code.
+            </p>
+            <button className="st-btn-primary" onClick={startCamera} style={{ padding: '12px 24px' }}>📷 Activer la caméra</button>
+            <div style={{ width: '100%', maxWidth: 400 }}>
+              <input className="st-input" placeholder="Coller le contenu du QR code ici..." value={qrInput} onChange={e => setQrInput(e.target.value)} style={{ width: '100%', marginBottom: 8 }} />
+              <button className="st-btn-primary" onClick={() => handleCode(qrInput)} disabled={!qrInput.trim()} style={{ width: '100%' }}>Vérifier le code</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <video ref={videoRef} style={{ width: '100%', maxWidth: 400, borderRadius: 12, border: '2px solid var(--border)' }} playsInline muted />
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+            <button onClick={stopCamera} style={{ padding: '8px 16px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-secondary)', cursor: 'pointer' }}>Arrêter la caméra</button>
+          </div>
+        )}
+        {error && <p style={{ color: '#EF4444', fontSize: '0.85rem', marginTop: 10, textAlign: 'center' }}>{error}</p>}
+      </div>
+
+      {result && (
+        <div className="st-card" style={{ padding: '20px', borderColor: result.scanned ? '#00c853' : '#8B5CF6' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>{result.scanned ? '✅ Billet déjà validé' : '🎫 Billet trouvé'}</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 16 }}>
+            <InfoBox icon="🎭" label="Événement" value={result.eventTitre || result.senticket_events?.titre || ''} />
+            <InfoBox icon="📅" label="Date" value={result.eventDate || result.senticket_events?.date || ''} />
+            <InfoBox icon="🕐" label="Heure" value={result.eventHeure || result.senticket_events?.heure || ''} />
+            <InfoBox icon="📍" label="Lieu" value={result.eventLieu || result.senticket_events?.lieu || ''} />
+            <InfoBox icon="👤" label="Acheteur" value={`${result.acheteur?.prenom || ''} ${result.acheteur?.nom || ''}`} />
+            <InfoBox icon="📧" label="Email" value={result.acheteur?.email || ''} />
+            <InfoBox icon="🎟️" label="Billets" value={`${result.qty || 1}`} />
+            <InfoBox icon="💳" label="Paiement" value={result.payment_method || ''} />
+          </div>
+          {!result.scanned && (
+            <button className="st-btn-primary" onClick={validateScan} style={{ width: '100%', padding: '14px', fontSize: '1rem' }}>
+              ✓ Valider l'entrée
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
