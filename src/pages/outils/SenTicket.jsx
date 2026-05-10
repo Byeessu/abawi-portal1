@@ -12,8 +12,8 @@ import {
   bumpView as dbBumpView, fetchViewCount,
   fetchOrderByQr, markOrderScanned,
   sendTicketEmail,
-  initiatePayment, verifyPayment,
 } from '../../lib/senticketDb';
+import { createInvoice, isPaydunyaConfigured } from '../../config/paydunya';
 
 // =====================================================================
 // SenTicket — Plateforme de billetterie événementielle ABAWI
@@ -1162,43 +1162,47 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
   const [step, setStep] = useState('form'); // form | processing | success | error
   const [payError, setPayError] = useState('');
 
-  // Vérifier retour PayDunya (token dans URL)
+  // Vérifier retour PayDunya (success=1 dans URL)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    if (token) {
-      setStep('processing');
-      verifyPayment(token).then(res => {
-        if (res?.success && res.status === 'completed') {
-          onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
-          setStep('success');
-          // Nettoyer l'URL
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } else {
-          setPayError('Le paiement n\'a pas été confirmé. Veuillez réessayer.');
-          setStep('error');
-        }
-      });
+    if (params.get('success') === '1') {
+      onConfirm(method, buyer, { discount, couponCode: appliedCoupon?.code || null, groupEmails: groupEmails.split(',').map(e => e.trim()).filter(Boolean) });
+      setStep('success');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (params.get('cancel') === '1') {
+      setPayError('Le paiement a été annulé.');
+      setStep('error');
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
   async function handlePay() {
     if (!canSubmit) return;
+    if (!isPaydunyaConfigured()) {
+      setPayError('PayDunya n\'est pas configuré. Veuillez contacter l\'administrateur.');
+      setStep('error');
+      return;
+    }
     setStep('processing');
-    const orderId = `senticket_${Date.now()}`;
-    const returnUrl = `${window.location.origin}${window.location.pathname}`;
-    const payment = await initiatePayment({
-      amount: totalTTC,
-      description: `Billet SenTicket — ${cart.map(c => c.eventTitre).join(', ')}`,
-      orderId,
-      returnUrl,
-      buyerEmail: buyer.email,
-      buyerPhone: buyer.tel,
-    });
-    if (payment?.paymentUrl) {
-      window.location.href = payment.paymentUrl;
-    } else {
-      setPayError(payment?.error || 'Impossible d\'initier le paiement. Vérifiez votre connexion ou contactez le support.');
+    try {
+      const result = await createInvoice({
+        title: `Billet SenTicket — ${cart.map(c => c.eventTitre).join(', ')}`,
+        amount: totalTTC,
+        method,
+        customerEmail: buyer.email,
+        customerPhone: buyer.tel,
+        returnUrl: `${window.location.origin}${window.location.pathname}?success=1`,
+        cancelUrl: `${window.location.origin}${window.location.pathname}?cancel=1`,
+      });
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        setPayError('Impossible d\'obtenir l\'URL de paiement PayDunya.');
+        setStep('error');
+      }
+    } catch (err) {
+      setPayError(err.message || 'Erreur lors de l\'initiation du paiement.');
       setStep('error');
     }
   }

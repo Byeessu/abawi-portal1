@@ -221,35 +221,3 @@ export async function sendTicketEmail({ to, subject, body }) {
   return true
 }
 
-/* ═══ PAIEMENT PAYDUNYA ═══ */
-export async function initiatePayment({ amount, description, orderId, returnUrl, buyerEmail, buyerPhone }) {
-  try {
-    const { data, error } = await supabase.functions.invoke('create-payment', {
-      body: { amount, description, orderId, returnUrl, buyerEmail, buyerPhone },
-    })
-    if (error || !data?.success) {
-      console.error('[SenTicket Payment] initiate failed:', error || data?.error)
-      return null
-    }
-    return data
-  } catch (err) {
-    console.error('[SenTicket Payment] error:', err)
-    return null
-  }
-}
-
-export async function verifyPayment(token) {
-  try {
-    const { data, error } = await supabase.functions.invoke('verify-payment', {
-      body: { token },
-    })
-    if (error) {
-      console.error('[SenTicket Payment] verify failed:', error)
-      return null
-    }
-    return data
-  } catch (err) {
-    console.error('[SenTicket Payment] verify error:', err)
-    return null
-  }
-}
