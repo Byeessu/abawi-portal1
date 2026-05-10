@@ -1,4 +1,5 @@
 const CACHE_NAME = 'abawi-abavie-v7'
+// NOTE: si tu changes cette version, mets à jour aussi EXPECTED_VERSION dans index.html
 const STATIC_ASSETS = [
   '/', '/digital', '/academy', '/podcasts', '/outils', '/news',
   '/manifest.json', '/abavie',
