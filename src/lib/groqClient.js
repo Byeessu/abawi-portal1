@@ -155,6 +155,9 @@ async function callProxy(payload) {
 
 async function callDirect(payload, apiKey, baseUrl) {
   const url = `${baseUrl || DEFAULT_GROQ_BASE_URL}/chat/completions`
+  if (typeof window !== 'undefined') {
+    try { console.log('[AI direct]', url, 'model:', payload?.model, 'key:', String(apiKey).slice(0, 8) + '…') } catch {}
+  }
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -165,6 +168,9 @@ async function callDirect(payload, apiKey, baseUrl) {
   })
   if (!res.ok) {
     const txt = await res.text().catch(() => '')
+    if (typeof window !== 'undefined') {
+      try { console.log('[AI direct] ERROR', res.status, txt.slice(0, 300)) } catch {}
+    }
     throw normalizeError(res.status, txt)
   }
   return await res.json()
