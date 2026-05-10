@@ -43,7 +43,11 @@ self.addEventListener('fetch', (e) => {
         if (cached) return cached
         try {
           const response = await fetch(e.request)
-          if (response.ok) cache.put(e.request, response.clone())
+          // Cache.put ne supporte pas les réponses partielles (206) ni opaques.
+          // On ne met en cache que les réponses basiques 200 complètes.
+          if (response.ok && response.status === 200 && response.type === 'basic') {
+            cache.put(e.request, response.clone()).catch(() => {})
+          }
           return response
         } catch {
           return cached || new Response('Offline', { status: 503 })
