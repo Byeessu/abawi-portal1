@@ -17,6 +17,75 @@ const WITHDRAWALS_KEY = 'senticket_withdrawals';
 
 const COMMISSION_RATE = 0.07; // 7% commission SenTicket
 
+const FAVORITES_KEY = 'senticket_favorites';
+const VIEWS_KEY = 'senticket_views';
+
+function loadFavorites() {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+function saveFavorites(set) {
+  try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...set])); } catch {}
+}
+function loadViews() {
+  try {
+    const raw = localStorage.getItem(VIEWS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {};
+}
+function saveViews(obj) {
+  try { localStorage.setItem(VIEWS_KEY, JSON.stringify(obj)); } catch {}
+}
+function bumpView(eventId) {
+  const v = loadViews();
+  v[eventId] = (v[eventId] || 0) + 1;
+  saveViews(v);
+  return v[eventId];
+}
+function generateICS(event) {
+  const dt = event.date.replace(/-/g, '');
+  const [h, m] = (event.heure || '00:00').split(':').map(Number);
+  const start = `${dt}T${String(h).padStart(2, '0')}${String(m||0).padStart(2, '0')}00`;
+  const endH = (h + 2) % 24;
+  const end = `${dt}T${String(endH).padStart(2, '0')}${String(m||0).padStart(2, '0')}00`;
+  const uid = `senticket-${event.id}@abawi.sn`;
+  const summary = event.titre.replace(/,/g, '\\,');
+  const location = `${event.lieu}, ${event.ville}`.replace(/,/g, '\\,');
+  const desc = event.description.replace(/\n/g, '\\n').replace(/,/g, '\\,');
+  return `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//ABAWI//SenTicket//FR\nBEGIN:VEVENT\nUID:${uid}\nDTSTART;TZID=Africa/Dakar:${start}\nDTEND;TZID=Africa/Dakar:${end}\nSUMMARY:${summary}\nLOCATION:${location}\nDESCRIPTION:${desc}\nEND:VEVENT\nEND:VCALENDAR`;
+}
+function downloadICS(event) {
+  const blob = new Blob([generateICS(event)], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `senticket-${event.id}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function shareEvent(event, platform) {
+  const url = window.location.href;
+  const text = encodeURIComponent(`${event.titre} — ${event.date} à ${event.ville} via SenTicket 🎫`);
+  const link = encodeURIComponent(url);
+  const maps = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${link}`,
+    twitter: `https://twitter.com/intent/tweet?text=${text}&url=${link}`,
+    whatsapp: `https://wa.me/?text=${text}%20${link}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${link}`,
+  };
+  if (maps[platform]) window.open(maps[platform], '_blank', 'width=600,height=400');
+}
+function copyLink(event) {
+  const url = `${window.location.origin}/outils/senticket?event=${event.id}`;
+  navigator.clipboard?.writeText(url).then(() => alert('Lien copié !')).catch(() => {});
+}
+
 function loadLocalEvents() {
   try {
     const raw = localStorage.getItem(EVENTS_KEY);
@@ -249,12 +318,15 @@ export default function SenTicket() {
   const [notification, setNotification] = useState(null);
   const [organizerTab, setOrganizerTab] = useState('creer'); // creer | stats
   const [withdrawals, setWithdrawals] = useState(() => loadWithdrawals());
+  const [favorites, setFavorites] = useState(() => loadFavorites());
+  const [views] = useState(() => loadViews());
   const nav = useNavigate();
 
   // Persistance
   useEffect(() => { saveLocalEvents(events); }, [events]);
   useEffect(() => { saveOrders(orders); }, [orders]);
   useEffect(() => { saveWithdrawals(withdrawals); }, [withdrawals]);
+  useEffect(() => { saveFavorites(favorites); }, [favorites]);
 
   // Notification auto-clear
   useEffect(() => {
@@ -494,7 +566,7 @@ export default function SenTicket() {
                     <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>⭐ En vedette</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                       {featuredEvents.slice(0, 3).map(evt => (
-                        <EventCard key={evt.id} event={evt} onClick={() => { setSelectedEvent(evt); setView('detail'); }} />
+                        <EventCard key={evt.id} event={evt} isFavorite={favorites.has(evt.id)} onClick={() => { setSelectedEvent(evt); setView('detail'); }} onToggleFavorite={() => { const next = new Set(favorites); if (next.has(evt.id)) next.delete(evt.id); else next.add(evt.id); setFavorites(next); }} />
                       ))}
                     </div>
                   </div>
@@ -512,7 +584,7 @@ export default function SenTicket() {
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                     {filteredEvents.map(evt => (
-                      <EventCard key={evt.id} event={evt} onClick={() => { setSelectedEvent(evt); setView('detail'); }} />
+                      <EventCard key={evt.id} event={evt} isFavorite={favorites.has(evt.id)} onClick={() => { setSelectedEvent(evt); setView('detail'); }} onToggleFavorite={() => { const next = new Set(favorites); if (next.has(evt.id)) next.delete(evt.id); else next.add(evt.id); setFavorites(next); }} />
                     ))}
                   </div>
                 )}
@@ -522,9 +594,19 @@ export default function SenTicket() {
             {view === 'detail' && selectedEvent && (
               <EventDetail
                 event={selectedEvent}
+                events={events}
+                isFavorite={favorites.has(selectedEvent.id)}
+                viewCount={views[selectedEvent.id] || 0}
                 onBack={() => setView('explorer')}
                 onAddToCart={(billet, qty) => addToCart(selectedEvent, billet, qty)}
                 onGoPanier={() => setView('panier')}
+                onToggleFavorite={() => {
+                  const next = new Set(favorites);
+                  if (next.has(selectedEvent.id)) next.delete(selectedEvent.id);
+                  else next.add(selectedEvent.id);
+                  setFavorites(next);
+                }}
+                onSelectEvent={evt => { setSelectedEvent(evt); bumpView(evt.id); }}
               />
             )}
           </>
@@ -590,12 +672,12 @@ export default function SenTicket() {
 // Sous-composants
 // =====================================================================
 
-function EventCard({ event, onClick }) {
+function EventCard({ event, isFavorite, onClick, onToggleFavorite }) {
   const dispo = event.billets.reduce((s, b) => s + (b.places - b.vendus), 0);
   const plusBas = Math.min(...event.billets.map(b => b.prix));
   return (
-    <div className="st-card st-anim" onClick={onClick} style={{ cursor: 'pointer' }}>
-      <div style={{
+    <div className="st-card st-anim" style={{ cursor: 'pointer', position: 'relative' }}>
+      <div onClick={onClick} style={{
         height: 140,
         background: event.cover_url ? `url(${event.cover_url}) center/cover no-repeat` : 'linear-gradient(135deg, #1a103c, #2d1b69, #1a103c)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', position: 'relative',
@@ -609,10 +691,11 @@ function EventCard({ event, onClick }) {
           }}>⭐ Vedette</span>
         )}
       </div>
-      <div style={{ padding: '14px 16px' }}>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+      <div style={{ padding: '14px 16px' }} onClick={onClick}>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
           <span className="st-badge" style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6' }}>{event.categorie}</span>
           <span className="st-badge" style={{ background: 'rgba(0,200,83,0.12)', color: '#00c853' }}>{event.ville}</span>
+          {isFavorite && <span style={{ marginLeft: 'auto', fontSize: '1rem' }}>❤️</span>}
         </div>
         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3 }}>{event.titre}</h3>
         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 10 }}>
@@ -625,13 +708,29 @@ function EventCard({ event, onClick }) {
           </span>
         </div>
       </div>
+      {onToggleFavorite && (
+        <button
+          onClick={e => { e.stopPropagation(); onToggleFavorite(); }}
+          style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 2,
+            width: 32, height: 32, borderRadius: '50%', border: 'none',
+            background: isFavorite ? 'rgba(239,68,68,0.9)' : 'rgba(0,0,0,0.4)',
+            color: '#fff', cursor: 'pointer', fontSize: '1rem', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',
+          }}
+        >{isFavorite ? '❤️' : '🤍'}</button>
+      )}
     </div>
   );
 }
 
-function EventDetail({ event, onBack, onAddToCart, onGoPanier }) {
+function EventDetail({ event, events, isFavorite, viewCount, onBack, onAddToCart, onGoPanier, onToggleFavorite, onSelectEvent }) {
   const [selectedBillet, setSelectedBillet] = useState(null);
   const [qty, setQty] = useState(1);
+
+  useEffect(() => { bumpView(event.id); }, [event.id]);
+
+  const related = events.filter(e => e.id !== event.id && e.statut === 'actif' && (e.categorie === event.categorie || e.ville === event.ville)).slice(0, 3);
 
   return (
     <div className="st-anim">
@@ -646,13 +745,29 @@ function EventDetail({ event, onBack, onAddToCart, onGoPanier }) {
           {!event.cover_url && event.image}
         </div>
         <div style={{ padding: '22px 24px' }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
             <span className="st-badge" style={{ background: 'rgba(139,92,246,0.12)', color: '#8B5CF6' }}>{event.categorie}</span>
             <span className="st-badge" style={{ background: 'rgba(0,200,83,0.12)', color: '#00c853' }}>{event.ville}</span>
             {event.featured && <span className="st-badge" style={{ background: 'rgba(245,197,24,0.15)', color: '#D4A017' }}>⭐ En vedette</span>}
+            {viewCount > 0 && <span className="st-badge" style={{ background: 'var(--bg-primary)', color: 'var(--text-muted)' }}>👁 {viewCount} vue{viewCount>1?'s':''}</span>}
+            <button onClick={onToggleFavorite} style={{
+              marginLeft: 'auto', padding: '4px 10px', borderRadius: 100, border: `1px solid ${isFavorite ? '#EF4444' : 'var(--border)'}`,
+              background: isFavorite ? 'rgba(239,68,68,0.1)' : 'transparent', color: isFavorite ? '#EF4444' : 'var(--text-muted)',
+              cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
+            }}>{isFavorite ? '❤️ Favori' : '🤍 Ajouter aux favoris'}</button>
           </div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>{event.titre}</h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>{event.description}</p>
+
+          {/* Actions rapides */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+            <ActionBtn label="📅 Calendrier" onClick={() => downloadICS(event)} />
+            <ActionBtn label="🔗 Copier lien" onClick={() => copyLink(event)} />
+            <ActionBtn label="📘 Facebook" onClick={() => shareEvent(event, 'facebook')} />
+            <ActionBtn label="🐦 X/Twitter" onClick={() => shareEvent(event, 'twitter')} />
+            <ActionBtn label="💬 WhatsApp" onClick={() => shareEvent(event, 'whatsapp')} />
+            <ActionBtn label="💼 LinkedIn" onClick={() => shareEvent(event, 'linkedin')} />
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
             <InfoBox icon="📅" label="Date" value={formatDate(event.date)} />
@@ -716,7 +831,32 @@ function EventDetail({ event, onBack, onAddToCart, onGoPanier }) {
           )}
         </div>
       </div>
+
+      {/* Recommandations */}
+      {related.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>🔥 Vous pourriez aussi aimer</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+            {related.map(evt => (
+              <EventCard key={evt.id} event={evt} onClick={() => onSelectEvent(evt)} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function ActionBtn({ label, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: '6px 12px', borderRadius: 10, border: '1px solid var(--border)',
+      background: 'var(--bg-card)', color: 'var(--text-secondary)',
+      cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, transition: 'all 0.2s',
+    }} onMouseEnter={e => { e.currentTarget.style.borderColor = '#8B5CF6'; e.currentTarget.style.color = '#8B5CF6'; }}
+    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}>
+      {label}
+    </button>
   );
 }
 
@@ -891,6 +1031,37 @@ function HistoriqueView({ orders, onBack }) {
     );
   }
 
+  function exportTicket(o) {
+    const lines = [
+      '═══════════════════════════════════════',
+      '         SENTICKET · BILLET',
+      '═══════════════════════════════════════',
+      '',
+      `Événement : ${o.eventTitre}`,
+      `Billet    : ${o.billetNom} × ${o.qty}`,
+      `Total     : ${formatPrix(o.total)}`,
+      `Acheteur  : ${o.acheteur?.prenom || ''} ${o.acheteur?.nom || ''}`,
+      `Email     : ${o.acheteur?.email || ''}`,
+      `Tél       : ${o.acheteur?.tel || ''}`,
+      `Date achat: ${formatDate(o.dateAchat)}`,
+      `Statut    : ${o.statut.toUpperCase()}`,
+      `ID        : ${o.id}`,
+      '',
+      '═══════════════════════════════════════',
+      '  Présentez ce billet à l\'entrée',
+      '═══════════════════════════════════════',
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `billet-${o.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="st-anim">
       <button onClick={onBack} style={{ marginBottom: 16, padding: '8px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>← Explorer</button>
@@ -913,8 +1084,13 @@ function HistoriqueView({ orders, onBack }) {
               </div>
               <QRCodeDisplay data={o.qrData} size={90} />
             </div>
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-              ID : {o.id} · Présentez ce QR code à l'entrée
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ID : {o.id} · Présentez ce QR code à l'entrée</span>
+              <button onClick={() => exportTicket(o)} style={{
+                padding: '4px 10px', borderRadius: 8, border: '1px solid var(--border)',
+                background: 'var(--bg-card)', color: 'var(--text-secondary)', cursor: 'pointer',
+                fontSize: '0.72rem', fontWeight: 600,
+              }}>📥 Télécharger le billet</button>
             </div>
           </div>
         ))}
