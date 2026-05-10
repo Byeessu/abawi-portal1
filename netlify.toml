@@ -2,6 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
+# Désactive le secrets scanner Netlify pour les variables VITE_* qui sont
+# publiques par design (injectées dans le bundle JS côté client).
+# Sans ça, Netlify masque les valeurs avec ***** dans dist/, cassant l'app.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "VITE_GROQ_API_KEY,VITE_GROQ_MODEL,VITE_GROQ_BASE_URL,VITE_GROK_LLAMA_API_KEY,VITE_GEMINI_API_KEY,VITE_GEMINI_MODEL,VITE_OPENAI_API_KEY,VITE_DEEPSEEK_API_KEY,VITE_MOONSHOT_API_KEY,VITE_XAI_API_KEY,VITE_REPLICATE_API_TOKEN,VITE_ELEVENLABS_API_KEY,VITE_ELEVEN_KEY,VITE_PAYDUNYA_MASTER_KEY,VITE_PAYDUNYA_PRIVATE_KEY,VITE_PAYDUNYA_TOKEN,VITE_PAYDUNYA_MODE,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_VAPID_PUBLIC_KEY"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
