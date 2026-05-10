@@ -65,7 +65,10 @@ self.addEventListener('fetch', (e) => {
         return caches.match(e.request).then(cached => cached || response)
       }
       return response
-    }).catch(() => caches.match(e.request))
+    }).catch(async () => {
+      const cached = await caches.match(e.request)
+      return cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' })
+    })
   )
 })
 
