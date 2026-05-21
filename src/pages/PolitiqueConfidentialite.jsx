@@ -4,6 +4,7 @@ import SEO from '../components/SEO'
 function PolitiqueConfidentialite() {
   return (
     <main className="ml-page">
+      <div className="ml-inner">
       <SEO
         title="Politique de Confidentialité — ABAWI"
         description="Politique de confidentialité d'ABAWI : collecte, utilisation et protection de vos données personnelles. Conforme à la loi sénégalaise et au RGPD."
@@ -135,6 +136,7 @@ function PolitiqueConfidentialite() {
       <p className="ml-footer">
         ABAWI SN — Dakar, Sénégal. Contact DPO : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a>
       </p>
+      </div>
     </main>
   )
 }

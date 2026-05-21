@@ -17,6 +17,7 @@ function PolitiqueCookies() {
 
   return (
     <main className="ml-page">
+      <div className="ml-inner">
       <SEO
         title="Politique Cookies — ABAWI"
         description="Politique cookies d'ABAWI : gestion des cookies, préférences et consentement. Contrôlez vos données de navigation."
@@ -113,6 +114,7 @@ function PolitiqueCookies() {
       </section>
 
       <p className="ml-footer">ABAWI SN — Dakar, Sénégal.</p>
+      </div>
     </main>
   )
 }

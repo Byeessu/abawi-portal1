@@ -4,6 +4,7 @@ import SEO from '../components/SEO'
 function CGU() {
   return (
     <main className="ml-page">
+      <div className="ml-inner">
       <SEO
         title="Conditions Générales d'Utilisation — ABAWI"
         description="Conditions générales d'utilisation du portail ABAWI. Règles d'accès, propriété intellectuelle, responsabilités et modalités de service."
@@ -11,7 +12,7 @@ function CGU() {
       />
       <h1 className="ml-title">Conditions générales d'utilisation</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
-        Dernière mise à jour : avril 2026
+        Dernière mise à jour : mai 2026
       </p>
 
       <section className="ml-section">
@@ -65,16 +66,16 @@ function CGU() {
       <section className="ml-section">
         <h2>5. Rétractation et remboursement</h2>
         <p>
-          <strong>Contenus numériques :</strong> la livraison étant immédiate, le droit de rétractation ne s'applique
-          pas de plein droit. À titre commercial, nous appliquons néanmoins une garantie <strong>« satisfait ou
-          remboursé » sous 7 jours</strong> pour les guides et fascicules, sur demande à contact@abawi.sn.
+          <strong>Guides et fascicules :</strong> les contenus numériques ne sont <strong>pas remboursables une fois téléchargés</strong> — un fichier téléchargé peut être copié ou transféré, ce qui rend la rétractation impossible à vérifier. En dehors de tout téléchargement, nous appliquons à titre commercial une garantie <strong>« satisfait ou remboursé » sous 7 jours</strong> après l'achat. Envoyez votre demande à <strong>contact@abawi.sn</strong> ou sur WhatsApp.
         </p>
         <p>
-          <strong>Abonnement ABAWI+ :</strong> annulable à tout moment depuis l'espace membre. Le mois en cours
-          n'est pas remboursé ; l'annulation prend effet à la fin de la période payée.
+          <strong>Abonnement ABAWI+ :</strong> annulable à tout moment depuis l'espace membre. Le mois en cours n'est pas remboursé ; l'annulation prend effet à la fin de la période payée.
         </p>
         <p>
-          <strong>Packs :</strong> remboursement possible sous 7 jours si aucun contenu du pack n'a été téléchargé.
+          <strong>Packs de contenus :</strong> mêmes conditions que les guides individuels — remboursement possible sous 7 jours après l'achat, uniquement si aucun contenu du pack n'a été téléchargé.
+        </p>
+        <p>
+          <strong>Outils et crédits :</strong> les crédits consommés ne sont pas remboursables. En cas de dysfonctionnement avéré d'un outil, les crédits utilisés peuvent être restitués sur justification, à la discrétion d'ABAWI SN.
         </p>
       </section>
 
@@ -149,6 +150,7 @@ function CGU() {
       </section>
 
       <p className="ml-footer">ABAWI SN — Dakar, Sénégal. Contact : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a></p>
+      </div>
     </main>
   )
 }
