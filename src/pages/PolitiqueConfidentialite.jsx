@@ -5,6 +5,25 @@ function PolitiqueConfidentialite() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
+        {/* ── Sidebar ── */}
+        <aside className="ml-sidebar">
+          <p className="ml-sidebar-title">Sur cette page</p>
+          <nav className="ml-sidebar-nav">
+            <a href="#resp">1. Responsable</a>
+            <a href="#data">2. Données collectées</a>
+            <a href="#finalites">3. Finalités</a>
+            <a href="#base">4. Base légale</a>
+            <a href="#destinataires">5. Destinataires</a>
+            <a href="#conservation">6. Conservation</a>
+            <a href="#droits">7. Vos droits</a>
+            <a href="#securite">8. Sécurité</a>
+            <a href="#mineurs">9. Mineurs</a>
+            <a href="#modif">10. Modifications</a>
+          </nav>
+        </aside>
+
+        {/* ── Content ── */}
+        <div className="ml-content">
       <SEO
         title="Politique de Confidentialité — ABAWI"
         description="Politique de confidentialité d'ABAWI : collecte, utilisation et protection de vos données personnelles. Conforme à la loi sénégalaise et au RGPD."
@@ -14,7 +33,7 @@ function PolitiqueConfidentialite() {
       <p className="ml-subtitle">Dernière mise à jour : mai 2026</p>
 
       <section className="ml-section">
-        <h2>1. Responsable du traitement</h2>
+        <h2 id="resp">1. Responsable du traitement</h2>
         <p>
           Le responsable du traitement des données personnelles est <strong>ABAWI SN</strong>,
           VDN Liberté 6 Extension, Dakar, Sénégal. Contact : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a>.
@@ -28,7 +47,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>2. Données collectées</h2>
+        <h2 id="data">2. Données collectées</h2>
         <p>Nous collectons uniquement les données strictement nécessaires :</p>
         <ul>
           <li><strong>Compte membre :</strong> nom, prénom, email, téléphone, mot de passe haché</li>
@@ -41,7 +60,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>3. Finalités du traitement</h2>
+        <h2 id="finalites">3. Finalités du traitement</h2>
         <ul>
           <li>Créer et gérer votre compte membre</li>
           <li>Traiter vos commandes et livrer vos produits numériques</li>
@@ -54,7 +73,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>4. Base légale</h2>
+        <h2 id="base">4. Base légale</h2>
         <ul>
           <li><strong>Exécution du contrat :</strong> compte, commandes, livraison</li>
           <li><strong>Obligation légale :</strong> facturation, fiscalité, lutte contre la fraude</li>
@@ -64,7 +83,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>5. Destinataires et sous-traitants</h2>
+        <h2 id="destinataires">5. Destinataires et sous-traitants</h2>
         <p>Vos données peuvent être transmises à nos sous-traitants techniques, uniquement dans la mesure nécessaire à leur mission :</p>
         <ul>
           <li><strong>Netlify, Inc.</strong> (hébergement) — USA, clauses contractuelles types</li>
@@ -77,7 +96,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>6. Durée de conservation</h2>
+        <h2 id="conservation">6. Durée de conservation</h2>
         <ul>
           <li>Compte actif : durée de la relation contractuelle</li>
           <li>Après suppression du compte : 3 ans (obligations comptables : 10 ans pour les factures)</li>
@@ -87,7 +106,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>7. Vos droits</h2>
+        <h2 id="droits">7. Vos droits</h2>
         <p>Conformément à la loi, vous disposez des droits suivants :</p>
         <ul>
           <li><strong>Accès :</strong> obtenir une copie de vos données</li>
@@ -107,7 +126,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>8. Sécurité</h2>
+        <h2 id="securite">8. Sécurité</h2>
         <p>
           Nous mettons en œuvre des mesures techniques et organisationnelles adaptées : chiffrement TLS des échanges,
           hachage des mots de passe (bcrypt/argon2), isolation des environnements, accès restreint aux données,
@@ -116,7 +135,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>9. Mineurs</h2>
+        <h2 id="mineurs">9. Mineurs</h2>
         <p>
           Le service n'est pas destiné aux personnes de moins de 16 ans. Si vous êtes mineur, vous devez obtenir
           le consentement de votre représentant légal avant toute inscription ou achat.
@@ -124,7 +143,7 @@ function PolitiqueConfidentialite() {
       </section>
 
       <section className="ml-section">
-        <h2>10. Modifications</h2>
+        <h2 id="modif">10. Modifications</h2>
         <p>
           Cette politique peut être mise à jour. Toute modification substantielle sera notifiée par email ou via
           une bannière sur le site. La version en vigueur est toujours disponible sur cette page.
@@ -134,7 +153,8 @@ function PolitiqueConfidentialite() {
       <p className="ml-footer">
         ABAWI SN — Dakar, Sénégal. Contact DPO : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a>
       </p>
-      </div>
+        </div>{/* ml-content */}
+      </div>{/* ml-inner */}
     </main>
   )
 }

@@ -18,6 +18,21 @@ function PolitiqueCookies() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
+        {/* ── Sidebar ── */}
+        <aside className="ml-sidebar">
+          <p className="ml-sidebar-title">Sur cette page</p>
+          <nav className="ml-sidebar-nav">
+            <a href="#definition">Qu'est-ce qu'un cookie ?</a>
+            <a href="#types">Types de cookies</a>
+            <a href="#conservation">Durée de conservation</a>
+            <a href="#gestion">Gérer vos préférences</a>
+            <a href="#tiers">Cookies tiers</a>
+            <a href="#droits">Vos droits</a>
+          </nav>
+        </aside>
+
+        {/* ── Content ── */}
+        <div className="ml-content">
       <SEO
         title="Politique Cookies — ABAWI"
         description="Politique cookies d'ABAWI : gestion des cookies, préférences et consentement. Contrôlez vos données de navigation."
@@ -27,7 +42,7 @@ function PolitiqueCookies() {
       <p className="ml-subtitle">Dernière mise à jour : mai 2026</p>
 
       <section className="ml-section">
-        <h2>Qu'est-ce qu'un cookie ?</h2>
+        <h2 id="definition">Qu'est-ce qu'un cookie ?</h2>
         <p>
           Un cookie est un petit fichier déposé par un site web dans votre navigateur. Il permet de reconnaître
           votre appareil lors de visites ultérieures, de mémoriser vos préférences et d'assurer certaines
@@ -36,7 +51,7 @@ function PolitiqueCookies() {
       </section>
 
       <section className="ml-section">
-        <h2>Types de cookies utilisés</h2>
+        <h2 id="types">Types de cookies utilisés</h2>
 
         <h3 style={{ marginTop: 16, marginBottom: 8 }}>✅ Cookies strictement nécessaires (toujours actifs)</h3>
         <p>Indispensables au fonctionnement du site. Ils ne peuvent pas être désactivés.</p>
@@ -63,7 +78,7 @@ function PolitiqueCookies() {
       </section>
 
       <section className="ml-section">
-        <h2>Durée de conservation</h2>
+        <h2 id="conservation">Durée de conservation</h2>
         <ul>
           <li>Cookies de session : jusqu'à la fermeture du navigateur</li>
           <li>Cookies de préférences : 12 mois</li>
@@ -73,7 +88,7 @@ function PolitiqueCookies() {
       </section>
 
       <section className="ml-section">
-        <h2>Gérer vos préférences</h2>
+        <h2 id="gestion">Gérer vos préférences</h2>
         <p>Vous pouvez à tout moment :</p>
         <ul>
           <li>Modifier votre consentement via la bannière (au chargement du site ou ci-dessous)</li>
@@ -93,7 +108,7 @@ function PolitiqueCookies() {
       </section>
 
       <section className="ml-section">
-        <h2>Cookies tiers (sous-traitants)</h2>
+        <h2 id="tiers">Cookies tiers (sous-traitants)</h2>
         <p>Les prestataires suivants peuvent déposer des cookies techniques lors de l'utilisation de certaines fonctionnalités :</p>
         <ul>
           <li><strong>PayDunya</strong> (paiement) — uniquement sur la page de paiement</li>
@@ -102,7 +117,7 @@ function PolitiqueCookies() {
       </section>
 
       <section className="ml-section">
-        <h2>Vos droits</h2>
+        <h2 id="droits">Vos droits</h2>
         <p>
           Vous disposez de droits d'accès, de rectification, de suppression, d'opposition et de portabilité
           sur vos données. Pour les exercer, consultez notre{' '}
@@ -112,7 +127,8 @@ function PolitiqueCookies() {
       </section>
 
       <p className="ml-footer">ABAWI SN — Dakar, Sénégal.</p>
-      </div>
+        </div>{/* ml-content */}
+      </div>{/* ml-inner */}
     </main>
   )
 }

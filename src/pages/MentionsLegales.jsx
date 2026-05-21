@@ -46,14 +46,14 @@ function MentionsLegales() {
           <p>Toutes les transactions sont sécurisées et chiffrées.</p>
         </section>
 
-        <section className="ml-section">
+        <section className="ml-section" id="conditions">
           <h2>Conditions d'utilisation</h2>
           <p>En accédant au site abawi.app, vous acceptez les présentes conditions.</p>
           <p>Les contenus proposés (guides PDF, fascicules, podcasts) sont protégés par le droit d'auteur. Toute reproduction non autorisée est interdite.</p>
           <p>Les prix affichés sont en Francs CFA (FCFA/XOF) et peuvent être modifiés sans préavis.</p>
         </section>
 
-        <section className="ml-section">
+        <section className="ml-section" id="remboursement">
           <h2>Politique de remboursement</h2>
           <div className="ml-infobox">
             <p><strong>Guides et fascicules :</strong> les contenus numériques ne sont <strong>pas remboursables une fois téléchargés</strong> — un fichier téléchargé peut être copié ou transféré. En dehors de tout téléchargement, une garantie <strong>« satisfait ou remboursé » sous 7 jours</strong> s'applique sur demande à contact@abawi.sn ou sur WhatsApp.</p>
@@ -63,7 +63,7 @@ function MentionsLegales() {
           <p><strong>Crédits :</strong> les crédits consommés ne sont pas remboursables. En cas de dysfonctionnement avéré, ils peuvent être restitués à la discrétion d'ABAWI SN.</p>
         </section>
 
-        <section className="ml-section">
+        <section className="ml-section" id="donnees">
           <h2>Protection des données</h2>
           <p>ABAWI SN s'engage à protéger vos données personnelles conformément à la loi sénégalaise sur la protection des données.</p>
           <p>Les données collectées (email, téléphone, historique d'achat) sont utilisées exclusivement pour le traitement de vos commandes et l'envoi de vos produits.</p>
@@ -71,13 +71,14 @@ function MentionsLegales() {
           <p>Vous pouvez demander la suppression de vos données à tout moment en contactant contact@abawi.sn.</p>
         </section>
 
-        <section className="ml-section">
+        <section className="ml-section" id="cookies">
           <h2>Cookies</h2>
           <p>Le site utilise des cookies techniques nécessaires à son fonctionnement (thème, préférences, session). Aucun cookie publicitaire n'est utilisé.</p>
         </section>
 
         <p className="ml-footer">ABAWI SN · VDN Liberté 6 Extension, Dakar, Sénégal · contact@abawi.sn</p>
-      </div>
+        </div>{/* ml-content */}
+      </div>{/* ml-inner */}
     </main>
   )
 }

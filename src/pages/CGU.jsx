@@ -5,6 +5,27 @@ function CGU() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
+        {/* ── Sidebar ── */}
+        <aside className="ml-sidebar">
+          <p className="ml-sidebar-title">Sur cette page</p>
+          <nav className="ml-sidebar-nav">
+            <a href="#objet">1. Objet</a>
+            <a href="#compte">2. Compte membre</a>
+            <a href="#produits">3. Produits & services</a>
+            <a href="#prix">4. Prix et paiement</a>
+            <a href="#remboursement">5. Remboursement</a>
+            <a href="#pi">6. Propriété intellectuelle</a>
+            <a href="#ia">7. Outils IA</a>
+            <a href="#dispo">8. Disponibilité</a>
+            <a href="#resp">9. Responsabilité</a>
+            <a href="#donnees">10. Données personnelles</a>
+            <a href="#modif">11. Modifications</a>
+            <a href="#droit">12. Droit applicable</a>
+          </nav>
+        </aside>
+
+        {/* ── Content ── */}
+        <div className="ml-content">
       <SEO
         title="Conditions Générales d'Utilisation — ABAWI"
         description="Conditions générales d'utilisation du portail ABAWI. Règles d'accès, propriété intellectuelle, responsabilités et modalités de service."
@@ -14,7 +35,7 @@ function CGU() {
       <p className="ml-subtitle">Dernière mise à jour : mai 2026</p>
 
       <section className="ml-section">
-        <h2>1. Objet</h2>
+        <h2 id="objet">1. Objet</h2>
         <p>
           Les présentes conditions générales régissent l'utilisation du portail <strong>ABAWI</strong>,
           édité par ABAWI SN (VDN Liberté 6 Extension, Dakar, Sénégal), proposant des contenus numériques
@@ -27,7 +48,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>2. Compte membre</h2>
+        <h2 id="compte">2. Compte membre</h2>
         <p>
           L'inscription est gratuite. Vous êtes responsable de la confidentialité de votre mot de passe et
           de toutes les activités effectuées depuis votre compte. Informez-nous immédiatement de toute
@@ -37,7 +58,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>3. Produits et services</h2>
+        <h2 id="produits">3. Produits et services</h2>
         <ul>
           <li><strong>Guides et fascicules</strong> : contenus numériques téléchargeables (PDF + audio)</li>
           <li><strong>Podcasts</strong> : audios streaming et téléchargement selon abonnement</li>
@@ -49,7 +70,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>4. Prix et paiement</h2>
+        <h2 id="prix">4. Prix et paiement</h2>
         <p>
           Les prix sont affichés en <strong>Francs CFA (FCFA / XOF)</strong>, TTC. Nous pouvons les modifier
           à tout moment ; les commandes en cours restent au tarif initial.
@@ -62,7 +83,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>5. Rétractation et remboursement</h2>
+        <h2 id="remboursement">5. Rétractation et remboursement</h2>
         <p>
           <strong>Guides et fascicules :</strong> les contenus numériques ne sont <strong>pas remboursables une fois téléchargés</strong> — un fichier téléchargé peut être copié ou transféré, ce qui rend la rétractation impossible à vérifier. En dehors de tout téléchargement, nous appliquons à titre commercial une garantie <strong>« satisfait ou remboursé » sous 7 jours</strong> après l'achat. Envoyez votre demande à <strong>contact@abawi.sn</strong> ou sur WhatsApp.
         </p>
@@ -78,7 +99,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>6. Propriété intellectuelle</h2>
+        <h2 id="pi">6. Propriété intellectuelle</h2>
         <p>
           Tous les contenus (textes, images, audio, code, logos) sont protégés par le droit d'auteur.
           L'achat donne droit à un <strong>usage personnel et non commercial</strong>. Toute reproduction,
@@ -92,7 +113,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>7. Utilisation des outils IA</h2>
+        <h2 id="ia">7. Utilisation des outils IA</h2>
         <p>
           Les outils IA sont des assistants — ils <strong>ne remplacent pas un conseil professionnel</strong>
           (avocat, expert-comptable, banquier, médecin). ABAWI SN ne saurait être tenue responsable des décisions
@@ -105,7 +126,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>8. Disponibilité</h2>
+        <h2 id="dispo">8. Disponibilité</h2>
         <p>
           Nous visons une disponibilité 24/7 mais pouvons interrompre le service pour maintenance,
           mise à jour ou cas de force majeure (panne hébergeur, coupure Internet, attaque cyber).
@@ -114,7 +135,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>9. Responsabilité</h2>
+        <h2 id="resp">9. Responsabilité</h2>
         <p>
           ABAWI SN s'engage à une obligation de moyens. Notre responsabilité est limitée au montant
           effectivement payé pour le service concerné au cours des 12 derniers mois. Sont exclus les
@@ -123,7 +144,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>10. Données personnelles</h2>
+        <h2 id="donnees">10. Données personnelles</h2>
         <p>
           Le traitement des données est régi par notre{' '}
           <a href="/politique-confidentialite">Politique de confidentialité</a>, partie intégrante des présentes CGU.
@@ -131,7 +152,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>11. Modifications</h2>
+        <h2 id="modif">11. Modifications</h2>
         <p>
           ABAWI SN peut modifier ces CGU à tout moment. Les utilisateurs sont informés par email ou via
           le site. L'utilisation continue du service après modification vaut acceptation.
@@ -139,7 +160,7 @@ function CGU() {
       </section>
 
       <section className="ml-section">
-        <h2>12. Droit applicable et litiges</h2>
+        <h2 id="droit">12. Droit applicable et litiges</h2>
         <p>
           Les présentes CGU sont régies par le <strong>droit sénégalais</strong>. En cas de litige, les parties
           s'efforceront de trouver une solution amiable. À défaut, les tribunaux de <strong>Dakar</strong> seront
@@ -148,7 +169,8 @@ function CGU() {
       </section>
 
       <p className="ml-footer">ABAWI SN — Dakar, Sénégal. Contact : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a></p>
-      </div>
+        </div>{/* ml-content */}
+      </div>{/* ml-inner */}
     </main>
   )
 }
