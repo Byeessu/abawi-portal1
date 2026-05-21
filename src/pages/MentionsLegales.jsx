@@ -39,7 +39,7 @@ function MentionsLegales() {
           <p><strong>Base de données :</strong> Supabase — Union Européenne</p>
         </section>
 
-        <section className="ml-section">
+        <section className="ml-section" id="paiements">
           <h2>Paiements</h2>
           <p>Les paiements sont traités par <strong>PayDunya</strong> (Dakar, Sénégal), plateforme de paiement agréée.</p>
           <p>Moyens de paiement acceptés : Wave, Orange Money, Free Money, Carte bancaire (Visa, Mastercard).</p>
