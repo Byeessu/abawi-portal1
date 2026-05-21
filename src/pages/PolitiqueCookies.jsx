@@ -24,9 +24,7 @@ function PolitiqueCookies() {
         noindex={false}
       />
       <h1 className="ml-title">Politique cookies</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
-        Dernière mise à jour : mai 2026
-      </p>
+      <p className="ml-subtitle">Dernière mise à jour : mai 2026</p>
 
       <section className="ml-section">
         <h2>Qu'est-ce qu'un cookie ?</h2>

@@ -4,9 +4,27 @@ function MentionsLegales() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
-        <h1 className="ml-title">Mentions légales</h1>
 
-        <section className="ml-section">
+        {/* ── Sidebar ── */}
+        <aside className="ml-sidebar">
+          <p className="ml-sidebar-title">Sur cette page</p>
+          <nav className="ml-sidebar-nav">
+            <a href="#editeur">Éditeur du site</a>
+            <a href="#hebergement">Hébergement</a>
+            <a href="#paiements">Paiements</a>
+            <a href="#conditions">Conditions d'utilisation</a>
+            <a href="#remboursement">Remboursement</a>
+            <a href="#donnees">Protection des données</a>
+            <a href="#cookies">Cookies</a>
+          </nav>
+        </aside>
+
+        {/* ── Content ── */}
+        <div className="ml-content">
+        <h1 className="ml-title">Mentions légales</h1>
+        <p className="ml-subtitle">Dernière mise à jour : mai 2026 — ABAWI SN, Dakar, Sénégal</p>
+
+        <section className="ml-section" id="editeur">
           <h2>Éditeur du site</h2>
           <p><strong>Raison sociale :</strong> ABAWI SN</p>
           <p><strong>Siège social :</strong> VDN Liberté 6 Extension, Dakar, Sénégal</p>
@@ -15,7 +33,7 @@ function MentionsLegales() {
           <p><strong>Email :</strong> contact@abawi.sn</p>
         </section>
 
-        <section className="ml-section">
+        <section className="ml-section" id="hebergement">
           <h2>Hébergement</h2>
           <p><strong>Site web :</strong> Netlify, Inc. — San Francisco, USA</p>
           <p><strong>Base de données :</strong> Supabase — Union Européenne</p>
@@ -37,7 +55,9 @@ function MentionsLegales() {
 
         <section className="ml-section">
           <h2>Politique de remboursement</h2>
-          <p><strong>Guides et fascicules :</strong> les contenus numériques ne sont <strong>pas remboursables une fois téléchargés</strong> — un fichier téléchargé peut être copié ou transféré. En dehors de tout téléchargement, une garantie <strong>« satisfait ou remboursé » sous 7 jours</strong> s'applique. Envoyez votre demande à contact@abawi.sn ou sur WhatsApp.</p>
+          <div className="ml-infobox">
+            <p><strong>Guides et fascicules :</strong> les contenus numériques ne sont <strong>pas remboursables une fois téléchargés</strong> — un fichier téléchargé peut être copié ou transféré. En dehors de tout téléchargement, une garantie <strong>« satisfait ou remboursé » sous 7 jours</strong> s'applique sur demande à contact@abawi.sn ou sur WhatsApp.</p>
+          </div>
           <p><strong>Abonnement ABAWI+ :</strong> annulable à tout moment. Le mois en cours n'est pas remboursé. L'annulation prend effet à la fin du mois payé.</p>
           <p><strong>Packs :</strong> mêmes conditions que les guides individuels — remboursement possible sous 7 jours si aucun contenu n'a été téléchargé.</p>
           <p><strong>Crédits :</strong> les crédits consommés ne sont pas remboursables. En cas de dysfonctionnement avéré, ils peuvent être restitués à la discrétion d'ABAWI SN.</p>
@@ -56,7 +76,7 @@ function MentionsLegales() {
           <p>Le site utilise des cookies techniques nécessaires à son fonctionnement (thème, préférences, session). Aucun cookie publicitaire n'est utilisé.</p>
         </section>
 
-        <p className="ml-footer">Dernière mise à jour : mai 2026 — ABAWI SN, Dakar, Sénégal</p>
+        <p className="ml-footer">ABAWI SN · VDN Liberté 6 Extension, Dakar, Sénégal · contact@abawi.sn</p>
       </div>
     </main>
   )

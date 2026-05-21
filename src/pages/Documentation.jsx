@@ -161,7 +161,7 @@ export default function Documentation() {
         </p>
       </section>
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 20px 80px' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 clamp(24px, 4vw, 60px) 80px' }}>
 
         {/* Nav sections */}
         <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 40, paddingTop: 24, overflowX: 'auto', scrollbarWidth: 'none' }}>
