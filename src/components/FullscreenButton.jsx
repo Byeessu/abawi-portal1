@@ -45,13 +45,11 @@ function pathLabel(p) {
     '/outils/consultant': 'Consultant Élite',
     '/outils/abawi-ia': 'ABAWI IA',
     '/outils/exegetika': 'Exegetika',
-    '/outils/sante': 'ABAWI Santé',
+    '/outils/sante': 'Abavie',
     '/outils/autoroute': 'AutoRoute',
     '/outils/editeur-pro': 'Éditeur Pro',
     '/outils/smart-word-editor': 'Smart Word',
     '/outils/maxavis': 'MaxAvis Élite',
-    '/outils/studio-design-pro': 'Studio Design',
-    '/outils/studio-logo-ia': 'Studio Logo IA',
     '/outils/tontine': 'Tontine Pro',
     '/outils': 'Outils ABAWI',
     '/abawi360/crm': 'CRM 360',
@@ -112,7 +110,7 @@ function FullscreenButtonInner({ targetSelector, position = 'bottom-right' }) {
       try {
         const p = req.call(el)
         if (p && typeof p.then === 'function') p.catch(() => {})
-      } catch {}
+      } catch { /* ignore */ }
     }
   }, [])
 
@@ -126,7 +124,7 @@ function FullscreenButtonInner({ targetSelector, position = 'bottom-right' }) {
       try {
         const p = fn.call(document)
         if (p && typeof p.then === 'function') p.catch(() => {})
-      } catch {}
+      } catch { /* ignore */ }
     }
   }, [])
 

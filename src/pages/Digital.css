@@ -319,3 +319,18 @@
   .dg-aplus-title { font-size: 1.6rem; }
   .dg-aplus-prix { font-size: 1.5rem; }
 }
+
+/* ── Mobile 640px — hero height ── */
+@media (max-width: 640px) {
+  .dg-hero { padding: 40px 0 32px; }
+  .dg-hero-sub { font-size: 0.92rem; }
+}
+/* ── Mobile 480px ── */
+@media (max-width: 480px) {
+  .dg-page { padding: 0 16px 60px; }
+  .dg-hero { padding: 28px 0 22px; }
+  .dg-hero-title { font-size: 1.5rem; }
+  .dg-packs-scroll { grid-template-columns: 1fr; }
+  .dg-filter { padding: 5px 10px; font-size: 0.76rem; }
+  .dg-aplus-content { padding: 20px 16px; }
+}

@@ -1,68 +1,90 @@
 /**
- * Smart Word Editor — Éditeur de documents avancé
- * Mise en page libre, templates multiples, contrôle complet
+ * Smart Word Editor Ultra
+ * Éditeur professionnel enrichi : IA intégrée, dictée vocale,
+ * historique, statistiques de lecture, mode focus, auto-save, etc.
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
+import ToolInfoPanel from '../../components/ToolInfoPanel'
 import '../../components/elite/elite.css'
 import SEO from '../../components/SEO'
+import { useAuth } from '../../context/AuthContext'
+import { useToolGuard } from '../../hooks/useToolGuard'
+import ToolUpsellModal, { ToolGuardBadge } from '../../components/ToolUpsellModal'
+import { supabase } from '../../lib/supabase'
 
-/* ═══════════════════════════════════════════════════════════════
-   TEMPLATES DE MISE EN PAGE
-═══════════════════════════════════════════════════════════════ */
+/* ─── Templates ─── */
 const LAYOUT_TEMPLATES = [
   { id: 'blank', name: 'Page blanche', icon: '📄', margins: { top: 25, right: 25, bottom: 25, left: 25 }, lineHeight: 1.5 },
-  { id: 'letter', name: 'Lettre formelle', icon: '📨', margins: { top: 20, right: 20, bottom: 20, left: 20 }, lineHeight: 1.6 },
-  { id: 'report', name: 'Rapport pro', icon: '📊', margins: { top: 30, right: 25, bottom: 30, left: 25 }, lineHeight: 1.8 },
-  { id: 'contract', name: 'Contrat', icon: '⚖️', margins: { top: 20, right: 30, bottom: 20, left: 30 }, lineHeight: 2 },
-  { id: 'cv', name: 'CV / Resume', icon: '👤', margins: { top: 15, right: 20, bottom: 15, left: 20 }, lineHeight: 1.4 },
-  { id: 'memo', name: 'Mémo', icon: '📝', margins: { top: 20, right: 20, bottom: 20, left: 20 }, lineHeight: 1.5 },
-  { id: 'novel', name: 'Roman / Livre', icon: '📖', margins: { top: 25, right: 20, bottom: 25, left: 20 }, lineHeight: 1.75 },
-  { id: 'academic', name: 'Académique', icon: '🎓', margins: { top: 25, right: 25, bottom: 25, left: 30 }, lineHeight: 2 },
+  { id: 'letter', name: 'Lettre formelle', icon: '📨', margins: { top: 20, right: 20, bottom: 20, left: 20 }, lineHeight: 1.15 },
+  { id: 'report', name: 'Rapport', icon: '📊', margins: { top: 25, right: 20, bottom: 25, left: 20 }, lineHeight: 1.5 },
+  { id: 'contract', name: 'Contrat', icon: '📋', margins: { top: 30, right: 30, bottom: 30, left: 30 }, lineHeight: 1.5 },
+  { id: 'cv', name: 'CV', icon: '👤', margins: { top: 15, right: 20, bottom: 15, left: 20 }, lineHeight: 1.25 },
+  { id: 'memo', name: 'Mémo', icon: '📝', margins: { top: 20, right: 25, bottom: 20, left: 25 }, lineHeight: 1.5 },
+  { id: 'novel', name: 'Roman', icon: '📖', margins: { top: 25, right: 25, bottom: 25, left: 25 }, lineHeight: 1.75 },
+  { id: 'academic', name: 'Académique', icon: '🎓', margins: { top: 25, right: 25, bottom: 25, left: 25 }, lineHeight: 2 }
 ]
 
-/* ═══════════════════════════════════════════════════════════════
-   POLICES DISPONIBLES
-═══════════════════════════════════════════════════════════════ */
 const FONTS = [
-  { id: 'arial', name: 'Arial', family: 'Arial, Helvetica, sans-serif' },
+  { id: 'arial', name: 'Arial', family: 'Arial, sans-serif' },
   { id: 'times', name: 'Times New Roman', family: "'Times New Roman', Times, serif" },
-  { id: 'georgia', name: 'Georgia', family: 'Georgia, serif' },
+  { id: 'georgia', name: 'Georgia', family: "Georgia, 'Times New Roman', serif" },
   { id: 'calibri', name: 'Calibri', family: 'Calibri, sans-serif' },
+  { id: 'courier', name: 'Courier New', family: "'Courier New', Courier, monospace" },
   { id: 'verdana', name: 'Verdana', family: 'Verdana, Geneva, sans-serif' },
-  { id: 'garamond', name: 'Garamond', family: "'EB Garamond', Garamond, serif" },
-  { id: 'roboto', name: 'Roboto', family: 'Roboto, sans-serif' },
-  { id: 'opensans', name: 'Open Sans', family: "'Open Sans', sans-serif" },
-  { id: 'lato', name: 'Lato', family: 'Lato, sans-serif' },
-  { id: 'courier', name: 'Courier New', family: "'Courier New', monospace" },
+  { id: 'tahoma', name: 'Tahoma', family: 'Tahoma, Geneva, sans-serif' },
+  { id: 'palatino', name: 'Palatino', family: "'Palatino Linotype', 'Book Antiqua', Palatino, serif" },
+  { id: 'garamond', name: 'Garamond', family: "Garamond, 'EB Garamond', serif" },
+  { id: 'helvetica', name: 'Helvetica', family: 'Helvetica, Arial, sans-serif' },
+  { id: 'inter', name: 'Inter', family: "'Inter', system-ui, sans-serif" },
+  { id: 'roboto', name: 'Roboto', family: "'Roboto', sans-serif" },
+  { id: 'fira', name: 'Fira Code', family: "'Fira Code', monospace" }
 ]
+const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72]
 
-const FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 72]
-
-/* ═══════════════════════════════════════════════════════════════
-   STYLES SMARTART (Texte Stylé)
-═══════════════════════════════════════════════════════════════ */
 const SMARTART_STYLES = [
-  { id: 'gradient-blue', name: 'Dégradé Bleu', icon: '🌊', css: 'background: linear-gradient(135deg, #2196F3, #9C27B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;' },
-  { id: 'gradient-gold', name: 'Or Royal', icon: '👑', css: 'background: linear-gradient(135deg, #FFD700, #FF8C00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;' },
-  { id: 'gradient-fire', name: 'Feu', icon: '🔥', css: 'background: linear-gradient(180deg, #FF5722, #FF9800, #FFC107); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;' },
-  { id: 'gradient-forest', name: 'Forêt', icon: '🌲', css: 'background: linear-gradient(135deg, #4CAF50, #8BC34A, #CDDC39); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;' },
-  { id: 'shadow-soft', name: 'Ombre Douce', icon: '☁️', css: 'color: #333; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-weight: bold;' },
-  { id: 'shadow-glow', name: 'Lueur', icon: '✨', css: 'color: #fff; text-shadow: 0 0 10px #2196F3, 0 0 20px #2196F3, 0 0 30px #2196F3; background: #1a1a2e; padding: 4px 8px; border-radius: 4px;' },
-  { id: 'shadow-3d', name: '3D Relief', icon: '🎲', css: 'color: #fff; text-shadow: 1px 1px 0 #ccc, 2px 2px 0 #999, 3px 3px 0 #666, 4px 4px 0 #333; font-weight: bold;' },
-  { id: 'outline-black', name: 'Contour Noir', icon: '⬛', css: 'color: #fff; -webkit-text-stroke: 2px #000; font-weight: bold;' },
-  { id: 'outline-gold', name: 'Contour Or', icon: '🟨', css: 'color: #1a1a2e; -webkit-text-stroke: 2px #FFD700; font-weight: bold;' },
-  { id: 'neon-blue', name: 'Néon Bleu', icon: '💎', css: 'color: #fff; text-shadow: 0 0 5px #00bcd4, 0 0 10px #00bcd4, 0 0 20px #00bcd4, 0 0 40px #00bcd4; background: #0d1117; padding: 4px 8px; border-radius: 4px;' },
-  { id: 'neon-pink', name: 'Néon Rose', icon: '🌸', css: 'color: #fff; text-shadow: 0 0 5px #e91e63, 0 0 10px #e91e63, 0 0 20px #e91e63, 0 0 40px #e91e63; background: #0d1117; padding: 4px 8px; border-radius: 4px;' },
-  { id: 'retro', name: 'Rétro', icon: '📺', css: 'color: #00ff00; background: #000; padding: 4px 8px; border-radius: 4px; font-family: monospace; text-shadow: 0 0 5px #00ff00;' },
-  { id: 'vintage', name: 'Vintage', icon: '📜', css: 'color: #8B4513; text-shadow: 1px 1px 0 #D2691E; font-family: Georgia, serif; letter-spacing: 2px;' },
-  { id: 'emboss', name: 'Embossé', icon: '🏛️', css: 'color: #f0f0f0; text-shadow: -1px -1px 1px #fff, 1px 1px 1px #999; background: linear-gradient(135deg, #e0e0e0, #f5f5f5); padding: 4px 8px; border-radius: 4px;' },
-  { id: 'glass', name: 'Verre', icon: '💎', css: 'color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.2);' },
-  { id: 'metallic', name: 'Métallique', icon: '🔩', css: 'background: linear-gradient(180deg, #C0C0C0 0%, #808080 50%, #C0C0C0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold;' },
+  { id: 'gradient', name: 'Dégradé', icon: '🌈', css: 'background: linear-gradient(90deg, #ff6b6b, #4ecdc4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; font-size: 24px;' },
+  { id: 'neon', name: 'Néon', icon: '✨', css: 'color: #fff; text-shadow: 0 0 5px #03e9f4, 0 0 25px #03e9f4, 0 0 50px #03e9f4, 0 0 100px #03e9f4; font-weight: bold; font-size: 24px; background: #111; padding: 4px 8px; border-radius: 4px;' },
+  { id: '3d', name: '3D', icon: '🧊', css: 'color: #fff; text-shadow: 1px 1px #000, 2px 2px #000, 3px 3px #000, 4px 4px #000; font-weight: bold; font-size: 24px;' },
+  { id: 'metallic', name: 'Métallique', icon: '⚜️', css: 'background: linear-gradient(180deg, #cfcfcf 0%, #8a8a8a 50%, #e0e0e0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; font-size: 24px;' },
+  { id: 'fire', name: 'Feu', icon: '🔥', css: 'color: #ff4500; text-shadow: 0 0 10px #ff4500, 0 0 20px #ff8c00; font-weight: bold; font-size: 24px;' },
+  { id: 'ocean', name: 'Océan', icon: '🌊', css: 'color: #006994; text-shadow: 2px 2px 0px #00b4d8; font-weight: bold; font-size: 24px;' },
+  { id: 'shadow', name: 'Ombre', icon: '👤', css: 'color: #333; text-shadow: 3px 3px 0px rgba(0,0,0,0.2); font-weight: bold; font-size: 24px;' },
+  { id: 'retro', name: 'Rétro', icon: '🕹️', css: 'color: #33ff33; background: #000; font-family: "Courier New", monospace; font-weight: bold; font-size: 24px; padding: 4px 8px;' },
+  { id: 'glass', name: 'Verre', icon: '🪞', css: 'color: rgba(255,255,255,0.85); background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 4px 12px; font-weight: bold; font-size: 24px;' },
+  { id: 'gold', name: 'Or', icon: '🏆', css: 'background: linear-gradient(45deg, #FFD700, #FDB931, #FFD700); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; font-size: 24px;' }
 ]
 
-/* ═══════════════════════════════════════════════════════════════
-   STYLES CSS
-═══════════════════════════════════════════════════════════════ */
+const COLOR_PRESETS = [
+  '#000000', '#1a1a2e', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+  '#1abc9c', '#3498db', '#9b59b6', '#34495e', '#95a5a6', '#ecf0f1',
+  '#c0392b', '#d35400', '#f39c12', '#27ae60', '#16a085', '#2980b9',
+  '#8e44ad', '#2c3e50', '#7f8c8d', '#bdc3c7'
+]
+
+const SPECIAL_CHARS = [
+  '—', '–', '…', '«', '»', '’', '€', '£', '¥', '©', '®', '™',
+  '°', '±', '×', '÷', '½', '¼', '¾', '∞', '≈', '≠', '≤', '≥',
+  '←', '→', '↑', '↓', '✓', '✗', '★', '☆', '♦', '♠', '♣', '♥',
+  'α', 'β', 'γ', 'δ', 'ε', 'π', 'σ', 'μ', 'Ω', 'Σ', 'Δ', '√',
+  '∑', '∫', '∂', '∀', '∃', '∈', '∉', '∩', '∪', '⊂', '⊃', '∅'
+]
+
+const AI_MODES = [
+  { id: 'generate', name: 'Générer', icon: '✨', prompt: 'Rédige un texte professionnel et structuré sur le sujet suivant : {text}. Utilise un style académique/formel adapté.' },
+  { id: 'rewrite-formal', name: 'Réécrire (formel)', icon: '🎩', prompt: 'Réécris le texte suivant de manière formelle et professionnelle : {text}' },
+  { id: 'rewrite-casual', name: 'Réécrire (simple)', icon: '💬', prompt: 'Réécris le texte suivant de manière simple et accessible : {text}' },
+  { id: 'concise', name: 'Condenser', icon: '📉', prompt: 'Résume et condense le texte suivant en gardant les points essentiels : {text}' },
+  { id: 'expand', name: 'Développer', icon: '📈', prompt: 'Développe et enrichis le texte suivant avec plus de détails et d\'exemples : {text}' },
+  { id: 'summarize', name: 'Résumer', icon: '📋', prompt: 'Fais un résumé structuré (3 à 5 points clés) du texte suivant : {text}' },
+  { id: 'translate-en', name: 'Traduire EN', icon: '🇬🇧', prompt: 'Traduis le texte suivant en anglais professionnel : {text}' },
+  { id: 'translate-fr', name: 'Traduire FR', icon: '🇫🇷', prompt: 'Traduis le texte suivant en français professionnel : {text}' },
+  { id: 'grammar', name: 'Corriger', icon: '✅', prompt: 'Corrige les fautes d\'orthographe, de grammaire et de style dans le texte suivant. Retourne uniquement le texte corrigé : {text}' },
+  { id: 'tone-professional', name: 'Ton pro', icon: '💼', prompt: 'Adapte le ton du texte suivant pour un contexte professionnel et corporate : {text}' },
+  { id: 'tone-persuasive', name: 'Ton persuasif', icon: '🎯', prompt: 'Réécris le texte suivant de manière persuasive et convaincante : {text}' },
+  { id: 'tone-empathetic', name: 'Ton empathique', icon: '🤝', prompt: 'Réécris le texte suivant avec un ton empathique et bienveillant : {text}' }
+]
+
+/* ─── Styles ─── */
 const EDITOR_STYLES = `
   .smart-word-editor {
     display: flex;
@@ -71,7 +93,7 @@ const EDITOR_STYLES = `
     background: var(--bg-primary, #f5f5f5);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-  
+
   .swe-toolbar {
     display: flex;
     align-items: center;
@@ -82,7 +104,7 @@ const EDITOR_STYLES = `
     overflow-x: auto;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
-  
+
   .swe-toolbar-group {
     display: flex;
     align-items: center;
@@ -90,11 +112,11 @@ const EDITOR_STYLES = `
     padding: 0 8px;
     border-right: 1px solid var(--border, #e0e0e0);
   }
-  
+
   .swe-toolbar-group:last-child {
     border-right: none;
   }
-  
+
   .swe-btn {
     display: flex;
     align-items: center;
@@ -108,22 +130,23 @@ const EDITOR_STYLES = `
     cursor: pointer;
     font-size: 14px;
     transition: all 0.2s;
+    flex-shrink: 0;
   }
-  
+
   .swe-btn:hover {
     background: var(--bg-tertiary, #f0f0f0);
   }
-  
+
   .swe-btn.active {
     background: var(--accent-color, #e3f2fd);
     color: var(--primary-color, #1976d2);
   }
-  
+
   .swe-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
   }
-  
+
   .swe-select {
     height: 32px;
     padding: 0 8px;
@@ -134,24 +157,7 @@ const EDITOR_STYLES = `
     font-size: 13px;
     cursor: pointer;
   }
-  
-  .swe-color-btn {
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--border, #ddd);
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 2px;
-    background: white;
-  }
-  
-  .swe-color-btn input {
-    width: 100%;
-    height: 100%;
-    border: none;
-    cursor: pointer;
-  }
-  
+
   .swe-page-container {
     flex: 1;
     overflow-y: auto;
@@ -162,14 +168,13 @@ const EDITOR_STYLES = `
     justify-content: flex-start;
     background: var(--bg-primary, #f5f5f5);
   }
-  
+
   .swe-page {
     width: 210mm;
     min-height: 297mm;
     background: white !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     position: relative;
-    /* Force light color scheme so browser UA styles stay light */
     color-scheme: light;
     color: #1a1a2e;
   }
@@ -179,7 +184,6 @@ const EDITOR_STYLES = `
     font-family: 'Times New Roman', Times, serif;
     font-size: 12pt;
     line-height: 1.5;
-    /* !important overrides browser dark-mode UA stylesheet on contenteditable */
     color: #1a1a2e !important;
     background: transparent !important;
     color-scheme: light;
@@ -189,7 +193,6 @@ const EDITOR_STYLES = `
     outline: none;
   }
 
-  /* All content inside the A4 page is always dark text on white */
   .swe-page-content *:not([style*="color"]) {
     color: inherit !important;
   }
@@ -200,62 +203,51 @@ const EDITOR_STYLES = `
   .swe-page-content h1, .swe-page-content h2, .swe-page-content h3 {
     color: #0f172a !important;
   }
-  
+
   .swe-page-content p {
     margin: 0 0 12pt 0;
   }
-  
+
   .swe-page-content h1 {
     font-size: 24pt;
     margin: 24pt 0 12pt 0;
-    color: #1a1a1a;
   }
-  
+
   .swe-page-content h2 {
     font-size: 18pt;
     margin: 18pt 0 9pt 0;
-    color: #1a1a1a;
   }
-  
+
   .swe-page-content h3 {
     font-size: 14pt;
     margin: 14pt 0 7pt 0;
-    color: #1a1a1a;
   }
-  
-  .swe-page-content p {
-    color: #1a1a1a;
-  }
-  
-  .swe-page-content span {
-    color: #1a1a1a;
-  }
-  
+
   .swe-page-content ul, .swe-page-content ol {
     margin: 12pt 0;
     padding-left: 24pt;
   }
-  
+
   .swe-page-content li {
     margin: 6pt 0;
   }
-  
+
   .swe-page-content table {
     width: 100%;
     border-collapse: collapse;
     margin: 12pt 0;
   }
-  
+
   .swe-page-content td, .swe-page-content th {
     border: 1px solid #ccc;
     padding: 8px;
   }
-  
+
   .swe-page-content img {
     max-width: 100%;
     height: auto;
   }
-  
+
   .swe-status-bar {
     display: flex;
     align-items: center;
@@ -266,7 +258,7 @@ const EDITOR_STYLES = `
     font-size: 12px;
     color: #666;
   }
-  
+
   .swe-title-bar {
     display: flex;
     align-items: center;
@@ -274,8 +266,9 @@ const EDITOR_STYLES = `
     padding: 12px 16px;
     background: #fff;
     border-bottom: 1px solid #e0e0e0;
+    flex-wrap: wrap;
   }
-  
+
   .swe-title-input {
     flex: 1;
     height: 36px;
@@ -284,14 +277,15 @@ const EDITOR_STYLES = `
     border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
+    min-width: 120px;
   }
-  
+
   .swe-title-input:focus {
     outline: none;
     border-color: #1976d2;
     box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
   }
-  
+
   .swe-template-panel {
     position: fixed;
     top: 0;
@@ -304,7 +298,7 @@ const EDITOR_STYLES = `
     justify-content: center;
     z-index: 1000;
   }
-  
+
   .swe-template-modal {
     background: white;
     border-radius: 12px;
@@ -315,14 +309,14 @@ const EDITOR_STYLES = `
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   }
-  
+
   .swe-template-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 16px;
     margin-top: 16px;
   }
-  
+
   .swe-template-card {
     display: flex;
     flex-direction: column;
@@ -334,85 +328,52 @@ const EDITOR_STYLES = `
     transition: all 0.2s;
     text-align: center;
   }
-  
+
   .swe-template-card:hover {
     border-color: #1976d2;
     background: #f5f9ff;
   }
-  
+
   .swe-template-card.selected {
     border-color: #1976d2;
     background: #e3f2fd;
   }
-  
+
   .swe-template-icon {
     font-size: 48px;
     margin-bottom: 12px;
   }
-  
+
   .swe-margin-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 16px;
     background: #f8f9fa;
-    border-radius: 8px;
-    margin: 16px 0;
+    border-bottom: 1px solid #e0e0e0;
   }
-  
+
   .swe-margin-field {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  
+
   .swe-margin-field label {
     font-size: 12px;
     color: #666;
     width: 50px;
   }
-  
+
   .swe-margin-field input {
     flex: 1;
     padding: 6px 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 13px;
+    width: 60px;
   }
-  
-  .swe-dropdown {
-    position: relative;
-  }
-  
-  .swe-dropdown-content {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 100;
-    min-width: 150px;
-  }
-  
-  .swe-dropdown.open .swe-dropdown-content {
-    display: block;
-  }
-  
-  .swe-dropdown-item {
-    padding: 10px 16px;
-    cursor: pointer;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .swe-dropdown-item:hover {
-    background: #f5f5f5;
-  }
-  
+
   @media print {
     .smart-word-editor {
       height: auto;
@@ -431,481 +392,324 @@ const EDITOR_STYLES = `
   }
 `
 
-/* ═══════════════════════════════════════════════════════════════
-   COMPOSANT PRINCIPAL
-═══════════════════════════════════════════════════════════════ */
+/* ─── Helpers ─── */
+function debounce(fn, ms) {
+  let t
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms) }
+}
+function stripHtml(html) {
+  const tmp = document.createElement('div')
+  tmp.innerHTML = html
+  return tmp.textContent || tmp.innerText || ''
+}
+function htmlToMarkdown(html) {
+  let md = html
+    .replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
+    .replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
+    .replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
+    .replace(/<h4[^>]*>(.*?)<\/h4>/gi, '#### $1\n\n')
+    .replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**')
+    .replace(/<b[^>]*>(.*?)<\/b>/gi, '**$1**')
+    .replace(/<em[^>]*>(.*?)<\/em>/gi, '*$1*')
+    .replace(/<i[^>]*>(.*?)<\/i>/gi, '*$1*')
+    .replace(/<u[^>]*>(.*?)<\/u>/gi, '<u>$1</u>')
+    .replace(/<s[^>]*>(.*?)<\/s>/gi, '~~$1~~')
+    .replace(/<strike[^>]*>(.*?)<\/strike>/gi, '~~$1~~')
+    .replace(/<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi, '[$2]($1)')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<li[^>]*>(.*?)<\/li>/gi, '- $1\n')
+    .replace(/<tr[^>]*>(.*?)<\/tr>/gis, '| $1 |\n')
+    .replace(/<td[^>]*>(.*?)<\/td>/gi, ' $1 |')
+    .replace(/<th[^>]*>(.*?)<\/th>/gi, ' **$1** |')
+  const el = document.createElement('div')
+  el.innerHTML = md
+  return el.textContent || el.innerText || ''
+}
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+function readingStats(html) {
+  const text = stripHtml(html).trim()
+  if (!text) return { words: 0, chars: 0, sentences: 0, paragraphs: 0, readingTime: '0 min', grade: '-' }
+  const words = text.split(/\s+/).filter(w => w.length > 0).length
+  const chars = text.length
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length
+  const paragraphs = text.split(/\n{2,}/).filter(p => p.trim().length > 0).length
+  const readingTime = Math.max(1, Math.round(words / 200)) + ' min'
+  let grade = '-'
+  if (words > 0) {
+    const avgSentLen = words / Math.max(1, sentences)
+    const avgSyllables = text.split(/\s+/).reduce((acc, w) => acc + Math.max(1, w.replace(/[^aeiouy]/gi, '').length), 0) / Math.max(1, words)
+    const fk = 0.39 * avgSentLen + 11.8 * avgSyllables - 15.59
+    grade = Math.round(Math.max(1, fk))
+  }
+  return { words, chars, sentences, paragraphs, readingTime, grade }
+}
+
+/* ─── Component ─── */
 export default function SmartWordEditor() {
+  const { user, membre } = useAuth()
+  const guard = useToolGuard('smart_office', 'smart_office')
+
+  /* Refs */
+  const contentRef = useRef(null)
+  const titleRef = useRef(null)
+  const savedRangeRef = useRef(null)
+  const autoSaveTimerRef = useRef(null)
+  const lastSnapshotRef = useRef(Date.now())
+  const voiceRef = useRef(null)
+  const pageContainerRef = useRef(null)
+
+  /* Core State */
   const [title, setTitle] = useState('Document sans titre')
-  const DEFAULT_CONTENT = `<p style="color: #1a1a1a; font-size: 12pt;">Commencez à taper votre document ici...</p><p style="color: #1a1a1a;">&nbsp;</p><h2 style="color: #1a1a1a; font-size: 16pt; font-weight: bold;">TITRE DE SECTION</h2><p style="color: #1a1a1a;">Votre texte professionnel apparaît ici. Utilisez la barre d'outils pour formater votre document.</p>`
-  
-  const [content, setContent] = useState(DEFAULT_CONTENT)
-  const [selectedTemplate, setSelectedTemplate] = useState(LAYOUT_TEMPLATES[0])
-  const [margins, setMargins] = useState({ top: 25, right: 25, bottom: 25, left: 25 })
+  const [content, setContent] = useState('')
   const [fontFamily, setFontFamily] = useState('times')
   const [fontSize, setFontSize] = useState(12)
   const [lineHeight, setLineHeight] = useState(1.5)
+  const [margins, setMargins] = useState({ top: 25, right: 25, bottom: 25, left: 25 })
   const [zoom, setZoom] = useState(100)
+  const [selectedTemplate, setSelectedTemplate] = useState(LAYOUT_TEMPLATES[0])
   const [showTemplates, setShowTemplates] = useState(false)
   const [showMargins, setShowMargins] = useState(false)
-  const [showFindReplace, setShowFindReplace] = useState(false)
   const [showSmartArt, setShowSmartArt] = useState(false)
   const [showOutline, setShowOutline] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [wordCount, setWordCount] = useState(0)
-  const [charCount, setCharCount] = useState(0)
-  const [pageCount, setPageCount] = useState(1)
-  const [findText, setFindText] = useState('')
-  const [replaceText, setReplaceText] = useState('')
+  const [showFindReplace, setShowFindReplace] = useState(false)
+  const [showTableDialog, setShowTableDialog] = useState(false)
   const [activeFormats, setActiveFormats] = useState({})
   const [dropdownOpen, setDropdownOpen] = useState(null)
-  
-  const contentRef = useRef(null)
-  const titleRef = useRef(null)
+  const [tableConfig, setTableConfig] = useState({ rows: 3, cols: 3, withHeader: true })
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
-  // Inject styles
+  /* New Feature State */
+  const [showAiPanel, setShowAiPanel] = useState(false)
+  const [aiMode, setAiMode] = useState('generate')
+  const [aiInput, setAiInput] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiHistory, setAiHistory] = useState([])
+  const [showColorPicker, setShowColorPicker] = useState(null) // 'text' | 'bg'
+  const [colorValue, setColorValue] = useState('#000000')
+  const [showSpecialChars, setShowSpecialChars] = useState(false)
+  const [focusMode, setFocusMode] = useState(false)
+  const [typewriterMode, setTypewriterMode] = useState(false)
+  const [showLineNumbers, setShowLineNumbers] = useState(false)
+  const [wordGoal, setWordGoal] = useState(0)
+  const [showWordGoal, setShowWordGoal] = useState(false)
+  const [documentHistory, setDocumentHistory] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [lastSaved, setLastSaved] = useState(null)
+  const [isDictating, setIsDictating] = useState(false)
+  const [findText, setFindText] = useState('')
+  const [replaceText, setReplaceText] = useState('')
+  const [findCaseSensitive, setFindCaseSensitive] = useState(false)
+  const [findWholeWord, setFindWholeWord] = useState(false)
+  const [findUseRegex, setFindUseRegex] = useState(false)
+  const [comments, setComments] = useState([])
+  const [showComments, setShowComments] = useState(false)
+  const [activeCommentId, setActiveCommentId] = useState(null)
+  const [commentText, setCommentText] = useState('')
+
+  /* Stats */
+  const stats = readingStats(content)
+  const pageCount = Math.max(1, Math.ceil((content.split(/<br\s*\/?>/i).length + content.split('<p').length - 1) * (fontSize * lineHeight * 1.5) / 1123))
+
+  /* ─── Effects ─── */
+
+  // Initialize from localStorage or RichDoc redirect
   useEffect(() => {
-    const style = document.createElement('style')
-    style.textContent = EDITOR_STYLES
-    document.head.appendChild(style)
-    return () => style.remove()
+    const fromRichDoc = localStorage.getItem('richDocContent')
+    const fromTitle = localStorage.getItem('richDocTitle')
+    if (fromRichDoc) {
+      setContent(fromRichDoc)
+      if (contentRef.current) contentRef.current.innerHTML = fromRichDoc
+      if (fromTitle) setTitle(fromTitle)
+      localStorage.removeItem('richDocContent')
+      localStorage.removeItem('richDocTitle')
+    } else {
+      const saved = localStorage.getItem('swe-document')
+      if (saved) {
+        try {
+          const doc = JSON.parse(saved)
+          setTitle(doc.title || 'Document sans titre')
+          setContent(doc.content || '')
+          setFontFamily(doc.fontFamily || 'times')
+          setFontSize(doc.fontSize || 12)
+          setLineHeight(doc.lineHeight || 1.5)
+          setMargins(doc.margins || { top: 25, right: 25, bottom: 25, left: 25 })
+          setZoom(doc.zoom || 100)
+          setSelectedTemplate(doc.selectedTemplate || LAYOUT_TEMPLATES[0])
+          if (contentRef.current && doc.content) contentRef.current.innerHTML = doc.content
+        } catch { /* ignore */ }
+      }
+    }
+    const hist = localStorage.getItem('swe-history')
+    if (hist) {
+      try { setDocumentHistory(JSON.parse(hist)) } catch { /* ignore */ }
+    }
+    // Keyboard shortcuts
+    const onKey = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case 'b': e.preventDefault(); toggleFormat('bold'); break
+          case 'i': e.preventDefault(); toggleFormat('italic'); break
+          case 'u': e.preventDefault(); toggleFormat('underline'); break
+          case 's':
+            e.preventDefault()
+            if (e.shiftKey) exportToText()
+            else handleSave()
+            break
+          case 'y': e.preventDefault(); document.execCommand('redo'); updateContent(); break
+          case 'z': e.preventDefault(); document.execCommand('undo'); updateContent(); break
+          case 'k': e.preventDefault(); insertLink(); break
+          case 'f': e.preventDefault(); setShowFindReplace(true); break
+          case 'h': e.preventDefault(); setShowFindReplace(true); break
+          case 'p': e.preventDefault(); checkAndExport(() => window.print()); break
+          case 'e': e.preventDefault(); checkAndExport(exportToWord); break
+          case 'm': e.preventDefault(); setShowAiPanel(v => !v); break
+        }
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
   }, [])
 
-  // Initialize editor - load from localStorage if available
+  // Before unload
   useEffect(() => {
-    const savedContent = localStorage.getItem('smartword_editor_content')
-    const savedTitle = localStorage.getItem('smartword_editor_title')
-    if (savedContent) {
-      setContent(savedContent)
-      // Clear localStorage after loading to prevent reload on refresh
-      localStorage.removeItem('smartword_editor_content')
+    const handler = (e) => {
+      if (content && content !== '<p><br></p>' && content !== '<br>') {
+        e.preventDefault()
+        e.returnValue = ''
+      }
     }
-    if (savedTitle) {
-      setTitle(savedTitle)
-      localStorage.removeItem('smartword_editor_title')
-    }
-    // Initialize contentRef with default content if empty
-    if (contentRef.current && !savedContent) {
-      contentRef.current.innerHTML = DEFAULT_CONTENT
-    }
-    if (contentRef.current) {
-      // Force dark text via JS inline style — beats any UA dark-mode override
-      contentRef.current.style.setProperty('color', '#1a1a2e', 'important')
-      contentRef.current.style.setProperty('background', 'transparent', 'important')
-      contentRef.current.style.setProperty('color-scheme', 'light')
-      contentRef.current.focus()
-    }
-  }, [])
-
-  // Update counts
-  useEffect(() => {
-    const text = content.replace(/<[^>]*>/g, ' ')
-    const words = text.trim().split(/\s+/).filter(w => w.length > 0)
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync from external source (localStorage, props, async result) — refactor to derived state where feasible
-    setWordCount(words.length)
-    setCharCount(text.length)
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
   }, [content])
 
-  // Check active formats
-  const checkFormats = useCallback(() => {
-    const selection = window.getSelection()
-    if (selection.rangeCount > 0) {
-      const formats = {}
-      formats.bold = document.queryCommandState('bold')
-      formats.italic = document.queryCommandState('italic')
-      formats.underline = document.queryCommandState('underline')
-      formats.strikeThrough = document.queryCommandState('strikeThrough')
-      setActiveFormats(formats)
+  // Auto-save to localStorage
+  const saveToLocal = useCallback(() => {
+    const doc = {
+      title, content, fontFamily, fontSize, lineHeight,
+      margins, zoom, selectedTemplate, timestamp: Date.now()
     }
-  }, [])
+    localStorage.setItem('swe-document', JSON.stringify(doc))
+    setLastSaved(new Date())
+  }, [title, content, fontFamily, fontSize, lineHeight, margins, zoom, selectedTemplate])
 
-  // Save and restore selection for cursor position - FIXED
+  const debouncedSave = useRef(debounce(saveToLocal, 3000)).current
+
+  useEffect(() => { debouncedSave() }, [content, title, fontFamily, fontSize, lineHeight, margins, zoom, selectedTemplate, debouncedSave])
+
+  // History snapshot every 2 min
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (content && Date.now() - lastSnapshotRef.current > 120000) {
+        const snapshot = { title, content, timestamp: Date.now() }
+        setDocumentHistory(prev => {
+          const next = [snapshot, ...prev].slice(0, 20)
+          localStorage.setItem('swe-history', JSON.stringify(next))
+          return next
+        })
+        lastSnapshotRef.current = Date.now()
+      }
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [content, title])
+
+  // Typewriter scroll
+  useEffect(() => {
+    if (!typewriterMode || !contentRef.current || !pageContainerRef.current) return
+    const el = contentRef.current
+    const onInput = () => {
+      const sel = window.getSelection()
+      if (sel.rangeCount) {
+        const rect = sel.getRangeAt(0).getBoundingClientRect()
+        const containerRect = pageContainerRef.current.getBoundingClientRect()
+        const target = containerRect.top + containerRect.height / 2
+        const diff = rect.top - target
+        pageContainerRef.current.scrollBy({ top: diff, behavior: 'smooth' })
+      }
+    }
+    el.addEventListener('input', onInput)
+    return () => el.removeEventListener('input', onInput)
+  }, [typewriterMode])
+
+  /* ─── Core Helpers ─── */
+  const updateContent = () => {
+    if (contentRef.current) {
+      setContent(contentRef.current.innerHTML)
+    }
+  }
+
   const saveSelection = () => {
     const sel = window.getSelection()
-    if (sel.rangeCount > 0 && contentRef.current) {
-      const range = sel.getRangeAt(0)
-      // Store the current node and offset
-      return {
-        startContainer: range.startContainer,
-        startOffset: range.startOffset,
-        endContainer: range.endContainer,
-        endOffset: range.endOffset,
-        collapsed: range.collapsed
-      }
-    }
-    return null
+    if (sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange()
   }
 
-  const restoreSelection = (savedSel) => {
-    if (!savedSel || !contentRef.current) return
-    
-    try {
-      const sel = window.getSelection()
-      const range = document.createRange()
-      
-      // Try to restore to the same position or find the closest valid position
-      let startNode = savedSel.startContainer
-      let endNode = savedSel.endContainer
-      
-      // If the original node is no longer valid, try to find a text node nearby
-      if (!contentRef.current.contains(startNode) || !startNode.parentNode) {
-        // Focus the editor and place cursor at the end of content
-        const textNodes = []
-        const walker = document.createTreeWalker(contentRef.current, NodeFilter.SHOW_TEXT)
-        let node
-        while ((node = walker.nextNode())) {
-          textNodes.push(node)
-        }
-        if (textNodes.length > 0) {
-          const lastNode = textNodes[textNodes.length - 1]
-          range.setStart(lastNode, lastNode.length)
-          range.setEnd(lastNode, lastNode.length)
-        } else {
-          range.selectNodeContents(contentRef.current)
-          range.collapse(false)
-        }
-      } else {
-        // Original nodes are still valid, try to restore
-        try {
-          range.setStart(startNode, Math.min(savedSel.startOffset, startNode.length || 0))
-          range.setEnd(endNode, Math.min(savedSel.endOffset, endNode.length || 0))
-        } catch (e) {
-          // Fallback: place cursor at the end of start node
-          range.selectNodeContents(startNode)
-          range.collapse(false)
-        }
-      }
-      
-      sel.removeAllRanges()
-      sel.addRange(range)
-      
-      // Focus the editor
-      contentRef.current.focus()
-    } catch (e) {
-      // Silent fail - cursor positioning failed but command still executed
-      console.warn('Cursor restore failed:', e)
-    }
+  const restoreSelection = () => {
+    const sel = window.getSelection()
+    sel.removeAllRanges()
+    if (savedRangeRef.current) sel.addRange(savedRangeRef.current)
   }
 
-  // Format commands - FIXED cursor behavior
+  const checkFormats = () => {
+    setActiveFormats({
+      bold: document.queryCommandState('bold'),
+      italic: document.queryCommandState('italic'),
+      underline: document.queryCommandState('underline'),
+      strikeThrough: document.queryCommandState('strikeThrough'),
+      justifyLeft: document.queryCommandState('justifyLeft'),
+      justifyCenter: document.queryCommandState('justifyCenter'),
+      justifyRight: document.queryCommandState('justifyRight'),
+      justifyFull: document.queryCommandState('justifyFull'),
+      insertUnorderedList: document.queryCommandState('insertUnorderedList'),
+      insertOrderedList: document.queryCommandState('insertOrderedList'),
+    })
+  }
+
+  const handleTitleChange = (e) => setTitle(e.target.value)
+
   const toggleFormat = (command) => {
-    const savedSel = saveSelection()
+    if (contentRef.current) {
+      contentRef.current.focus()
+    }
     document.execCommand(command, false, null)
-    checkFormats()
     updateContent()
-    // Restore cursor position after DOM update
-    requestAnimationFrame(() => restoreSelection(savedSel))
+    checkFormats()
   }
 
   const setBlockFormat = (command, value = null) => {
-    const savedSel = saveSelection()
+    if (contentRef.current) {
+      contentRef.current.focus()
+    }
     document.execCommand(command, false, value)
     updateContent()
-    // Restore cursor position after DOM update
-    requestAnimationFrame(() => restoreSelection(savedSel))
+    checkFormats()
   }
 
-  // Insert SmartArt styled text
-  const insertSmartArt = (style) => {
-    const sel = window.getSelection()
-    if (sel.rangeCount === 0) return
-    
-    const range = sel.getRangeAt(0)
-    let text = ''
-    
-    // Get selected text or use placeholder
-    if (!range.collapsed) {
-      text = range.toString()
-    } else {
-      text = 'Texte Stylé'
-    }
-    
-    // Create styled span
-    const span = document.createElement('span')
-    span.style.cssText = style.css
-    span.textContent = text
-    span.dataset.smartart = style.id
-    
-    // Replace selection with styled text
-    range.deleteContents()
-    range.insertNode(span)
-    
-    // Move cursor after the inserted node
-    range.setStartAfter(span)
-    range.setEndAfter(span)
-    range.collapse(true)
-    sel.removeAllRanges()
-    sel.addRange(range)
-    
-    updateContent()
-    contentRef.current.focus()
-  }
-
-  const updateContent = () => {
-    if (contentRef.current) {
-      // Just update stats, don't store content in state to avoid re-renders
-      const text = contentRef.current.innerText || ''
-      setCharCount(text.length)
-      setWordCount(text.trim() ? text.trim().split(/\s+/).length : 0)
-    }
-  }
-
-  // Get content for export/save without storing in state
-  const getContent = () => {
-    return contentRef.current?.innerHTML || ''
-  }
-
-  const handleTitleChange = (e) => {
-    setTitle(e.target.value)
-  }
-
-  const applyTemplate = (template) => {
-    setSelectedTemplate(template)
-    setMargins(template.margins)
-    setLineHeight(template.lineHeight)
-    setShowTemplates(false)
-  }
-
-  const exportToHTML = () => {
-    const docContent = getContent()
-    const html = `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <style>
-    body {
-      font-family: ${FONTS.find(f => f.id === fontFamily)?.family || 'Times New Roman'}, serif;
-      font-size: ${fontSize}pt;
-      line-height: ${lineHeight};
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 40px;
-    }
-    h1 { font-size: 24pt; margin-bottom: 20px; }
-    h2 { font-size: 18pt; margin-bottom: 15px; }
-    h3 { font-size: 14pt; margin-bottom: 12px; }
-    p { margin-bottom: 12pt; }
-  </style>
-</head>
-<body>
-  ${docContent}
-</body>
-</html>`
-    const blob = new Blob([html], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.html`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const exportToWord = () => {
-    const docContent = getContent()
-    const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-  <meta charset="utf-8">
-  <title>${title}</title>
-  <style>
-    body { font-family: ${FONTS.find(f => f.id === fontFamily)?.family || 'Times New Roman'}; font-size: ${fontSize}pt; line-height: ${lineHeight}; }
-    p { margin: 0 0 12pt 0; }
-    h1 { font-size: 24pt; }
-    h2 { font-size: 18pt; }
-    h3 { font-size: 14pt; }
-  </style>
-</head>
-<body>
-  ${docContent}
-</body>
-</html>`
-    const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.doc`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const exportToPDF = () => {
-    window.print()
-  }
-
-  const exportToText = () => {
-    const docContent = getContent()
-    const text = docContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-    const blob = new Blob([text], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
+  /* ─── Insert ─── */
   const insertImage = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    input.onchange = (e) => {
-      const file = e.target.files[0]
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          const img = `<img src="${event.target.result}" style="max-width:100%; height:auto;" />`
-          document.execCommand('insertHTML', false, img)
-          updateContent()
-        }
-        reader.readAsDataURL(file)
+    if (contentRef.current) contentRef.current.focus()
+    const url = prompt('URL de l\'image:', 'https://')
+    if (url) {
+      const sel = window.getSelection()
+      if (sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0)
+        const img = document.createElement('img')
+        img.src = url
+        img.style.maxWidth = '100%'
+        img.style.height = 'auto'
+        img.style.display = 'block'
+        img.style.margin = '8px auto'
+        range.deleteContents()
+        range.insertNode(img)
+        range.collapse(false)
+        updateContent()
       }
-    }
-    input.click()
-  }
-
-  const [showTableDialog, setShowTableDialog] = useState(false)
-  const [tableConfig, setTableConfig] = useState({ rows: 3, cols: 3, withHeader: true })
-
-  const insertTable = () => {
-    const { rows, cols, withHeader } = tableConfig
-    if (!rows || !cols || rows < 1 || cols < 1) {
-      alert('Veuillez entrer des valeurs valides pour les lignes et colonnes')
-      return
-    }
-
-    const savedSel = saveSelection()
-    
-    // Créer le tableau HTML
-    let tableHTML = '<table style="width:100%; border-collapse:collapse; margin:12pt 0;">'
-    
-    for (let i = 0; i < parseInt(rows); i++) {
-      tableHTML += '<tr>'
-      for (let j = 0; j < parseInt(cols); j++) {
-        const isHeader = withHeader && i === 0
-        const tag = isHeader ? 'th' : 'td'
-        const bgStyle = isHeader ? 'background:#f5f5f5; font-weight:bold;' : ''
-        tableHTML += `<${tag} style="border:1px solid #999; padding:8px; ${bgStyle}">${isHeader ? 'En-tête' : 'Cellule'}</${tag}>`
-      }
-      tableHTML += '</tr>'
-    }
-    tableHTML += '</table><br />'
-    
-    // Insérer le tableau
-    document.execCommand('insertHTML', false, tableHTML)
-    updateContent()
-    
-    // Fermer le dialog et restaurer la position
-    setShowTableDialog(false)
-    requestAnimationFrame(() => restoreSelection(savedSel))
-  }
-
-  const addTableRow = () => {
-    const selection = window.getSelection()
-    if (!selection.rangeCount) return
-    
-    const cell = selection.anchorNode?.closest?.('td, th') || 
-                  selection.anchorNode?.parentElement?.closest?.('td, th')
-    if (!cell) return
-    
-    const row = cell.closest('tr')
-    const table = cell.closest('table')
-    if (!row || !table) return
-    
-    const cols = row.children.length
-    const newRow = document.createElement('tr')
-    
-    for (let i = 0; i < cols; i++) {
-      const newCell = document.createElement('td')
-      newCell.style.cssText = 'border:1px solid #999; padding:8px;'
-      newCell.textContent = 'Cellule'
-      newRow.appendChild(newCell)
-    }
-    
-    row.parentNode.insertBefore(newRow, row.nextSibling)
-    updateContent()
-  }
-
-  const addTableColumn = () => {
-    const selection = window.getSelection()
-    if (!selection.rangeCount) return
-    
-    const cell = selection.anchorNode?.closest?.('td, th') || 
-                  selection.anchorNode?.parentElement?.closest?.('td, th')
-    if (!cell) return
-    
-    const table = cell.closest('table')
-    if (!table) return
-    
-    const cellIndex = Array.from(cell.parentNode.children).indexOf(cell)
-    const rows = table.querySelectorAll('tr')
-    
-    rows.forEach(row => {
-      const newCell = document.createElement(row.children[0]?.tagName === 'TH' ? 'th' : 'td')
-      newCell.style.cssText = 'border:1px solid #999; padding:8px;'
-      if (row.children[0]?.tagName === 'TH') {
-        newCell.style.background = '#f5f5f5'
-        newCell.style.fontWeight = 'bold'
-      }
-      newCell.textContent = row.children[0]?.tagName === 'TH' ? 'En-tête' : 'Cellule'
-      
-      if (cellIndex + 1 < row.children.length) {
-        row.insertBefore(newCell, row.children[cellIndex + 1])
-      } else {
-        row.appendChild(newCell)
-      }
-    })
-    
-    updateContent()
-  }
-
-  const deleteTableRow = () => {
-    const selection = window.getSelection()
-    if (!selection.rangeCount) return
-    
-    const cell = selection.anchorNode?.closest?.('td, th') || 
-                  selection.anchorNode?.parentElement?.closest?.('td, th')
-    if (!cell) return
-    
-    const row = cell.closest('tr')
-    const table = cell.closest('table')
-    if (!row || !table) return
-    
-    if (table.rows.length > 1) {
-      row.remove()
-      updateContent()
-    }
-  }
-
-  const deleteTableColumn = () => {
-    const selection = window.getSelection()
-    if (!selection.rangeCount) return
-    
-    const cell = selection.anchorNode?.closest?.('td, th') || 
-                  selection.anchorNode?.parentElement?.closest?.('td, th')
-    if (!cell) return
-    
-    const table = cell.closest('table')
-    if (!table) return
-    
-    const cellIndex = Array.from(cell.parentNode.children).indexOf(cell)
-    const rows = table.querySelectorAll('tr')
-    
-    let canDelete = true
-    rows.forEach(row => {
-      if (row.children.length <= 1) canDelete = false
-    })
-    
-    if (canDelete) {
-      rows.forEach(row => {
-        if (row.children[cellIndex]) {
-          row.children[cellIndex].remove()
-        }
-      })
-      updateContent()
     }
   }
 
   const insertLink = () => {
+    if (contentRef.current) contentRef.current.focus()
     const url = prompt('URL du lien:', 'https://')
     if (url) {
       document.execCommand('createLink', false, url)
@@ -913,42 +717,300 @@ export default function SmartWordEditor() {
     }
   }
 
-  const printDocument = () => {
-    window.print()
+  const insertTable = () => {
+    if (contentRef.current) contentRef.current.focus()
+    const { rows, cols, withHeader } = tableConfig
+    let html = '<table style="width:100%;border-collapse:collapse;margin:8px 0">'
+    for (let i = 0; i < rows; i++) {
+      html += '<tr>'
+      for (let j = 0; j < cols; j++) {
+        const isHeader = withHeader && i === 0
+        const tag = isHeader ? 'th' : 'td'
+        const bg = isHeader ? 'background:#f0f0f0;font-weight:bold' : ''
+        html += `<${tag} style="border:1px solid #ccc;padding:6px;${bg}">Cellule</${tag}>`
+      }
+      html += '</tr>'
+    }
+    html += '</table><p><br></p>'
+    document.execCommand('insertHTML', false, html)
+    setShowTableDialog(false)
+    updateContent()
   }
 
-  // Find and Replace functionality
-  const handleFind = () => {
-    if (findText && contentRef.current) {
-      const selection = window.getSelection()
-      selection.removeAllRanges()
-      
-      if (window.find) {
-        window.find(findText, false, false, true)
+  const insertHorizontalRule = () => {
+    if (contentRef.current) contentRef.current.focus()
+    document.execCommand('insertHorizontalRule', false, null)
+    updateContent()
+  }
+
+  const insertPageBreak = () => {
+    if (contentRef.current) contentRef.current.focus()
+    document.execCommand('insertHTML', false, '<div style="page-break-after:always;height:0"></div><p><br></p>')
+    updateContent()
+  }
+
+  const insertSpecialChar = (char) => {
+    if (contentRef.current) contentRef.current.focus()
+    document.execCommand('insertText', false, char)
+    updateContent()
+  }
+
+  const applyColor = (type, color) => {
+    if (contentRef.current) contentRef.current.focus()
+    if (type === 'text') document.execCommand('foreColor', false, color)
+    else document.execCommand('hiliteColor', false, color)
+    updateContent()
+    setShowColorPicker(null)
+  }
+
+  /* ─── SmartArt ─── */
+  const insertSmartArt = (style) => {
+    if (contentRef.current) contentRef.current.focus()
+    const sel = window.getSelection()
+    if (sel.rangeCount === 0) return
+    const range = sel.getRangeAt(0)
+    const selectedText = range.toString()
+    if (!selectedText) {
+      alert('Veuillez sélectionner du texte pour appliquer un style.')
+      return
+    }
+    const span = document.createElement('span')
+    style.css.split(';').filter(s => s.trim()).forEach(rule => {
+      const [prop, val] = rule.split(':').map(s => s.trim())
+      if (prop && val) span.style[prop] = val
+    })
+    span.textContent = selectedText
+    range.deleteContents()
+    range.insertNode(span)
+    range.collapse(false)
+    updateContent()
+  }
+
+  /* ─── AI Assistant ─── */
+  const callAi = async () => {
+    const sel = window.getSelection()
+    const selectedText = sel.toString().trim()
+    const textToProcess = selectedText || aiInput
+    if (!textToProcess.trim()) {
+      alert('Sélectionnez du texte ou tapez une instruction.')
+      return
+    }
+    setAiLoading(true)
+    try {
+      const mode = AI_MODES.find(m => m.id === aiMode) || AI_MODES[0]
+      const prompt = mode.prompt.replace('{text}', textToProcess)
+      const res = await fetch('/.netlify/functions/groq-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'Tu es un assistant rédactionnel professionnel. Réponds uniquement avec le texte demandé, sans introduction ni conclusion métacommentaire.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 2000,
+          temperature: 0.7
+        })
+      })
+      const data = await res.json()
+      const result = data.choices?.[0]?.message?.content || 'Erreur de génération'
+      setAiHistory(prev => [{ mode: mode.name, input: textToProcess.slice(0, 100), result, timestamp: Date.now() }, ...prev].slice(0, 20))
+      // Insert at cursor or replace selection
+      if (selectedText) {
+        document.execCommand('insertText', false, result)
       } else {
-        alert('Fonction rechercher non supportée par ce navigateur')
+        document.execCommand('insertText', false, result)
+      }
+      updateContent()
+    } catch (err) {
+      console.error(err)
+      alert('Erreur IA : ' + (err.message || 'Service indisponible'))
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  /* ─── Voice Dictation ─── */
+  const toggleDictation = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('La dictée vocale n\'est pas supportée par ce navigateur.')
+      return
+    }
+    if (isDictating && voiceRef.current) {
+      voiceRef.current.stop()
+      setIsDictating(false)
+      return
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+    recognition.lang = 'fr-FR'
+    recognition.continuous = true
+    recognition.interimResults = true
+    voiceRef.current = recognition
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results).map(r => r[0].transcript).join('')
+      if (contentRef.current) {
+        contentRef.current.focus()
+        document.execCommand('insertText', false, transcript)
+        updateContent()
       }
     }
+    recognition.onerror = () => setIsDictating(false)
+    recognition.onend = () => setIsDictating(false)
+    recognition.start()
+    setIsDictating(true)
   }
 
-  const handleReplace = () => {
-    if (findText && contentRef.current) {
-      const html = contentRef.current.innerHTML
-      const newHtml = html.replace(new RegExp(findText, 'g'), replaceText)
-      contentRef.current.innerHTML = newHtml
-      setContent(newHtml)
-    }
-  }
-
+  /* ─── Find/Replace ─── */
   const handleReplaceAll = () => {
-    if (findText && contentRef.current) {
+    if (!findText || !contentRef.current) return
+    let pattern = findUseRegex ? findText : escapeRegExp(findText)
+    const flags = findCaseSensitive ? 'g' : 'gi'
+    if (findWholeWord) pattern = `\\b${pattern}\\b`
+    try {
       const html = contentRef.current.innerHTML
-      const newHtml = html.replace(new RegExp(findText, 'gi'), replaceText)
+      const newHtml = html.replace(new RegExp(pattern, flags), replaceText)
       contentRef.current.innerHTML = newHtml
       setContent(newHtml)
+    } catch (e) {
+      alert('Expression régulière invalide')
     }
   }
 
+  /* ─── Comments ─── */
+  const addComment = () => {
+    const sel = window.getSelection()
+    const text = sel.toString()
+    if (!text || !commentText.trim()) return
+    const id = 'c-' + Date.now()
+    const range = sel.getRangeAt(0).cloneRange()
+    const span = document.createElement('span')
+    span.id = id
+    span.style.backgroundColor = '#fff3cd'
+    span.style.borderBottom = '2px solid #ffc107'
+    span.dataset.comment = commentText
+    try {
+      range.surroundContents(span)
+    } catch {
+      alert('Impossible de commenter cette sélection. Essayez un texte plus simple.')
+      return
+    }
+    setComments(prev => [...prev, { id, text, comment: commentText, timestamp: Date.now() }])
+    setCommentText('')
+    updateContent()
+  }
+
+  const removeComment = (id) => {
+    const el = document.getElementById(id)
+    if (el) {
+      const parent = el.parentNode
+      while (el.firstChild) parent.insertBefore(el.firstChild, el)
+      parent.removeChild(el)
+      updateContent()
+    }
+    setComments(prev => prev.filter(c => c.id !== id))
+  }
+
+  /* ─── History ─── */
+  const restoreHistory = (snapshot) => {
+    setTitle(snapshot.title)
+    setContent(snapshot.content)
+    if (contentRef.current) contentRef.current.innerHTML = snapshot.content
+  }
+
+  const handleSave = () => {
+    saveToLocal()
+    if (user && supabase) {
+      // Optional: persist to Supabase for logged-in users
+      supabase.from('documents').upsert({
+        user_id: user.id,
+        title,
+        content,
+        updated_at: new Date().toISOString()
+      }, { onConflict: ['user_id', 'title'] }).then(({ error }) => {
+        if (error) console.error('Supabase save error:', error)
+        else console.log('Saved to cloud')
+      })
+    }
+  }
+
+  /* ─── Exports ─── */
+  const exportToHTML = () => {
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${title}</title>
+<style>
+body{font-family:${FONTS.find(f=>f.id===fontFamily)?.family||'serif'};font-size:${fontSize}pt;line-height:${lineHeight};margin:0;padding:${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;}
+</style></head><body>${content}</body></html>`
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${title}.html`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportToWord = () => {
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head><meta charset="utf-8"><title>${title}</title></head>
+<body style="font-family:${FONTS.find(f=>f.id===fontFamily)?.family||'serif'};font-size:${fontSize}pt;line-height:${lineHeight};">
+${content}
+</body></html>`
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${title}.doc`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportToPDF = () => window.print()
+
+  const exportToText = () => {
+    const text = stripHtml(content)
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${title}.txt`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const exportToMarkdown = () => {
+    const md = `# ${title}\n\n` + htmlToMarkdown(content)
+    const blob = new Blob([md], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${title}.md`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const checkAndExport = async (exportFn) => {
+    const debitResult = await guard.checkAndDebit()
+    if (!debitResult.ok) return
+    await guard.recordUsage()
+    exportFn()
+  }
+
+  /* ─── Templates ─── */
+  const applyTemplate = (template) => {
+    setSelectedTemplate(template)
+    setMargins(template.margins)
+    setLineHeight(template.lineHeight)
+    setShowTemplates(false)
+  }
+
+  /* ─── Outline Navigation ─── */
+  const outlineItems = () => {
+    if (!contentRef.current) return []
+    const headings = contentRef.current.querySelectorAll('h1, h2, h3')
+    return Array.from(headings).map((h, i) => ({
+      level: h.tagName.toLowerCase(),
+      text: h.textContent,
+      el: h
+    }))
+  }
+
+  const scrollToHeading = (el) => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  /* ─── Styles ─── */
   const pageStyle = {
     padding: `${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm`,
     fontFamily: FONTS.find(f => f.id === fontFamily)?.family || 'serif',
@@ -961,11 +1023,43 @@ export default function SmartWordEditor() {
 
   return (
     <>
-      <SEO title={`${title} — Smart Word Editor`} description="Éditeur de documents professionnel avec mise en page libre" />
-      
+      <style dangerouslySetInnerHTML={{ __html: EDITOR_STYLES }} />
+      <SEO title={`${title} — Smart Word Editor`} description="Éditeur de documents professionnel avec IA, dictée, historique et mise en page avancée"  image="/og-tools/smart-word-editor.jpg"/>
+
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '16px 16px 0' }}>
+        <ToolInfoPanel
+          toolName="Smart Word Editor"
+          icon="📝"
+          description="Éditeur de documents professionnel : IA intégrée, dictée vocale, historique, 8 templates, 13 polices et effets SmartArt"
+          benefits={[
+            'Rédigez avec l\'assistance IA (génération, réécriture, traduction, correction)',
+            'Dictée vocale pour rédiger mains libres',
+            'Historique automatique des versions du document',
+            '8 templates pré-configurés et 13 polices professionnelles',
+            'Export HTML, Word, PDF, Markdown et texte brut',
+          ]}
+          howToUse={[
+            'Choisissez un template et donnez un titre à votre document',
+            'Utilisez le bouton ✨ IA pour générer ou transformer du texte',
+            'Activez la dictée vocale 🎙️ pour rédiger sans taper',
+            'Personnalisez polices, marges, couleurs et interligne',
+            'Exportez dans le format de votre choix',
+          ]}
+          tips={[
+            'Le raccourci Ctrl+M ouvre l\'assistant IA',
+            'Ctrl+S sauvegarde, Ctrl+Shift+S exporte en texte',
+            'Le mode Focus (F11) masque tout sauf l\'éditeur',
+          ]}
+        />
+        <div style={{ marginTop: 8 }}>
+          <ToolGuardBadge guard={guard} />
+        </div>
+      </div>
+
       <div className="smart-word-editor">
-        {/* Title Bar */}
-        <div className="swe-title-bar">
+      {/* ── Top Bar ── */}
+      {!focusMode && (
+        <div className="swe-title-bar" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 20 }}>📝</span>
           <input
             ref={titleRef}
@@ -974,145 +1068,105 @@ export default function SmartWordEditor() {
             value={title}
             onChange={handleTitleChange}
             placeholder="Titre du document..."
+            style={{ flex: 1, minWidth: 200 }}
           />
-          <button 
-            className="swe-btn" 
-            onClick={() => setShowTemplates(true)}
-            title="Modèles de mise en page"
-            style={{ width: 'auto', padding: '0 12px', gap: 6 }}
-          >
-            📄 Templates
+          <button className="swe-btn" onClick={() => setShowTemplates(true)} title="Modèles">📄 Templates</button>
+          <button className="swe-btn" onClick={() => setShowMargins(!showMargins)} title="Marges">📐 Marges</button>
+          <button className="swe-btn" onClick={() => setShowAiPanel(!showAiPanel)} title="Assistant IA">✨ IA</button>
+          <button className="swe-btn" onClick={toggleDictation} title="Dictée vocale" style={{ background: isDictating ? '#ef4444' : undefined, color: isDictating ? '#fff' : undefined }}>
+            {isDictating ? '⏹️ Arrêter' : '🎙️ Dictée'}
           </button>
-          <button 
-            className="swe-btn" 
-            onClick={() => setShowMargins(!showMargins)}
-            title="Marges"
-            style={{ width: 'auto', padding: '0 12px', gap: 6 }}
-          >
-            📐 Marges
+          <button className="swe-btn" onClick={() => setFocusMode(!focusMode)} title="Mode focus">
+            {focusMode ? '⛶ Normal' : '🎯 Focus'}
           </button>
+          <button className="swe-btn" onClick={handleSave} title="Sauvegarder (Ctrl+S)">💾</button>
+          {lastSaved && <span style={{ fontSize: 11, color: '#666' }}>Sauvé {lastSaved.toLocaleTimeString()}</span>}
         </div>
+      )}
 
-        {/* Toolbar */}
-        <div className="swe-toolbar">
-          {/* Undo/Redo */}
+      {/* ── Toolbar ── */}
+      {!focusMode && (
+        <div className="swe-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+          {/* Undo / Redo */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={() => { document.execCommand('undo'); updateContent() }} title="Annuler">↩️</button>
-            <button className="swe-btn" onClick={() => { document.execCommand('redo'); updateContent() }} title="Rétablir">↪️</button>
+            <button className="swe-btn" onClick={() => { document.execCommand('undo'); updateContent() }} title="Annuler (Ctrl+Z)">↩️</button>
+            <button className="swe-btn" onClick={() => { document.execCommand('redo'); updateContent() }} title="Rétablir (Ctrl+Y)">↪️</button>
           </div>
 
-          {/* Font Family */}
+          {/* Font */}
           <div className="swe-toolbar-group">
-            <select 
-              className="swe-select" 
-              value={fontFamily} 
-              onChange={(e) => setFontFamily(e.target.value)}
-              style={{ minWidth: 140 }}
-            >
-              {FONTS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            <select className="swe-select" value={fontFamily} onChange={e => setFontFamily(e.target.value)} style={{ minWidth: 140 }}>
+              {FONTS.map(f => (
+                <option key={f.id} value={f.id} style={{ fontFamily: f.family }}>{f.name}</option>
+              ))}
             </select>
           </div>
 
-          {/* Font Size */}
+          {/* Size */}
           <div className="swe-toolbar-group">
-            <select 
-              className="swe-select" 
-              value={fontSize} 
-              onChange={(e) => {
-                setFontSize(parseInt(e.target.value))
-                document.execCommand('fontSize', false, e.target.value)
-                updateContent()
-              }}
-              style={{ width: 60 }}
-            >
+            <select className="swe-select" value={fontSize} onChange={e => { if (contentRef.current) contentRef.current.focus(); setFontSize(parseInt(e.target.value)); document.execCommand('fontSize', false, e.target.value); updateContent() }} style={{ width: 60 }}>
               {FONT_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          {/* Text Formatting */}
+          {/* Format */}
           <div className="swe-toolbar-group">
-            <button 
-              className={`swe-btn ${activeFormats.bold ? 'active' : ''}`} 
-              onClick={() => toggleFormat('bold')} 
-              title="Gras"
-            >
-              <b>B</b>
-            </button>
-            <button 
-              className={`swe-btn ${activeFormats.italic ? 'active' : ''}`} 
-              onClick={() => toggleFormat('italic')} 
-              title="Italique"
-            >
-              <i>I</i>
-            </button>
-            <button 
-              className={`swe-btn ${activeFormats.underline ? 'active' : ''}`} 
-              onClick={() => toggleFormat('underline')} 
-              title="Souligné"
-            >
-              <u>U</u>
-            </button>
-            <button 
-              className={`swe-btn ${activeFormats.strikeThrough ? 'active' : ''}`} 
-              onClick={() => toggleFormat('strikeThrough')} 
-              title="Barré"
-            >
-              <s>S</s>
-            </button>
+            <button className={`swe-btn ${activeFormats.bold ? 'active' : ''}`} onClick={() => toggleFormat('bold')} title="Gras (Ctrl+B)"><b>B</b></button>
+            <button className={`swe-btn ${activeFormats.italic ? 'active' : ''}`} onClick={() => toggleFormat('italic')} title="Italique (Ctrl+I)"><i>I</i></button>
+            <button className={`swe-btn ${activeFormats.underline ? 'active' : ''}`} onClick={() => toggleFormat('underline')} title="Souligné (Ctrl+U)"><u>U</u></button>
+            <button className={`swe-btn ${activeFormats.strikeThrough ? 'active' : ''}`} onClick={() => toggleFormat('strikeThrough')} title="Barré"><s>S</s></button>
           </div>
 
-          {/* Alignment */}
+          {/* Align */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={() => setBlockFormat('justifyLeft')} title="Aligner à gauche">⬅️</button>
+            <button className="swe-btn" onClick={() => setBlockFormat('justifyLeft')} title="Gauche">⬅️</button>
             <button className="swe-btn" onClick={() => setBlockFormat('justifyCenter')} title="Centrer">⬆️</button>
-            <button className="swe-btn" onClick={() => setBlockFormat('justifyRight')} title="Aligner à droite">➡️</button>
+            <button className="swe-btn" onClick={() => setBlockFormat('justifyRight')} title="Droite">➡️</button>
             <button className="swe-btn" onClick={() => setBlockFormat('justifyFull')} title="Justifier">⬌</button>
           </div>
 
           {/* Lists */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={() => toggleFormat('insertUnorderedList')} title="Liste à puces">•</button>
-            <button className="swe-btn" onClick={() => toggleFormat('insertOrderedList')} title="Liste numérotée">1.</button>
+            <button className="swe-btn" onClick={() => toggleFormat('insertUnorderedList')} title="Puces">•</button>
+            <button className="swe-btn" onClick={() => toggleFormat('insertOrderedList')} title="Numérotée">1.</button>
           </div>
 
           {/* Indent */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={() => setBlockFormat('outdent')} title="Diminuer le retrait">⤴️</button>
-            <button className="swe-btn" onClick={() => setBlockFormat('indent')} title="Augmenter le retrait">⤵️</button>
+            <button className="swe-btn" onClick={() => setBlockFormat('outdent')} title="Retrait -">⤴️</button>
+            <button className="swe-btn" onClick={() => setBlockFormat('indent')} title="Retrait +">⤵️</button>
           </div>
 
           {/* Insert */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={insertImage} title="Insérer une image">🖼️</button>
-            <button className="swe-btn" onClick={() => setShowTableDialog(true)} title="Insérer un tableau">▦</button>
-            <button className="swe-btn" onClick={insertLink} title="Insérer un lien">🔗</button>
-            <button className="swe-btn" onClick={() => setBlockFormat('insertHorizontalRule')} title="Ligne horizontale">➖</button>
+            <button className="swe-btn" onClick={insertImage} title="Image">🖼️</button>
+            <button className="swe-btn" onClick={() => setShowTableDialog(true)} title="Tableau">▦</button>
+            <button className="swe-btn" onClick={insertLink} title="Lien (Ctrl+K)">🔗</button>
+            <button className="swe-btn" onClick={insertHorizontalRule} title="Ligne">➖</button>
+            <button className="swe-btn" onClick={insertPageBreak} title="Saut de page">↵</button>
           </div>
 
           {/* Colors */}
-          <div className="swe-toolbar-group">
-            <div className="swe-dropdown">
-              <button className="swe-btn" onClick={() => setDropdownOpen(dropdownOpen === 'color' ? null : 'color')} title="Couleur du texte">
-                <span style={{ borderBottom: '3px solid #333' }}>A</span>
-              </button>
-            </div>
-            <div className="swe-dropdown">
-              <button className="swe-btn" onClick={() => setDropdownOpen(dropdownOpen === 'bg' ? null : 'bg')} title="Couleur de fond">
-                <span style={{ background: '#ffeb3b', padding: '0 4px' }}>H</span>
-              </button>
-            </div>
+          <div className="swe-toolbar-group" style={{ position: 'relative' }}>
+            <button className="swe-btn" onClick={() => setShowColorPicker(showColorPicker === 'text' ? null : 'text')} title="Couleur texte">
+              <span style={{ borderBottom: '3px solid ' + (showColorPicker === 'text' ? '#1976d2' : '#333') }}>A</span>
+            </button>
+            <button className="swe-btn" onClick={() => setShowColorPicker(showColorPicker === 'bg' ? null : 'bg')} title="Surlignage">
+              <span style={{ background: showColorPicker === 'bg' ? '#1976d2' : '#ffeb3b', padding: '0 4px', color: showColorPicker === 'bg' ? '#fff' : '#000' }}>H</span>
+            </button>
+            {showColorPicker && (
+              <div style={{ position: 'absolute', top: 40, left: 0, zIndex: 10, background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', display: 'grid', gridTemplateColumns: 'repeat(7, 24px)', gap: 4 }}>
+                {COLOR_PRESETS.map(c => (
+                  <button key={c} onClick={() => applyColor(showColorPicker, c)} style={{ width: 24, height: 24, borderRadius: 4, background: c, border: '1px solid #ddd', cursor: 'pointer' }} />
+                ))}
+                <input type="color" value={colorValue} onChange={e => { setColorValue(e.target.value); applyColor(showColorPicker, e.target.value) }} style={{ gridColumn: 'span 3', width: '100%' }} />
+              </div>
+            )}
           </div>
 
           {/* Headers */}
           <div className="swe-toolbar-group">
-            <select 
-              className="swe-select" 
-              onChange={(e) => {
-                if (e.target.value) {
-                  setBlockFormat('formatBlock', e.target.value)
-                }
-              }}
-            >
+            <select className="swe-select" onChange={e => { if (e.target.value) setBlockFormat('formatBlock', e.target.value) }}>
               <option value="">Style</option>
               <option value="P">Paragraphe</option>
               <option value="H1">Titre 1</option>
@@ -1122,14 +1176,9 @@ export default function SmartWordEditor() {
             </select>
           </div>
 
-          {/* Line Height */}
+          {/* Line height */}
           <div className="swe-toolbar-group">
-            <select 
-              className="swe-select" 
-              value={lineHeight} 
-              onChange={(e) => setLineHeight(parseFloat(e.target.value))}
-              title="Interligne"
-            >
+            <select className="swe-select" value={lineHeight} onChange={e => setLineHeight(parseFloat(e.target.value))} title="Interligne">
               <option value={1}>Simple</option>
               <option value={1.15}>1.15</option>
               <option value={1.5}>1.5</option>
@@ -1139,361 +1188,336 @@ export default function SmartWordEditor() {
             </select>
           </div>
 
-          {/* SmartArt / Texte Stylé */}
+          {/* SmartArt */}
           <div className="swe-toolbar-group">
             <button className="swe-btn" onClick={() => setShowSmartArt(!showSmartArt)} title="Texte Stylé" style={{ fontSize: '18px' }}>✨</button>
           </div>
 
           {/* Tools */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={() => setShowFindReplace(true)} title="Rechercher/Remplacer">🔍</button>
-            <button className="swe-btn" onClick={() => setShowOutline(!showOutline)} title="Plan du document">📋</button>
-            <button className="swe-btn" onClick={() => setIsFullscreen(!isFullscreen)} title="Plein écran">⛶</button>
+            <button className="swe-btn" onClick={() => setShowFindReplace(true)} title="Rechercher (Ctrl+F)">🔍</button>
+            <button className="swe-btn" onClick={() => setShowOutline(!showOutline)} title="Plan">📋</button>
+            <button className="swe-btn" onClick={() => setShowHistory(!showHistory)} title="Historique">🕐</button>
+            <button className="swe-btn" onClick={() => setShowWordGoal(!showWordGoal)} title="Objectif mots">🎯</button>
+            <button className="swe-btn" onClick={() => setShowLineNumbers(!showLineNumbers)} title="Numéros de ligne">#</button>
+            <button className="swe-btn" onClick={() => setTypewriterMode(!typewriterMode)} title="Mode machine à écrire" style={{ color: typewriterMode ? '#1976d2' : undefined }}>⌨️</button>
+            <button className="swe-btn" onClick={() => setShowComments(!showComments)} title="Commentaires" style={{ color: comments.length ? '#f59e0b' : undefined }}>💬{comments.length > 0 && <sup>{comments.length}</sup>}</button>
+            <button className="swe-btn" onClick={() => setShowSpecialChars(!showSpecialChars)} title="Caractères spéciaux">Ω</button>
           </div>
 
           {/* Export */}
           <div className="swe-toolbar-group">
-            <button className="swe-btn" onClick={printDocument} title="Imprimer">🖨️</button>
-            <button className="swe-btn" onClick={exportToWord} title="Export Word">📄</button>
-            <button className="swe-btn" onClick={exportToPDF} title="Export PDF">📑</button>
-            <button className="swe-btn" onClick={exportToHTML} title="Export HTML">🌐</button>
+            <button className="swe-btn" onClick={() => checkAndExport(() => window.print())} title="Imprimer (Ctrl+P)">🖨️</button>
+            <button className="swe-btn" onClick={() => checkAndExport(exportToWord)} title="Word">📄</button>
+            <button className="swe-btn" onClick={() => checkAndExport(exportToPDF)} title="PDF">📑</button>
+            <button className="swe-btn" onClick={exportToHTML} title="HTML">🌐</button>
+            <button className="swe-btn" onClick={exportToMarkdown} title="Markdown">📉</button>
+            <button className="swe-btn" onClick={exportToText} title="Texte">📃</button>
+          </div>
+
+          {/* Zoom */}
+          <div className="swe-toolbar-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input type="range" min={50} max={200} value={zoom} onChange={e => setZoom(parseInt(e.target.value))} style={{ width: 80 }} />
+            <span style={{ fontSize: 12, minWidth: 36 }}>{zoom}%</span>
           </div>
         </div>
+      )}
 
-        {/* SmartArt / Texte Stylé Panel */}
-        {showSmartArt && (
-          <div className="swe-outline-panel" style={{ position: 'fixed', right: 20, top: 180, width: 320, maxHeight: 500, overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border, #ddd)', borderRadius: 12, padding: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 50 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>🎨 Texte Stylé</h3>
-              <button onClick={() => setShowSmartArt(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 18, color: 'var(--text-secondary)' }}>✕</button>
-            </div>
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '0 0 12px 0' }}>
-              Sélectionnez du texte puis cliquez sur un style
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-              {SMARTART_STYLES.map(style => (
-                <button
-                  key={style.id}
-                  onClick={() => insertSmartArt(style)}
-                  style={{
-                    padding: '12px 8px',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
-                    background: 'var(--bg-primary)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 4,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                  <span style={{ fontSize: 24 }}>{style.icon}</span>
-                  <span style={{ 
-                    fontSize: 11, 
-                    color: 'var(--text-primary)',
-                    textAlign: 'center',
-                    fontWeight: 500
-                  }}>
-                    {style.name}
-                  </span>
-                  <span style={{ fontSize: 14, ...Object.fromEntries(style.css.split(';').filter(s => s).map(s => s.trim().split(': ').map((v, i) => i === 1 ? v.replace(/"/g, "'") : v))) }}>
-                    Abc
-                  </span>
+      {/* ── Floating panels ── */}
+
+      {/* SmartArt Panel */}
+      {showSmartArt && (
+        <div style={{ position: 'fixed', right: 20, top: 140, width: 320, maxHeight: 500, overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 50 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: 16 }}>🎨 Texte Stylé</h3>
+            <button onClick={() => setShowSmartArt(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
+          </div>
+          <p style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>Sélectionnez du texte puis cliquez sur un style</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+            {SMARTART_STYLES.map(style => (
+              <button key={style.id} onClick={() => insertSmartArt(style)} style={{ padding: 10, border: '1px solid #ddd', borderRadius: 8, background: 'var(--bg-primary)', cursor: 'pointer' }}>
+                <span style={{ fontSize: 20 }}>{style.icon}</span>
+                <div style={{ fontSize: 11 }}>{style.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Outline Panel */}
+      {showOutline && (
+        <div style={{ position: 'fixed', right: 20, top: 140, width: 260, maxHeight: 400, overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Plan du document</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {outlineItems().length > 0 ? outlineItems().map((item, i) => (
+              <button key={i} onClick={() => scrollToHeading(item.el)} style={{ textAlign: 'left', padding: '6px 8px', border: 'none', background: 'none', cursor: 'pointer', borderRadius: 4, fontSize: item.level === 'h1' ? 14 : item.level === 'h2' ? 13 : 12, fontWeight: item.level === 'h1' ? 600 : 400, paddingLeft: item.level === 'h2' ? 16 : item.level === 'h3' ? 32 : 8, color: 'var(--text-primary)' }}>
+                {item.level === 'h1' ? '📄' : item.level === 'h2' ? '📑' : '📃'} {item.text}
+              </button>
+            )) : (
+              <p style={{ color: '#999', fontSize: 13, fontStyle: 'italic' }}>Utilisez les styles Titre 1, 2, 3 pour créer un plan</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* History Panel */}
+      {showHistory && (
+        <div style={{ position: 'fixed', right: 20, top: 140, width: 300, maxHeight: 400, overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>🕐 Historique</h3>
+          {documentHistory.length === 0 ? (
+            <p style={{ color: '#999', fontSize: 13 }}>Aucun historique</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {documentHistory.map((h, i) => (
+                <button key={i} onClick={() => restoreHistory(h)} style={{ textAlign: 'left', padding: 8, border: '1px solid #eee', borderRadius: 6, background: '#f9f9f9', cursor: 'pointer', fontSize: 12 }}>
+                  <div style={{ fontWeight: 600 }}>{h.title}</div>
+                  <div style={{ color: '#666' }}>{new Date(h.timestamp).toLocaleString()}</div>
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* Outline Panel */}
-        {showOutline && (
-          <div className="swe-outline-panel" style={{ position: 'fixed', right: 20, top: 180, width: 250, maxHeight: 400, overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border, #ddd)', borderRadius: 8, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50 }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: 16, fontWeight: 600 }}>Plan du document</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {content.includes('<h1') || content.includes('<h2') || content.includes('<h3') ? (
-                <div dangerouslySetInnerHTML={{ 
-                  __html: content.replace(/<(?!h[123]|\/h[123]|p>|\/p>|br|\/br)[^>]*>/g, '')
-                                 .replace(/<h1[^>]*>([^<]*)<\/h1>/g, '<div style="padding:4px 0;font-weight:600;color:#1976d2;font-size:16px">📄 $1</div>')
-                                 .replace(/<h2[^>]*>([^<]*)<\/h2>/g, '<div style="padding:4px 0;padding-left:16px;font-weight:500;color:#333;font-size:14px">📑 $1</div>')
-                                 .replace(/<h3[^>]*>([^<]*)<\/h3>/g, '<div style="padding:4px 0;padding-left:32px;color:#666;font-size:13px">📃 $1</div>')
-                }} />
-              ) : (
-                <p style={{ color: '#999', fontSize: 13, fontStyle: 'italic' }}>
-                  Utilisez les styles Titre 1, 2, 3 pour créer un plan
-                </p>
-              )}
+      {/* Word Goal */}
+      {showWordGoal && (
+        <div style={{ position: 'fixed', right: 20, top: 140, width: 220, background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>🎯 Objectif mots</h3>
+          <input type="number" value={wordGoal} onChange={e => setWordGoal(parseInt(e.target.value) || 0)} style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ddd', marginBottom: 8 }} />
+          {wordGoal > 0 && (
+            <div>
+              <div style={{ height: 8, background: '#eee', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(100, (stats.words / wordGoal) * 100)}%`, height: '100%', background: stats.words >= wordGoal ? '#2ecc71' : '#3498db', transition: 'width 0.3s' }} />
+              </div>
+              <p style={{ fontSize: 12, marginTop: 4 }}>{stats.words} / {wordGoal} mots</p>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {/* Margins Panel */}
-        {showMargins && (
-          <div className="swe-margin-controls">
-            <div className="swe-margin-field">
-              <label>Haut</label>
-              <input 
-                type="number" 
-                value={margins.top} 
-                onChange={(e) => setMargins({...margins, top: parseInt(e.target.value) || 0})}
-                min={0} max={50}
-              /> mm
-            </div>
-            <div className="swe-margin-field">
-              <label>Droite</label>
-              <input 
-                type="number" 
-                value={margins.right} 
-                onChange={(e) => setMargins({...margins, right: parseInt(e.target.value) || 0})}
-                min={0} max={50}
-              /> mm
-            </div>
-            <div className="swe-margin-field">
-              <label>Bas</label>
-              <input 
-                type="number" 
-                value={margins.bottom} 
-                onChange={(e) => setMargins({...margins, bottom: parseInt(e.target.value) || 0})}
-                min={0} max={50}
-              /> mm
-            </div>
-            <div className="swe-margin-field">
-              <label>Gauche</label>
-              <input 
-                type="number" 
-                value={margins.left} 
-                onChange={(e) => setMargins({...margins, left: parseInt(e.target.value) || 0})}
-                min={0} max={50}
-              /> mm
-            </div>
-          </div>
-        )}
-
-        {/* Page Container */}
-        <div className="swe-page-container">
-          {/* colorScheme:light forces browser UA to use light-mode canvas colors */}
-          <div className="swe-page" style={{ ...pageStyle, colorScheme: 'light', color: '#1a1a2e' }}>
-            <div
-              ref={contentRef}
-              className="swe-page-content"
-              contentEditable
-              suppressContentEditableWarning
-              onInput={updateContent}
-              onMouseUp={checkFormats}
-              onKeyUp={checkFormats}
-              style={{ minHeight: '100%', color: '#1a1a2e', colorScheme: 'light' }}
-            />
+      {/* Special Chars */}
+      {showSpecialChars && (
+        <div style={{ position: 'fixed', right: 20, top: 140, width: 280, background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>Ω Caractères spéciaux</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+            {SPECIAL_CHARS.map(c => (
+              <button key={c} onClick={() => insertSpecialChar(c)} style={{ padding: 6, fontSize: 16, border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer', background: 'var(--bg-primary)' }}>{c}</button>
+            ))}
           </div>
         </div>
+      )}
 
-        {/* Status Bar */}
-        <div className="swe-status-bar">
-          <div style={{ display: 'flex', gap: 16 }}>
-            <span>Page {pageCount} sur {pageCount}</span>
-            <span>{wordCount} mots</span>
-            <span>{charCount} caractères</span>
+      {/* Margins Panel */}
+      {showMargins && (
+        <div className="swe-margin-controls" style={{ display: 'flex', gap: 16, padding: '8px 16px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+          {['top', 'right', 'bottom', 'left'].map(side => (
+            <div key={side} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <label style={{ fontSize: 12, textTransform: 'capitalize' }}>{side}</label>
+              <input type="number" value={margins[side]} onChange={e => setMargins({ ...margins, [side]: parseInt(e.target.value) || 0 })} min={0} max={50} style={{ width: 50, padding: 4 }} />
+              <span style={{ fontSize: 11 }}>mm</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── AI Panel ── */}
+      {showAiPanel && (
+        <div style={{ position: 'fixed', right: 20, top: 140, width: 380, maxHeight: '80vh', overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', zIndex: 60 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: 16 }}>✨ Assistant IA</h3>
+            <button onClick={() => setShowAiPanel(false)} style={{ border: 'none', background: 'none', cursor: 'pointer', fontSize: 18 }}>✕</button>
+          </div>
+
+          <select value={aiMode} onChange={e => setAiMode(e.target.value)} style={{ width: '100%', padding: 8, marginBottom: 12, borderRadius: 6, border: '1px solid #ddd' }}>
+            {AI_MODES.map(m => <option key={m.id} value={m.id}>{m.icon} {m.name}</option>)}
+          </select>
+
+          <textarea
+            value={aiInput}
+            onChange={e => setAiInput(e.target.value)}
+            placeholder="Tapez une instruction ou sélectionnez du texte dans l'éditeur..."
+            style={{ width: '100%', minHeight: 80, padding: 10, borderRadius: 6, border: '1px solid #ddd', fontSize: 14, resize: 'vertical', marginBottom: 10 }}
+          />
+
+          <button
+            onClick={callAi}
+            disabled={aiLoading}
+            style={{ width: '100%', padding: 10, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, opacity: aiLoading ? 0.7 : 1 }}
+          >
+            {aiLoading ? '⏳ Génération...' : '✨ Exécuter'}
+          </button>
+
+          {aiHistory.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ fontSize: 13, marginBottom: 8, color: '#666' }}>Historique IA</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 200, overflow: 'auto' }}>
+                {aiHistory.map((h, i) => (
+                  <div key={i} style={{ padding: 8, background: '#f5f5f5', borderRadius: 6, fontSize: 12 }}>
+                    <div style={{ fontWeight: 600, color: '#1976d2' }}>{h.mode}</div>
+                    <div style={{ color: '#333', marginTop: 4, whiteSpace: 'pre-wrap' }}>{h.result.slice(0, 200)}{h.result.length > 200 ? '...' : ''}</div>
+                    <button onClick={() => { document.execCommand('insertText', false, h.result); updateContent() }} style={{ marginTop: 4, fontSize: 11, color: '#1976d2', border: 'none', background: 'none', cursor: 'pointer' }}>📋 Insérer dans le document</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Page & Editor ── */}
+      <div className="swe-page-container" ref={pageContainerRef} style={{ position: 'relative' }}>
+        {/* Line Numbers */}
+        {showLineNumbers && (
+          <div style={{ position: 'absolute', left: -40, top: 0, width: 32, textAlign: 'right', color: '#999', fontSize: 10, fontFamily: 'monospace', lineHeight: pageStyle.lineHeight, userSelect: 'none', paddingTop: `${margins.top}mm` }}>
+            {Array.from({ length: Math.max(1, Math.ceil(content.split('<br').length / (lineHeight * 1.2))) }, (_, i) => (
+              <div key={i} style={{ height: `${fontSize * lineHeight * 1.5}pt` }}>{i + 1}</div>
+            ))}
+          </div>
+        )}
+        <div className="swe-page" style={{ ...pageStyle, colorScheme: 'light', color: '#1a1a2e' }}>
+          <div
+            ref={contentRef}
+            className="swe-page-content"
+            contentEditable
+            suppressContentEditableWarning
+            onInput={updateContent}
+            onMouseUp={checkFormats}
+            onKeyUp={checkFormats}
+            style={{ minHeight: '100%', color: '#1a1a2e', colorScheme: 'light', padding: showLineNumbers ? '0 0 0 8px' : undefined }}
+          />
+        </div>
+      </div>
+
+      {/* ── Status Bar ── */}
+      {!focusMode && (
+        <div className="swe-status-bar" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <span>Page {pageCount}</span>
+            <span>{stats.words} mots</span>
+            <span>{stats.chars} car.</span>
+            <span>{stats.sentences} phrases</span>
+            <span>{stats.paragraphs} §</span>
+            <span>⏱️ {stats.readingTime}</span>
+            <span>Niv. {stats.grade}</span>
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             <span>Zoom: {zoom}%</span>
             <span>Template: {selectedTemplate.name}</span>
+            {wordGoal > 0 && (
+              <span style={{ color: stats.words >= wordGoal ? '#2ecc71' : '#f59e0b' }}>
+                🎯 {Math.round((stats.words / wordGoal) * 100)}%
+              </span>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Find/Replace Modal */}
+      {/* ── Modals ── */}
+
+      {/* Find Replace */}
       {showFindReplace && (
         <div className="swe-template-panel" onClick={() => setShowFindReplace(false)}>
-          <div className="swe-template-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 20 }}>Rechercher et remplacer</h2>
-              <button 
-                className="swe-btn" 
-                onClick={() => setShowFindReplace(false)}
-                style={{ fontSize: 20 }}
-              >
-                ✕
-              </button>
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500 }}>Rechercher</label>
-              <input
-                type="text"
-                value={findText}
-                onChange={(e) => setFindText(e.target.value)}
-                placeholder="Texte à rechercher..."
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #ddd', fontSize: 14 }}
-              />
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500 }}>Remplacer par</label>
-              <input
-                type="text"
-                value={replaceText}
-                onChange={(e) => setReplaceText(e.target.value)}
-                placeholder="Nouveau texte..."
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #ddd', fontSize: 14 }}
-              />
+          <div className="swe-template-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
+            <h2 style={{ marginBottom: 16 }}>🔍 Rechercher et remplacer</h2>
+            <input value={findText} onChange={e => setFindText(e.target.value)} placeholder="Rechercher..." style={{ width: '100%', padding: 10, marginBottom: 10, borderRadius: 6, border: '1px solid #ddd' }} />
+            <input value={replaceText} onChange={e => setReplaceText(e.target.value)} placeholder="Remplacer par..." style={{ width: '100%', padding: 10, marginBottom: 10, borderRadius: 6, border: '1px solid #ddd' }} />
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={findCaseSensitive} onChange={e => setFindCaseSensitive(e.target.checked)} /> Respecter la casse
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={findWholeWord} onChange={e => setFindWholeWord(e.target.checked)} /> Mots entiers
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, cursor: 'pointer' }}>
+                <input type="checkbox" checked={findUseRegex} onChange={e => setFindUseRegex(e.target.checked)} /> Regex
+              </label>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button 
-                onClick={handleFind}
-                style={{ flex: 1, padding: '10px', background: '#f0f0f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}
-              >
-                🔍 Rechercher
-              </button>
-              <button 
-                onClick={handleReplace}
-                style={{ flex: 1, padding: '10px', background: '#1976d2', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}
-              >
-                Remplacer
-              </button>
-              <button 
-                onClick={handleReplaceAll}
-                style={{ flex: 1, padding: '10px', background: '#059669', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}
-              >
-                Tout remplacer
-              </button>
+              <button onClick={() => {
+                if (findText && contentRef.current) {
+                  if (window.find) {
+                    window.find(findText, findCaseSensitive, false, true, findWholeWord, false, findUseRegex)
+                  }
+                }
+              }} style={{ flex: 1, padding: 10, background: '#f0f0f0', border: 'none', borderRadius: 6, cursor: 'pointer' }}>🔍 Suivant</button>
+              <button onClick={handleReplaceAll} style={{ flex: 1, padding: 10, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Tout remplacer</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Table Dialog Modal */}
+      {/* Comments Panel */}
+      {showComments && (
+        <div style={{ position: 'fixed', right: 20, bottom: 80, width: 300, maxHeight: 400, overflow: 'auto', background: 'var(--bg-secondary, white)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 50 }}>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>💬 Commentaires</h3>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <input value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Ajouter un commentaire..." style={{ flex: 1, padding: 8, borderRadius: 4, border: '1px solid #ddd' }} />
+            <button onClick={addComment} style={{ padding: '8px 12px', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>+</button>
+          </div>
+          {comments.length === 0 ? (
+            <p style={{ color: '#999', fontSize: 13 }}>Aucun commentaire. Sélectionnez du texte et ajoutez-en un.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {comments.map(c => (
+                <div key={c.id} style={{ padding: 8, background: '#fff3cd', borderRadius: 6, fontSize: 12 }}>
+                  <div style={{ fontWeight: 600 }}>"{c.text.slice(0, 40)}..."</div>
+                  <div style={{ marginTop: 4 }}>{c.comment}</div>
+                  <button onClick={() => removeComment(c.id)} style={{ marginTop: 4, fontSize: 11, color: '#c0392b', border: 'none', background: 'none', cursor: 'pointer' }}>🗑️ Supprimer</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Table Dialog */}
       {showTableDialog && (
         <div className="swe-template-panel" onClick={() => setShowTableDialog(false)}>
           <div className="swe-template-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 360 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ margin: 0, fontSize: 20 }}>▦ Insérer un tableau</h2>
-              <button className="swe-btn" onClick={() => setShowTableDialog(false)} style={{ fontSize: 20 }}>
-                ✕
-              </button>
-            </div>
-            
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500 }}>Nombre de lignes</label>
-              <input
-                type="number"
-                min="1"
-                max="50"
-                value={tableConfig.rows}
-                onChange={(e) => setTableConfig({...tableConfig, rows: parseInt(e.target.value) || 1})}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #ddd', fontSize: 14 }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 500 }}>Nombre de colonnes</label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={tableConfig.cols}
-                onChange={(e) => setTableConfig({...tableConfig, cols: parseInt(e.target.value) || 1})}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #ddd', fontSize: 14 }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={tableConfig.withHeader}
-                  onChange={(e) => setTableConfig({...tableConfig, withHeader: e.target.checked})}
-                  style={{ width: 18, height: 18 }}
-                />
-                <span style={{ fontSize: 14 }}>Première ligne en tant qu'en-tête</span>
-              </label>
-            </div>
-            
-            {/* Aperçu */}
-            <div style={{ marginBottom: 20, padding: 12, background: '#f5f5f5', borderRadius: 8 }}>
-              <p style={{ margin: '0 0 8px 0', fontSize: 12, color: '#666', fontWeight: 500 }}>Aperçu:</p>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <tbody>
-                  {Array.from({ length: Math.min(tableConfig.rows, 4) }, (_, i) => (
-                    <tr key={i}>
-                      {Array.from({ length: tableConfig.cols }, (_, j) => (
-                        <td 
-                          key={j} 
-                          style={{ 
-                            border: '1px solid #ccc', 
-                            padding: '4px 8px', 
-                            fontSize: 11,
-                            background: tableConfig.withHeader && i === 0 ? '#e0e0e0' : 'white',
-                            fontWeight: tableConfig.withHeader && i === 0 ? 'bold' : 'normal'
-                          }}
-                        >
-                          {tableConfig.withHeader && i === 0 ? 'En-tête' : 'Cellule'}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                  {tableConfig.rows > 4 && (
-                    <tr>
-                      <td colSpan={tableConfig.cols} style={{ textAlign: 'center', padding: '4px', fontSize: 11, color: '#999' }}>
-                        ... ({tableConfig.rows - 4} lignes de plus)
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
+            <h2 style={{ marginBottom: 16 }}>▦ Insérer un tableau</h2>
+            <label>Lignes</label>
+            <input type="number" min={1} max={50} value={tableConfig.rows} onChange={e => setTableConfig({ ...tableConfig, rows: parseInt(e.target.value) || 1 })} style={{ width: '100%', padding: 10, marginBottom: 10, borderRadius: 6, border: '1px solid #ddd' }} />
+            <label>Colonnes</label>
+            <input type="number" min={1} max={20} value={tableConfig.cols} onChange={e => setTableConfig({ ...tableConfig, cols: parseInt(e.target.value) || 1 })} style={{ width: '100%', padding: 10, marginBottom: 10, borderRadius: 6, border: '1px solid #ddd' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, cursor: 'pointer' }}>
+              <input type="checkbox" checked={tableConfig.withHeader} onChange={e => setTableConfig({ ...tableConfig, withHeader: e.target.checked })} /> Première ligne en en-tête
+            </label>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button 
-                onClick={insertTable}
-                style={{ flex: 1, padding: '12px', background: '#1976d2', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
-              >
-                ▦ Créer le tableau
-              </button>
-              <button 
-                onClick={() => setShowTableDialog(false)}
-                style={{ padding: '12px 20px', background: '#f0f0f0', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 14 }}
-              >
-                Annuler
-              </button>
+              <button onClick={insertTable} style={{ flex: 1, padding: 12, background: '#1976d2', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600 }}>▦ Créer</button>
+              <button onClick={() => setShowTableDialog(false)} style={{ padding: '12px 20px', background: '#f0f0f0', border: 'none', borderRadius: 6, cursor: 'pointer' }}>Annuler</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Template Modal */}
+      {/* Templates Modal */}
       {showTemplates && (
         <div className="swe-template-panel" onClick={() => setShowTemplates(false)}>
           <div className="swe-template-modal" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 24 }}>Choisir un modèle</h2>
-              <button 
-                className="swe-btn" 
-                onClick={() => setShowTemplates(false)}
-                style={{ fontSize: 20 }}
-              >
-                ✕
-              </button>
-            </div>
-            <p style={{ color: '#666', margin: '0 0 16px 0' }}>
-              Sélectionnez un modèle de mise en page pour votre document
-            </p>
-            <div className="swe-template-grid">
-              {LAYOUT_TEMPLATES.map(template => (
-                <div
-                  key={template.id}
-                  className={`swe-template-card ${selectedTemplate.id === template.id ? 'selected' : ''}`}
-                  onClick={() => applyTemplate(template)}
-                >
-                  <div className="swe-template-icon">{template.icon}</div>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{template.name}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>
-                    Marges: {template.margins.top}/{template.margins.right}/{template.margins.bottom}/{template.margins.left}mm
-                  </div>
+            <h2 style={{ marginBottom: 16 }}>Choisir un modèle</h2>
+            <div className="swe-template-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+              {LAYOUT_TEMPLATES.map(t => (
+                <div key={t.id} className={`swe-template-card ${selectedTemplate.id === t.id ? 'selected' : ''}`} onClick={() => applyTemplate(t)} style={{ padding: 16, border: selectedTemplate.id === t.id ? '2px solid #1976d2' : '1px solid #ddd', borderRadius: 8, cursor: 'pointer', textAlign: 'center' }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>{t.icon}</div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{t.name}</div>
+                  <div style={{ fontSize: 11, color: '#666' }}>Marges {t.margins.top}/{t.margins.right}/{t.margins.bottom}/{t.margins.left}mm</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
       )}
+
+      <ToolUpsellModal
+        isOpen={guard.upsellOpen}
+        config={guard.upsellConfig}
+        onClose={guard.closeUpsell}
+        onUseCredit={async () => {
+          const r = await guard.checkAndDebit()
+          if (r.ok) guard.closeUpsell()
+        }}
+      />
+      </div>
     </>
   )
 }

@@ -10,6 +10,8 @@ import { useToolAccess } from '../../hooks/useToolAccess'
 import { callGroq as groqCall } from '../../lib/groqClient'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolHero from '../../components/ToolHero'
 import RichDoc from '../../components/RichDoc'
 
 const IMMO_SYSTEM = `Tu es un expert immobilier senior spécialisé dans le marché sénégalais et ouest-africain, avec une expertise en financement bancaire, droit immobilier OHADA et investissement locatif. Tu rédiges des analyses et documents immobiliers professionnels, conformes à la législation sénégalaise.
@@ -280,7 +282,7 @@ export default function ImmobilierEliteSimple() {
   const exportExcel = async () => {
     if (!tool.allowed) { setShowPayment(true); return }
     try {
-      const data = { simulation: sim, simulation_locative: simLoc, simulation_construction: simConst, annonces, comparatif, financement, estimation, contrat_bail: contratBail, business_plan: businessPlan }
+      const data = { simulation: sim, simulation_locative: simLoc, simulation_construction: simConst, annonces: annonce, comparatif, financement, estimation, contrat_bail: contratBail, business_plan: businessPlan }
       await exportToExcel(data, { filename: `immobilier-elite-${section}-${Date.now()}.xlsx`, sheetName: 'Immobilier Élite' })
       if (!tool.unlimited) { const res = await tool.debit(); if (!res.ok) { alert('Crédits insuffisants'); setShowPayment(true); return } }
       alert('Excel exporté avec succès')
@@ -303,7 +305,10 @@ export default function ImmobilierEliteSimple() {
         description="Simulations de rentabilité immobilière, financement bancaire, actes et contrats conformes à la législation sénégalaise. Analyse locative et investissement."
         keywords="immobilier Sénégal, simulation rentabilité, financement immobilier, acte de vente, contrat de bail, investissement locatif, Loi Mbao, Caisse de Dépôt"
         type="article"
-      />
+       image="/og-tools/immobilier.jpg"/>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="Immobilier Élite"
         icon="🏢"
@@ -329,82 +334,17 @@ export default function ImmobilierEliteSimple() {
           'Utilisez « Estimation » avant de négocier un prix de vente',
         ]}
       />
-      {/* Élite Header */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #3B82F6, #2563EB)', 
-        padding: '40px', 
-        borderRadius: '20px', 
-        marginBottom: '32px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ 
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(240,180,41,0.2) 0%, transparent 70%)',
-          borderRadius: '50%',
-          transform: 'translate(50%, -50%)'
-        }} />
-        <h1 style={{ 
-          color: '#FFFFFF', 
-          fontSize: '3rem', 
-          fontWeight: '900',
-          margin: '0 0 16px 0',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Immobilier Élite
-        </h1>
-        <p style={{ 
-          color: '#DBEAFE', 
-          fontSize: '1.2rem',
-          margin: 0,
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Simulations immobilières avancées et expertise marché ouest-africain
-        </p>
-        <div style={{ 
-          marginTop: '24px',
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? 9 Modules Immobiliers
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Simulations Avancées
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Financement Bancaire
-          </div>
-        </div>
-      </div>
+      <ToolHero
+        icon="🏢"
+        badge="Immobilier · Afrique de l'Ouest"
+        title="Immobilier"
+        titleAccent="Élite"
+        subtitle="Simulations de rentabilité, financement bancaire, actes et baux conformes au droit OHADA."
+        gradient="linear-gradient(135deg, #451a03 0%, #92400e 45%, #b45309 100%)"
+        glowColor="rgba(180,83,9,0.4)"
+        accentColor="#FCD34D"
+        stats={[['🏗️','9 Modules'],['📊','Rentabilité locative'],['🏦','Financement bancaire'],['📜','Baux OHADA']]}
+      />
 
       {/* Élite Navigation */}
       <div style={{

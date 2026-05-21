@@ -56,23 +56,23 @@ export default function AdminDashboard() {
       </main>
 
       <style>{`
-        .admin-container { display: flex; min-height: 100vh; background: #070B0F; color: #fff; font-family: sans-serif; }
-        .admin-sidebar { width: 260px; background: #000; padding: 30px; border-right: 1px solid #1a1a1a; }
-        .admin-logo { font-size: 1.5rem; font-weight: 900; color: #F0B429; margin-bottom: 50px; }
-        .admin-logo span { color: #fff; opacity: 0.5; font-size: 0.8rem; }
-        nav button { width: 100%; text-align: left; padding: 15px; margin-bottom: 10px; background: none; border: none; color: #888; cursor: pointer; border-radius: 10px; transition: 0.3s; }
-        nav button.active { background: #F0B429; color: #000; font-weight: 700; }
+        .admin-container { display: flex; min-height: 100vh; background: var(--bg-primary); color: var(--text-primary); font-family: sans-serif; }
+        .admin-sidebar { width: 260px; background: var(--bg-card); padding: 30px; border-right: 1px solid var(--border); }
+        .admin-logo { font-size: 1.5rem; font-weight: 900; color: var(--gold); margin-bottom: 50px; }
+        .admin-logo span { color: var(--text-primary); opacity: 0.5; font-size: 0.8rem; }
+        nav button { width: 100%; text-align: left; padding: 15px; margin-bottom: 10px; background: none; border: none; color: var(--text-secondary); cursor: pointer; border-radius: 10px; transition: 0.3s; }
+        nav button.active { background: var(--gold); color: #000; font-weight: 700; }
         .admin-main { flex: 1; padding: 40px; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .add-btn { background: #18A84A; color: #fff; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 700; }
+        .add-btn { background: var(--green); color: #fff; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 700; }
         .admin-content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .admin-card { background: #111; border-radius: 20px; overflow: hidden; border: 1px solid #222; }
-        .card-preview { height: 150px; background: #222; display: flex; align-items: center; justify-content: center; color: #444; }
+        .admin-card { background: var(--bg-card); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); }
+        .card-preview { height: 150px; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
         .card-details { padding: 20px; }
         .card-actions { display: flex; gap: 10px; margin-top: 15px; }
         .card-actions button { flex: 1; padding: 8px; border-radius: 5px; border: none; cursor: pointer; font-size: 0.8rem; }
-        .edit { background: #333; color: #fff; }
-        .delete { background: rgba(220, 38, 38, 0.2); color: #ef4444; }
+        .edit { background: var(--bg-primary); color: var(--text-primary); }
+        .delete { background: rgba(220, 38, 38, 0.2); color: var(--red); }
       `}</style>
     </div>
   );

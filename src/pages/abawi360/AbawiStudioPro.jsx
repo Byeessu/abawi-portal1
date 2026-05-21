@@ -6,7 +6,6 @@ import { groqChatCompletion } from '../../lib/groqClient'
 import { requestElevenLabsTTS } from '../../lib/elevenlabsClient'
 import { REPLICATE_MODELS, generateImage, pollPrediction } from '../../lib/replicateClient'
 import { resolveRuntimeApiKey } from '../../lib/runtimeApiKeys'
-import { Link } from 'react-router-dom'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
 
 const GROQ_BASE_URL = import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1'
@@ -96,8 +95,12 @@ export default function AbawiStudioPro() {
         headers: { Authorization: `Bearer ${groqKey}` },
         body,
       })
-      if (!res.ok) throw new Error(`Erreur transcription (${res.status})`)
-      const data = await res.json()
+      const responseText = await res.text().catch(() => '')
+      if (!res.ok) {
+        throw new Error(`Erreur transcription (${res.status}): ${responseText.slice(0, 120)}`)
+      }
+      let data
+      try { data = JSON.parse(responseText) } catch { throw new Error('Réponse non-JSON du serveur de transcription') }
       const text = cleanIAText(data?.text || '')
       setTranscript(text)
       if (!script.trim()) setScript(text)
@@ -269,7 +272,7 @@ Rends uniquement la version finale, claire, professionnelle, sans markdown ni sy
       const { error } = await supabase.from('ai_jobs').insert(row)
       if (!error) savedToDb = true
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
     const localRow = { id: `${Date.now()}-${Math.random()}`, ...row, storage: savedToDb ? 'supabase' : 'local' }
     const next = [localRow, ...history].slice(0, 20)
     setHistory(next)
@@ -384,7 +387,7 @@ Rends uniquement la version finale, claire, professionnelle, sans markdown ni sy
   )
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px 80px' }}>
+    <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px 80px' }}>
       <section style={{ border: '1px solid var(--border)', borderRadius: 20, padding: 24, background: 'linear-gradient(135deg, rgba(20,184,166,0.14), var(--bg-card))' }}>
         <div style={{ color: 'var(--accent)', fontWeight: 800, fontSize: '0.78rem', letterSpacing: 1.2 }}>ABAWI 360 / STUDIO PRO</div>
         <h1 style={{ color: 'var(--text-primary)', marginTop: 10 }}>ABAWI Studio Pro</h1>
@@ -660,6 +663,10 @@ Rends uniquement la version finale, claire, professionnelle, sans markdown ni sy
                     <img
                       src={url}
                       alt={`Généré ${idx + 1}`}
+                      width={400}
+                      height={300}
+                      loading="lazy"
+                      decoding="async"
                       style={{ width: '100%', height: 'auto', display: 'block' }}
                     />
                     <div style={{ padding: 12, display: 'flex', gap: 8 }}>

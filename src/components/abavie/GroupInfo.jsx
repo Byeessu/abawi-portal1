@@ -19,6 +19,7 @@ export default function GroupInfo({ conversation, onClose }) {
     if (!conversation?.id) return;
     loadMembers();
     checkAdmin();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation]);
 
   async function loadMembers() {

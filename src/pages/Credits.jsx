@@ -71,8 +71,16 @@ export default function Credits() {
             { label: '📄 CV Pro', cost: CREDIT_COSTS.cv },
             { label: '✉️ Lettre motivation', cost: CREDIT_COSTS.lettre },
             { label: '📊 Business Plan', cost: CREDIT_COSTS.business_plan },
+            { label: '🎤 Pitch Deck', cost: CREDIT_COSTS.pitch },
             { label: '🔍 Analyse CV', cost: CREDIT_COSTS.analyse_cv },
             { label: '🏦 Finance Elite', cost: CREDIT_COSTS.finance_elite },
+            { label: '⚖️ Juridique Elite', cost: CREDIT_COSTS.juridique_elite },
+            { label: '🧾 Comptable Elite', cost: CREDIT_COSTS.comptable_elite },
+            { label: '💼 RH Elite', cost: CREDIT_COSTS.rh_elite },
+            { label: '🏠 Immobilier Elite', cost: CREDIT_COSTS.immobilier_elite },
+            { label: '📈 Consultant Elite', cost: CREDIT_COSTS.consultant_elite },
+            { label: '🎨 Image Pro', cost: CREDIT_COSTS.image_pro },
+            { label: '🎧 Audio Studio', cost: CREDIT_COSTS.audio_studio },
           ].map(item => (
             <div key={item.label} className="credits-pricing__item">
               <span className="credits-pricing__label">{item.label}</span>

@@ -6,6 +6,7 @@ import './DetailPage.css'
 import { cleanIAText } from '../../lib/cleanText'
 import { Link } from 'react-router-dom'
 import ShareButtons from '../../components/ShareButtons'
+import SEO from '../../components/SEO'
 
 const TAG_COLORS = {
   'Digital': { bg: '#1BA8F5', text: '#fff' },
@@ -107,7 +108,7 @@ function stripJsonArtifacts(text) {
     .replace(/\\t/g, ' ')
     .replace(/\\/g, '')
     .replace(/\{"v":"/g, '')
-    .replace(/","t":"/g, ' ')
+    .replace(new RegExp('","t":"', "g"), ' ')
     .replace(/"\}$/g, '')
 }
 
@@ -123,6 +124,7 @@ function escapeXml(value) {
     .replace(/[\u2800-\u28FF]/g, '')
     .replace(/[\u0300-\u036F\u1DC0-\u1DFF]/g, '')
     // Émojis problématiques qui peuvent causer des artefacts
+    // eslint-disable-next-line no-misleading-character-class
     .replace(/[👁‍🗨👁‍🗨️]/g, '👁️')
     // Échapper XML standard
     .replace(/&/g, '&amp;')
@@ -138,9 +140,14 @@ function escapeXml(value) {
 // Fonction de nettoyage complète pour les textes
 function fullCleanText(text) {
   if (!text) return ''
-  let cleaned = stripJsonArtifacts(text)
+  // Strip HTML tags and entities first
+  let cleaned = String(text)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&[a-zA-Z]{1,8};|&#\d+;|&#x[\da-fA-F]+;/gi, ' ')
+  cleaned = stripJsonArtifacts(cleaned)
     .replace(/[\u2800-\u28FF]/g, '')
     .replace(/[\u0300-\u036F\u1DC0-\u1DFF]/g, '')
+    // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .replace(/["{}\[\]]/g, '')
@@ -152,7 +159,6 @@ function fullCleanText(text) {
     .trim()
   return cleanIAText(cleaned)
 }
-
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -192,7 +198,7 @@ function NewsCardMini({ article }) {
       >
         <div style={{ height: 120, background: `linear-gradient(135deg, ${ts.bg}20, ${ts.bg}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
           {article.cover_url
-            ? <img src={article.cover_url} alt={article.ti} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: 0.5 }} />
+            ? <img src={article.cover_url} alt={article.ti} loading="eager" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0, opacity: 0.5 }} />
             : null
           }
           <div style={{ position: 'absolute', top: 10, left: 10, padding: '3px 10px', borderRadius: 100, background: ts.bg, color: ts.text, fontSize: '0.68rem', fontWeight: 800 }}>{article.tag}</div>
@@ -335,14 +341,29 @@ function ArticleDetail() {
         return `<blockquote>${main}${cite}</blockquote>`
       }
       if (block.t === 'v') return `<div class="article-highlight">${escapeHtml(fullCleanText(block.v))}</div>`
+      if (block.t === 'd') {
+        const items = fullCleanText(block.v).split('|').map(s => s.trim()).filter(Boolean)
+        if (items.length < 2) return `<p>${escapeHtml(fullCleanText(block.v))}</p>`
+        return `<div class="article-data">${items.map(it => `<span>${escapeHtml(it)}</span>`).join('')}</div>`
+      }
       return ''
     }).join('')
   }
 
   htmlContent = sanitizeRenderedHtml(stripJsonArtifacts(htmlContent))
 
+  // Build excerpt from content
+  const excerpt = article.su || (htmlContent ? htmlContent.replace(/<[^>]+>/g, '').slice(0, 160) : '')
+
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
+      <SEO
+        title={`${safeTitle} — ABAWI News`}
+        description={excerpt}
+        keywords={`${article.tag}, actualité Afrique, business Afrique, ABAWI News`}
+        image={article.im || '/abawi-og-banner.jpg'}
+        type="article"
+      />
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(14px, 4vw, 24px) 80px' }}>
         {/* Breadcrumb */}
         <div style={{ padding: '20px 0', fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -374,7 +395,12 @@ function ArticleDetail() {
           }}>{safeTitle}</h1>
 
           {article.su && (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: 20 }}>{safeSubtitle}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: article.dl ? 12 : 20 }}>{safeSubtitle}</p>
+          )}
+          {article.dl && (
+            <p style={{ color: 'var(--text-primary)', fontSize: '1.02rem', lineHeight: 1.75, marginBottom: 20, fontStyle: 'italic', borderLeft: `3px solid ${ts.bg}`, paddingLeft: 14, opacity: 0.9 }}>
+              {fullCleanText(article.dl)}
+            </p>
           )}
 
           <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -393,7 +419,7 @@ function ArticleDetail() {
         </div>
 
         {/* Cover image */}
-        <img src={makeDetailVisual(safeArticle)} alt={safeTitle} style={{
+        <img src={makeDetailVisual(safeArticle)} alt={safeTitle} width={800} height={420} loading="lazy" decoding="async" style={{
           width: '100%', borderRadius: 16, marginBottom: 40,
           maxHeight: 420, objectFit: 'cover', border: `1px solid ${ts.bg}30`,
         }} />
@@ -424,6 +450,16 @@ function ArticleDetail() {
             background: ${ts.bg}10; border: 1px solid ${ts.bg}25;
             border-radius: 12px; padding: 16px 20px; margin: 20px 0;
             color: ${ts.bg}; font-weight: 600;
+          }
+          .article-content .article-data {
+            display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0;
+            padding: 14px 18px; background: ${ts.bg}08; border-radius: 12px;
+            border: 1px solid ${ts.bg}20;
+          }
+          .article-content .article-data span {
+            padding: 6px 14px; border-radius: 8px; background: ${ts.bg}15;
+            color: var(--text-primary); font-weight: 700; font-size: 0.9rem;
+            border: 1px solid ${ts.bg}25;
           }
         `}</style>
 

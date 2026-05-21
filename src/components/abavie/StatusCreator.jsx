@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { abavieSettings } from '../../lib/abavieSettings';
+import { abTalkSettings as abavieSettings } from '../../lib/abTalkSettings';
 
 const BG_COLORS = [
   '#18a84a', '#1e40af', '#dc2626', '#7c3aed', '#ea580c',
@@ -71,9 +71,9 @@ export default function StatusCreator({ onClose, onPublished }) {
 
     // ── 4. Sauvegarder en local EN PREMIER → affichage immédiat ──────────
     try {
-      const arr = JSON.parse(localStorage.getItem('abavie_statuses') || '[]');
+      const arr = JSON.parse(localStorage.getItem('abtalk_statuses') || '[]');
       arr.unshift(statusObj);
-      localStorage.setItem('abavie_statuses', JSON.stringify(arr.slice(0, 50)));
+      localStorage.setItem('abtalk_statuses', JSON.stringify(arr.slice(0, 50)));
     } catch { /* storage plein */ }
 
     // Notifier la sidebar immédiatement (pas besoin d'attendre Supabase)

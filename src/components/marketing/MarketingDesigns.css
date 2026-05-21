@@ -1,0 +1,527 @@
+/* ═══════════════════════════════════════════════════════════
+   ABAWI MARKETING DESIGN SYSTEM
+   Offres commerciales · Catalogues · Brochures · Pitch Deck
+   ═══════════════════════════════════════════════════════════ */
+
+.abawi-marketing {
+  --m-gold: #F0B429;
+  --m-gold-light: #FDE68A;
+  --m-gold-dark: #B45309;
+  --m-bg: #0D1117;
+  --m-surface: #161B22;
+  --m-border: #1A2332;
+  --m-text: #F0F2F5;
+  --m-text-dim: #8B95A5;
+  --m-accent: #F0B429;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--m-text);
+}
+
+/* ── HERO ─────────────────────────────────────────────── */
+.mk-hero {
+  position: relative;
+  padding: 80px 24px;
+  text-align: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse at top, rgba(240, 180, 41, 0.08) 0%, transparent 60%),
+              linear-gradient(180deg, #0D1117 0%, #0a0e14 100%);
+}
+.mk-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 40px,
+    rgba(240, 180, 41, 0.03) 40px,
+    rgba(240, 180, 41, 0.03) 41px
+  );
+  animation: mk-shimmer 30s linear infinite;
+  pointer-events: none;
+}
+@keyframes mk-shimmer {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(40px, 40px); }
+}
+.mk-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 100px;
+  background: rgba(240, 180, 41, 0.12);
+  border: 1px solid rgba(240, 180, 41, 0.25);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--m-gold);
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
+.mk-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 16px;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+}
+.mk-hero h1 span {
+  background: linear-gradient(135deg, var(--m-gold), #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mk-hero p {
+  font-size: 1.15rem;
+  color: var(--m-text-dim);
+  max-width: 560px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+.mk-hero-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── GRIDS ──────────────────────────────────────────── */
+.mk-grid {
+  display: grid;
+  gap: 24px;
+  padding: 0 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.mk-grid--3 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.mk-grid--2 { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+.mk-grid--4 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+
+/* ── CARDS ────────────────────────────────────────────── */
+.mk-card {
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mk-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--m-gold), #F59E0B, var(--m-gold));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.mk-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(240, 180, 41, 0.3);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(240, 180, 41, 0.1);
+}
+.mk-card:hover::before { opacity: 1; }
+
+.mk-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(240, 180, 41, 0.15), rgba(240, 180, 41, 0.05));
+  border: 1px solid rgba(240, 180, 41, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+.mk-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--m-text);
+}
+.mk-card p {
+  font-size: 0.95rem;
+  color: var(--m-text-dim);
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.mk-card-price {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--m-gold), #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mk-card-price span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* ── BADGES ───────────────────────────────────────────── */
+.mk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.mk-badge--gold {
+  background: rgba(240, 180, 41, 0.12);
+  color: var(--m-gold);
+  border: 1px solid rgba(240, 180, 41, 0.2);
+}
+.mk-badge--green {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* ── SECTIONS ─────────────────────────────────────────── */
+.mk-section {
+  padding: 80px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.mk-section-title {
+  text-align: center;
+  margin-bottom: 56px;
+}
+.mk-section-title h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+.mk-section-title h2 span {
+  background: linear-gradient(135deg, var(--m-gold), #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mk-section-title p {
+  color: var(--m-text-dim);
+  font-size: 1.05rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ── CATALOGUE ────────────────────────────────────────── */
+.mk-catalogue {
+  background: var(--m-bg);
+  padding: 60px 24px;
+}
+.mk-catalogue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto 40px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.mk-catalogue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.mk-product-card {
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.mk-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+}
+.mk-product-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #1A2332, #0D1117);
+}
+.mk-product-body {
+  padding: 20px;
+}
+.mk-product-body h4 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.mk-product-body p {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--m-text-dim);
+  line-height: 1.5;
+}
+.mk-product-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--m-border);
+}
+.mk-product-price {
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--m-gold);
+}
+
+/* ── BROCHURE A4 ──────────────────────────────────────── */
+.mk-brochure {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: 40px 48px;
+  box-shadow: 0 0 0 1px #e5e5e5, 0 8px 24px rgba(0,0,0,0.12);
+  position: relative;
+}
+.mk-brochure-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 24px;
+  border-bottom: 3px solid #F0B429;
+  margin-bottom: 32px;
+}
+.mk-brochure-logo {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #0D1117;
+}
+.mk-brochure-logo span {
+  color: #F0B429;
+}
+.mk-brochure h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 24px;
+  color: #0D1117;
+}
+.mk-brochure-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.mk-brochure-item {
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 20px;
+}
+.mk-brochure-item h4 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: #0D1117;
+}
+.mk-brochure-item p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.5;
+}
+.mk-brochure-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e5e5;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+}
+@media print {
+  .mk-brochure {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+  }
+}
+
+/* ── PITCH DECK ───────────────────────────────────────── */
+.mk-deck {
+  background: var(--m-bg);
+  min-height: 100vh;
+}
+.mk-slide {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--m-border);
+}
+.mk-slide h2 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  margin: 0 0 24px;
+}
+.mk-slide h2 span {
+  background: linear-gradient(135deg, var(--m-gold), #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mk-slide p {
+  font-size: 1.2rem;
+  color: var(--m-text-dim);
+  line-height: 1.7;
+  max-width: 640px;
+}
+.mk-stat {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  margin-top: 48px;
+}
+.mk-stat-item {
+  text-align: center;
+  padding: 32px;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+}
+.mk-stat-number {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--m-gold), #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mk-stat-label {
+  font-size: 0.9rem;
+  color: var(--m-text-dim);
+  margin-top: 8px;
+}
+
+/* ── PRINT BUTTONS ────────────────────────────────────── */
+.mk-print-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--m-gold), #F59E0B);
+  color: #0a0a0a;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(240, 180, 41, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+.mk-print-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(240, 180, 41, 0.4);
+}
+@media print {
+  .mk-print-btn { display: none !important; }
+}
+
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 768px) {
+  .mk-grid--2,
+  .mk-grid--3,
+  .mk-grid--4 { grid-template-columns: 1fr; }
+  .mk-brochure-grid { grid-template-columns: 1fr; }
+  .mk-section { padding: 48px 16px; }
+  .mk-hero { padding: 48px 16px; }
+  .mk-brochure {
+    width: 100%;
+    padding: 24px;
+    box-shadow: none;
+  }
+}
+
+/* ── LIGHT MODE OVERRIDES ─────────────────────────────────
+   Applied when <html class="light"> (ThemeContext light mode)
+   ──────────────────────────────────────────────────────── */
+.light .abawi-marketing {
+  --m-bg: #F8F9FA;
+  --m-surface: #FFFFFF;
+  --m-border: #E2E8F0;
+  --m-text: #1A202C;
+  --m-text-dim: #4A5568;
+}
+
+.light .mk-hero {
+  background: radial-gradient(ellipse at top, rgba(240,180,41,0.1) 0%, transparent 60%),
+              linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%);
+}
+.light .mk-hero h1 {
+  color: #1A202C;
+}
+.light .mk-hero p {
+  color: #4A5568;
+}
+
+.light .mk-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.light .mk-card:hover {
+  box-shadow: 0 16px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(240,180,41,0.2);
+}
+.light .mk-card h3 { color: #1A202C; }
+.light .mk-card p  { color: #4A5568; }
+
+.light .mk-section-title h2 { color: #1A202C; }
+.light .mk-section-title p  { color: #4A5568; }
+
+.light .mk-catalogue { background: #F1F5F9; }
+
+.light .mk-product-card {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+}
+.light .mk-product-card:hover {
+  box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+}
+.light .mk-product-img {
+  background: linear-gradient(135deg, #E2E8F0, #F1F5F9);
+}
+.light .mk-product-body h4 { color: #1A202C; }
+.light .mk-product-body p  { color: #4A5568; }
+.light .mk-product-meta    { border-top-color: #E2E8F0; }
+
+.light .mk-stat-item {
+  background: #FFFFFF;
+  border-color: #E2E8F0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.light .mk-stat-label { color: #4A5568; }
+
+.light .mk-highlight {
+  background: linear-gradient(135deg, rgba(240,180,41,0.08), rgba(240,180,41,0.03));
+  border-color: rgba(240,180,41,0.25);
+}
+
+/* Inline hardcoded dim colors in CommercialOffers & CatalogueViewer */
+.light .abawi-marketing [style*="color: #8B95A5"],
+.light .abawi-marketing [style*="color:#8B95A5"],
+.light .abawi-marketing [style*="color: #c9d1d9"],
+.light .abawi-marketing [style*="color:#c9d1d9"] {
+  color: #4A5568 !important;
+}

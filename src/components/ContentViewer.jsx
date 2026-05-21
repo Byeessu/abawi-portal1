@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useAudio } from '../context/AudioContext'
+import { useAuth } from '../context/AuthContext'
+import { canDownload } from '../lib/freeContentQuota'
+import QuotaPaywall from './QuotaPaywall'
 import Equalizer from './Equalizer'
 
-export default function ContentViewer({ type, src, titre, onClose }) {
+export default function ContentViewer({ type, src, titre, onClose, product, onBuy, access }) {
+  const { membre, isAdmin } = useAuth()
+  const allowDownload = canDownload(membre, isAdmin)
+  const isFreeUser = !allowDownload && !isAdmin
   const audio = useAudio()
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
   const [editOpen, setEditOpen] = useState(false)
   const [notes, setNotes] = useState('')
   const [uploadName, setUploadName] = useState('')
   const [workingText, setWorkingText] = useState('')
+  const [previewBlocked, setPreviewBlocked] = useState(false)
+  const [previewSeconds, setPreviewSeconds] = useState(120)
 
   useEffect(() => {
     if (type === 'audio' && src) {
@@ -20,6 +28,22 @@ export default function ContentViewer({ type, src, titre, onClose }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: review hook dependencies
   }, [src, type])
 
+  // Preview timer for free users on PDF (desktop) — 2 min ~ 25% of a guide
+  useEffect(() => {
+    if (type !== 'pdf' || !isFreeUser || isMobile || previewBlocked) return
+    const interval = setInterval(() => {
+      setPreviewSeconds((s) => {
+        if (s <= 1) {
+          clearInterval(interval)
+          setPreviewBlocked(true)
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [type, isFreeUser, isMobile, previewBlocked])
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 99999,
@@ -27,13 +51,13 @@ export default function ContentViewer({ type, src, titre, onClose }) {
     }}>
       {/* Top bar */}
       <div style={{
-        height: 56, background: '#0D1117', borderBottom: '1px solid #1A2332',
+        height: 56, background: 'var(--color-bg-secondary)', borderBottom: '1px solid var(--color-border)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: '1.1rem' }}>{type === 'pdf' ? '📄' : '🎧'}</span>
-          <span style={{ fontWeight: 600, color: '#F0F2F5', fontSize: '0.95rem' }}>{titre}</span>
+          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)', fontSize: '0.95rem' }}>{titre}</span>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           {type === 'pdf' && (
@@ -46,7 +70,7 @@ export default function ContentViewer({ type, src, titre, onClose }) {
               {editOpen ? '🧩 Masquer éditeur' : '🧩 Modifier PDF'}
             </button>
           )}
-          {src && type === 'pdf' && (
+          {src && type === 'pdf' && allowDownload && (
             <a href={src} download style={{
               padding: '7px 14px', borderRadius: 8,
               background: 'rgba(240,180,41,0.1)', border: '1px solid rgba(240,180,41,0.3)',
@@ -59,7 +83,7 @@ export default function ContentViewer({ type, src, titre, onClose }) {
           <button onClick={onClose} style={{
             padding: '7px 14px', borderRadius: 8,
             background: 'rgba(255,255,255,0.06)', border: 'none',
-            color: '#F0F2F5', cursor: 'pointer', fontSize: '0.82rem',
+            color: 'var(--color-text-primary)', cursor: 'pointer', fontSize: '0.82rem',
             fontFamily: 'Outfit, sans-serif',
           }}>✕ Fermer</button>
         </div>
@@ -75,8 +99,8 @@ export default function ContentViewer({ type, src, titre, onClose }) {
               justifyContent: 'center', height: '100%', gap: 20, padding: 32,
             }}>
               <div style={{ fontSize: '3.5rem' }}>📄</div>
-              <h2 style={{ color: '#F0F2F5', textAlign: 'center', fontSize: '1.1rem', maxWidth: 300 }}>{titre}</h2>
-              <p style={{ color: '#8B95A5', fontSize: '0.88rem', textAlign: 'center', maxWidth: 280, lineHeight: 1.5 }}>
+              <h2 style={{ color: 'var(--color-text-primary)', textAlign: 'center', fontSize: '1.1rem', maxWidth: 300 }}>{titre}</h2>
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.88rem', textAlign: 'center', maxWidth: 280, lineHeight: 1.5 }}>
                 Les PDFs s'ouvrent mieux dans votre navigateur ou application de lecture.
               </p>
               <a href={src} target="_blank" rel="noopener noreferrer" style={{
@@ -88,29 +112,58 @@ export default function ContentViewer({ type, src, titre, onClose }) {
               }}>
                 📖 Lire le PDF
               </a>
-              <a href={src} download style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '12px 24px', borderRadius: 12, textDecoration: 'none',
-                background: 'rgba(240,180,41,0.08)', border: '1px solid rgba(240,180,41,0.3)',
-                color: '#F0B429', fontWeight: 700, fontSize: '0.9rem',
-              }}>
-                ⬇️ Télécharger
-              </a>
+              {allowDownload && (
+                <a href={src} download style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '12px 24px', borderRadius: 12, textDecoration: 'none',
+                  background: 'rgba(240,180,41,0.08)', border: '1px solid rgba(240,180,41,0.3)',
+                  color: '#F0B429', fontWeight: 700, fontSize: '0.9rem',
+                }}>
+                  ⬇️ Télécharger
+                </a>
+              )}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: editOpen ? 'minmax(0,2fr) minmax(300px,1fr)' : '1fr', height: '100%' }}>
+            <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: editOpen ? 'minmax(0,2fr) minmax(300px,1fr)' : '1fr', height: '100%' }}>
               <iframe
                 src={src + '#toolbar=1&navpanes=1&scrollbar=1'}
-                style={{ width: '100%', height: '100%', border: 'none' }}
+                style={{ width: '100%', height: '100%', border: 'none', opacity: previewBlocked ? 0.15 : 1, transition: 'opacity 0.5s' }}
                 title={titre}
               />
+              {isFreeUser && !previewBlocked && (
+                <div style={{
+                  position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+                  background: 'rgba(7,11,15,0.85)', border: '1px solid rgba(240,180,41,0.3)', borderRadius: 10,
+                  padding: '8px 16px', color: '#F0B429', fontSize: '0.8rem', fontWeight: 700, zIndex: 50,
+                  pointerEvents: 'none', whiteSpace: 'nowrap',
+                }}>
+                  ⏱️ Preview gratuite — {Math.floor(previewSeconds / 60)}:{String(previewSeconds % 60).padStart(2, '0')} restantes
+                </div>
+              )}
+              {previewBlocked && (
+                <div style={{
+                  position: 'absolute', inset: 0, zIndex: 100,
+                  background: 'rgba(7,11,15,0.92)', backdropFilter: 'blur(6px)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+                }}>
+                  <div style={{ width: '100%', maxWidth: 520 }}>
+                    <QuotaPaywall
+                      product={product}
+                      access={access}
+                      onBuy={onBuy || (() => {})}
+                      onClose={() => { setPreviewBlocked(false); setPreviewSeconds(120); onClose() }}
+                      creditCost={access?.creditCost}
+                    />
+                  </div>
+                </div>
+              )}
               {editOpen && (
-                <div style={{ borderLeft: '1px solid #1A2332', padding: 14, overflowY: 'auto', background: '#0B1119' }}>
-                  <h3 style={{ margin: '0 0 8px', color: '#F0F2F5', fontSize: '0.92rem' }}>Atelier d’édition</h3>
-                  <p style={{ margin: '0 0 12px', color: '#8B95A5', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                <div style={{ borderLeft: '1px solid var(--color-border)', padding: 14, overflowY: 'auto', background: 'var(--color-bg-primary)' }}>
+                  <h3 style={{ margin: '0 0 8px', color: 'var(--color-text-primary)', fontSize: '0.92rem' }}>Atelier d’édition</h3>
+                  <p style={{ margin: '0 0 12px', color: 'var(--color-text-secondary)', fontSize: '0.78rem', lineHeight: 1.5 }}>
                     Ajoutez des annotations, importez du texte ou préparez une version modifiée à exporter.
                   </p>
-                  <label style={{ display: 'block', marginBottom: 8, color: '#8B95A5', fontSize: '0.75rem' }}>Upload document texte (txt/md/json/csv/html)</label>
+                  <label style={{ display: 'block', marginBottom: 8, color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Upload document texte (txt/md/json/csv/html)</label>
                   <input
                     type="file"
                     accept=".txt,.md,.json,.csv,.html,.htm"
@@ -124,19 +177,19 @@ export default function ContentViewer({ type, src, titre, onClose }) {
                     style={{ width: '100%', marginBottom: 10 }}
                   />
                   {uploadName && <div style={{ color: '#18A84A', fontSize: '0.75rem', marginBottom: 8 }}>Fichier chargé: {uploadName}</div>}
-                  <label style={{ display: 'block', marginBottom: 8, color: '#8B95A5', fontSize: '0.75rem' }}>Contenu éditable</label>
+                  <label style={{ display: 'block', marginBottom: 8, color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Contenu éditable</label>
                   <textarea
                     value={workingText}
                     onChange={(e) => setWorkingText(e.target.value)}
                     placeholder="Collez ici le texte à intégrer dans votre version document..."
-                    style={{ width: '100%', minHeight: 120, borderRadius: 8, background: '#0D1117', color: '#E5E7EB', border: '1px solid #263245', padding: 10, marginBottom: 10 }}
+                    style={{ width: '100%', minHeight: 120, borderRadius: 8, background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', padding: 10, marginBottom: 10 }}
                   />
-                  <label style={{ display: 'block', marginBottom: 8, color: '#8B95A5', fontSize: '0.75rem' }}>Notes PDF</label>
+                  <label style={{ display: 'block', marginBottom: 8, color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>Notes PDF</label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Corrections, signatures à apposer, sections à modifier..."
-                    style={{ width: '100%', minHeight: 140, borderRadius: 8, background: '#0D1117', color: '#E5E7EB', border: '1px solid #263245', padding: 10 }}
+                    style={{ width: '100%', minHeight: 140, borderRadius: 8, background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', padding: 10 }}
                   />
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
                     <button onClick={() => downloadText('txt', `${titre || 'document'}-edite.txt`, [workingText, notes].filter(Boolean).join('\n\n'))} style={btnStyle}>Export TXT</button>
@@ -155,9 +208,9 @@ export default function ContentViewer({ type, src, titre, onClose }) {
             height: '100%', flexDirection: 'column', gap: 24,
           }}>
             <div style={{ fontSize: '4rem' }}>🎧</div>
-            <h2 style={{ color: '#F0F2F5', textAlign: 'center', maxWidth: 480, padding: '0 24px' }}>{titre}</h2>
+            <h2 style={{ color: 'var(--color-text-primary)', textAlign: 'center', maxWidth: 480, padding: '0 24px' }}>{titre}</h2>
             <Equalizer size="xl" />
-            <div style={{ color: '#8B95A5', fontSize: '0.9rem', textAlign: 'center' }}>
+            <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', textAlign: 'center' }}>
               Le lecteur en bas de page vous permet de continuer l'écoute en naviguant
             </div>
             <div style={{ display: 'flex', gap: 12 }}>

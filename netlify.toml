@@ -2,6 +2,11 @@
   command = "npm run build"
   publish = "dist"
 
+# Allow Netlify Image CDN to resize/compress images from Supabase Storage
+# (used by senticket-og edge function to serve <300KB OG images for WhatsApp/Facebook)
+[images]
+  remote_images = ["https://nqpfmnsecjhqxuvfkqhi\\.supabase\\.co/.*"]
+
 # Désactive le secrets scanner Netlify pour les variables VITE_* qui sont
 # publiques par design (injectées dans le bundle JS côté client).
 # Sans ça, Netlify masque les valeurs avec ***** dans dist/, cassant l'app.
@@ -9,6 +14,321 @@
   SECRETS_SCAN_OMIT_KEYS = "VITE_GROQ_API_KEY,VITE_GROQ_MODEL,VITE_GROQ_BASE_URL,VITE_GROK_LLAMA_API_KEY,VITE_GEMINI_API_KEY,VITE_GEMINI_MODEL,VITE_OPENAI_API_KEY,VITE_DEEPSEEK_API_KEY,VITE_MOONSHOT_API_KEY,VITE_XAI_API_KEY,VITE_REPLICATE_API_TOKEN,VITE_ELEVENLABS_API_KEY,VITE_ELEVEN_KEY,VITE_PAYDUNYA_MASTER_KEY,VITE_PAYDUNYA_PRIVATE_KEY,VITE_PAYDUNYA_TOKEN,VITE_PAYDUNYA_MODE,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_VAPID_PUBLIC_KEY"
   VITE_SUPABASE_URL = "https://nqpfmnsecjhqxuvfkqhi.supabase.co"
   VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno"
+
+[[edge_functions]]
+  path = "/*"
+  function = "domain-redirect"
+
+[[edge_functions]]
+  path = "/outils/senticket"
+  function = "senticket-og"
+
+# tools-og handles all tool pages + main routes with tool-specific OG metadata.
+# It also covers place-ouvrier / espace-ouvrier / recrute-moi-sn as static defaults
+# (senticket-og continues to serve dynamic event OG for senticket).
+[[edge_functions]]
+  path = "/"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/cv"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/lettre"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/business-plan"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/pitch"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/facture"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/analyse-cv"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/finance"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/juridique"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/comptable"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/rh"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/immobilier"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/consultant"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/infographie-pro"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/photo-studio-pro"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/audio-studio-elite"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/studio-visuel-pro"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/image-pro"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/qr-code-pro"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/pro-card-elite"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/dictionnaire-elite"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/translator-elite"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/abawi-ia"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/exegetika"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/sante"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abavie"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/abspacegps"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/abzone"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/maxavis"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/tontine"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/autoroute"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/editeur-pro"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/smart-word-editor"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/smart-office"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/recrute-moi-sn"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/place-ouvrier"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/outils/espace-ouvrier"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/news"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/digital"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/academy"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/store"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi360"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi-pay"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/plans"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/boutique-sante"
+  function = "tools-og"
+
+# ── Dynamic routes (slug/id) — tools-og fetches real data from Supabase ───────
+[[edge_functions]]
+  path = "/news/*"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/digital/*"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/academy/*"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/podcasts"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/podcasts/*"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/store/*"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/boutique-sante/*"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/maxavis/*"
+  function = "tools-og"
+
+# ── Missing static routes ─────────────────────────────────────────────────────
+[[edge_functions]]
+  path = "/outils/format-converter"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi360/crm"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi360/planification"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi360/statistiques"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi360/marketing"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/arkel-up-center"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/clair"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/abawi-bank"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/a-propos"
+  function = "tools-og"
+
+[[edge_functions]]
+  path = "/.netlify/edge-functions/pharmacies-open-now"
+  function = "pharmacies-open-now"
+
+[[edge_functions]]
+  path = "/.netlify/edge-functions/places-nearby"
+  function = "places-nearby"
+
+[functions."replicate-generate"]
+  timeout = 26
+
+[functions."replicate-image-pro"]
+  timeout = 26
+
+[functions."auto-publish-marketing"]
+  schedule = "*/10 * * * *"
+
+[functions."auto-publish-news"]
+  schedule = "0 */3 * * *"
+
+# Variables disponibles pour TOUTES les Netlify functions au runtime
+[functions]
+  node_bundler = "esbuild"
+  [functions.job-bot-scheduled]
+    schedule = "0 */3 * * *"
+  [functions.event-bot-scheduled]
+    schedule = "0 */6 * * *"
+
+[context.production.environment]
+  SUPABASE_URL = "https://nqpfmnsecjhqxuvfkqhi.supabase.co"
+  SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno"
+
+[[redirects]]
+  from = "https://abawi-portal.com/*"
+  to = "https://abawi.app/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.abawi-portal.com/*"
+  to = "https://abawi.app/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.abawi.app/*"
+  to = "https://abawi.app/:splat"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/*"
@@ -18,6 +338,29 @@
 # ──────────────────────────────────────────────────────────────────────────────
 # Security & performance headers
 # ──────────────────────────────────────────────────────────────────────────────
+
+# HTML pages (index.html, prerendered product pages) — no-cache so Google always
+# gets fresh content and React hydrates on the current bundle.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Prerendered product pages — short public cache (10min) with CDN revalidation
+[[headers]]
+  for = "/digital/*"
+  [headers.values]
+    Cache-Control = "public, max-age=600, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/academy/*"
+  [headers.values]
+    Cache-Control = "public, max-age=600, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/podcasts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=600, stale-while-revalidate=86400"
 
 # Defaults applied to every route. These are safe defaults that do NOT enforce
 # a Content-Security-Policy yet (CSP belongs to security hardening — priority
@@ -64,6 +407,32 @@
   for = "*.svg"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/og-tools/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# OG banners (WebP) — generated at build time, content-hashed by slug → 1 year immutable
+[[headers]]
+  for = "/og/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Vary = "Accept"
+
+# All other WebP images — long cache but refreshable
+[[headers]]
+  for = "*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+    Vary = "Accept"
+
+# AVIF images — same long cache
+[[headers]]
+  for = "*.avif"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+    Vary = "Accept"
 
 # Service worker MUST NOT be cached — otherwise PWA updates never land.
 [[headers]]

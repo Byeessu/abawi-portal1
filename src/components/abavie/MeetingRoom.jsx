@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -32,7 +32,7 @@ export default function MeetingRoom({ roomId, isVideo = true, onClose }) {
 
   useEffect(() => {
     if (!roomId) return;
-    const link = `${window.location.origin}/abavie?meeting=${roomId}`;
+    const link = `${window.location.origin}/abtalk?meeting=${roomId}`;
     setJoinLink(link);
     startLocalStream();
     joinRoom();
@@ -41,6 +41,7 @@ export default function MeetingRoom({ roomId, isVideo = true, onClose }) {
       clearInterval(interval);
       leaveRoom();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
   useEffect(() => {

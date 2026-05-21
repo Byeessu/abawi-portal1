@@ -293,15 +293,16 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  border: 1px solid transparent;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
 .tool-tab:hover {
-  border-color: var(--border);
-  color: var(--text-primary);
+  border-color: var(--accent3);
+  color: var(--accent3);
+  background: color-mix(in srgb, var(--accent3) 8%, var(--bg-card));
 }
 
 .tool-tab.active {
@@ -419,7 +420,7 @@
 
 /* Elite Container */
 .elite-container {
-  max-width: min(1200px, 96vw);
+  max-width: min(1400px, 96vw);
   margin: 0 auto;
   padding: clamp(12px, 2vw, 20px);
 }

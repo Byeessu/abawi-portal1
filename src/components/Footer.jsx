@@ -1,4 +1,4 @@
-import logo from '../assets/logo-abawi-opt.png'
+import logo from '/logo.svg'
 import './Footer.css'
 import { Link } from 'react-router-dom'
 
@@ -8,8 +8,8 @@ function Footer() {
       <div className="footer-inner">
         <div className="footer-grid">
           <div className="footer-col">
-            <img src={logo} alt="ABAWI" height="36" width="36" className="footer-logo" />
-            <h4 className="footer-heading footer-heading--gold">ABAWI Digital</h4>
+            <img src={logo} alt="ABAWI" height="36" className="footer-logo" />
+            <h4 className="footer-heading" style={{ color: '#4CAF50' }}>ABAWI Digital</h4>
             <ul>
               <li><Link to="/digital">Tous les guides</Link></li>
               <li><Link to="/digital">Marketing Digital</Link></li>
@@ -38,6 +38,17 @@ function Footer() {
               <li><Link to="/news">Télécoms</Link></li>
               <li><Link to="/news">Matières premières</Link></li>
               <li><Link to="/news">Géopolitique</Link></li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h4 className="footer-heading footer-heading--green">Solutions Business</h4>
+            <ul>
+              <li><Link to="/offres-commerciales">Offres commerciales</Link></li>
+              <li><Link to="/catalogue">Catalogue produits</Link></li>
+              <li><Link to="/presentation">Présentation ABAWI</Link></li>
+              <li><Link to="/store">Store IT</Link></li>
+              <li><Link to="/abavie">Abavie Santé</Link></li>
             </ul>
           </div>
 
@@ -71,6 +82,7 @@ function Footer() {
         <div className="footer-bottom">
           <p>&copy; 2026 ABAWI SN. Tous droits réservés.</p>
           <div className="footer-bottom-links">
+            <Link to="/docs">Aide & Documentation</Link>
             <Link to="/a-propos">À propos</Link>
             <Link to="/mentions-legales">Mentions légales</Link>
             <Link to="/cgu">CGU</Link>

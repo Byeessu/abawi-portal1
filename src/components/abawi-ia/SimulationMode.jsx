@@ -1,10 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
+import { useAuth } from '../../context/AuthContext'
+import { useFreeToolQuota } from '../../hooks/useFreeToolQuota'
+import FreeToolPaywall from '../../components/FreeToolPaywall'
 
-export default function SimulationMode() {
+export default function SimulationMode({ language = 'fr' } = {}) {
+  const { membre } = useAuth()
+  const quota = useFreeToolQuota('abawi_ia', {
+    anonymousLimit: 5, memberLimit: 10, membre, creditType: 'abawi_ia',
+  })
+  const [showPaywall, setShowPaywall] = useState(false)
+
   const [type, setType] = useState('');
   const [context, setContext] = useState('');
   const [messages, setMessages] = useState([]);
@@ -14,7 +23,7 @@ export default function SimulationMode() {
   const systemMsgRef = useRef(null);
   const bottomRef = useRef(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // NOTE: pas de scroll auto — fenêtre stable.
 
   const SIMULATIONS = [
     { id: 'entretien', label: "👔 Entretien d'embauche", desc: "L'IA joue le recruteur" },
@@ -25,13 +34,29 @@ export default function SimulationMode() {
     { id: 'mediation', label: '⚖️ Médiation conflit', desc: 'Résolvez un conflit RH' },
   ];
 
+  async function checkAccessThen() {
+    if (quota.quotaAvailable) {
+      quota.recordUse()
+      return true
+    }
+    if (quota.canUseCredits) {
+      const result = await quota.debitCredits()
+      if (result.ok) return true
+    }
+    setShowPaywall(true)
+    return false
+  }
+
   async function startSimulation() {
+    if (!type) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setStarted(true);
     setLoading(true);
     const sim = SIMULATIONS.find(s => s.id === type);
     const sys = {
       role: 'system',
-      content: buildSystemPrompt({
+      content: buildSystemPrompt({ language,
         role: `formateur senior ABAWI spécialiste de la simulation : ${sim?.label}`,
         includeStyle: false,
         extra: `RÔLE SIMULATION : ${sim?.label}
@@ -57,8 +82,10 @@ RÈGLES DE JEU :
   }
 
   async function sendMessage() {
-    if (!input.trim()) return;
-    const userMsg = { role: 'user', content: input };
+    if (!input.trim() || loading) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
+    const userMsg = { role: 'user', content: input.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
@@ -118,6 +145,19 @@ RÈGLES DE JEU :
         <button onClick={sendMessage} disabled={!input.trim() || loading} style={{ padding: '12px 18px', borderRadius: '10px', background: 'linear-gradient(135deg, #06B6D4, #0891B2)', border: 'none', color: '#fff', cursor: 'pointer' }}>→</button>
       </div>
       <button onClick={() => { setStarted(false); setMessages([]); setType('') }} style={{ marginTop: '10px', padding: '6px 14px', borderRadius: '8px', background: 'none', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem', fontFamily: 'Outfit,sans-serif' }}>← Choisir une autre simulation</button>
+
+      {showPaywall && (
+        <FreeToolPaywall
+          toolName="Simulation Professionnelle"
+          usedToday={quota.usedToday}
+          limit={quota.limit}
+          membre={membre}
+          creditCost={quota.creditCost}
+          soldeCredits={quota.soldeCredits}
+          upgradeAction="generate"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
     </div>
   );
 }

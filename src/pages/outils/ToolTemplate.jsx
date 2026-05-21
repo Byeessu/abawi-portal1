@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { canAccess } from '../../lib/permissions';
 
@@ -8,9 +8,9 @@ const ToolTemplate = ({ toolName, children, requiredPlan }) => {
 
   useEffect(() => {
     if (membre && requiredPlan) {
-      setAccessGranted(canAccess(membre, requiredPlan));
+      Promise.resolve().then(() => setAccessGranted(canAccess(membre, requiredPlan)));
     } else {
-      setAccessGranted(true);
+      Promise.resolve().then(() => setAccessGranted(true));
     }
   }, [membre, requiredPlan]);
 

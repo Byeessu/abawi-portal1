@@ -27,7 +27,7 @@ function lsLoad(toolId) {
 
 function lsSave(toolId, entries) {
   // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-  try { localStorage.setItem(lsKey(toolId), JSON.stringify(entries)) } catch {}
+  try { localStorage.setItem(lsKey(toolId), JSON.stringify(entries)) } catch { /* ignore */ }
 }
 
 export function useWorkspace(toolId) {

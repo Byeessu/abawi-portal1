@@ -120,7 +120,7 @@ export async function getOrExtractPdf(productId, pdfUrl) {
       }
     }
   // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-  } catch {}
+  } catch { /* ignore */ }
 
   // Extract from PDF
   const result = await extractPdfContent(pdfUrl)

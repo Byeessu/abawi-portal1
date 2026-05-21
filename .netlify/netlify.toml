@@ -4,6 +4,7 @@ headersOrigin = "config"
 redirectsOrigin = "config"
 
 [build]
+edge_functions = "/Users/mac/Documents/Projects/abawi-portal1/netlify/edge-functions"
 publish = "/Users/mac/Documents/Projects/abawi-portal1/dist"
 publishOrigin = "config"
 commandOrigin = "config"
@@ -14,6 +15,8 @@ functions = "/Users/mac/Documents/Projects/abawi-portal1/netlify/functions"
 SECRETS_SCAN_OMIT_KEYS = "VITE_GROQ_API_KEY,VITE_GROQ_MODEL,VITE_GROQ_BASE_URL,VITE_GROK_LLAMA_API_KEY,VITE_GEMINI_API_KEY,VITE_GEMINI_MODEL,VITE_OPENAI_API_KEY,VITE_DEEPSEEK_API_KEY,VITE_MOONSHOT_API_KEY,VITE_XAI_API_KEY,VITE_REPLICATE_API_TOKEN,VITE_ELEVENLABS_API_KEY,VITE_ELEVEN_KEY,VITE_PAYDUNYA_MASTER_KEY,VITE_PAYDUNYA_PRIVATE_KEY,VITE_PAYDUNYA_TOKEN,VITE_PAYDUNYA_MODE,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_VAPID_PUBLIC_KEY"
 VITE_SUPABASE_URL = "https://nqpfmnsecjhqxuvfkqhi.supabase.co"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno"
+SUPABASE_URL = "https://nqpfmnsecjhqxuvfkqhi.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno"
 
 [build.processing]
 
@@ -27,15 +30,329 @@ VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 [build.services]
 
+[images]
+remote_images = ["https://nqpfmnsecjhqxuvfkqhi\\.supabase\\.co/.*"]
+
+[[edge_functions]]
+path = "/*"
+function = "domain-redirect"
+
+[[edge_functions]]
+path = "/outils/senticket"
+function = "senticket-og"
+
+[[edge_functions]]
+path = "/"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/cv"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/lettre"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/business-plan"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/pitch"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/facture"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/analyse-cv"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/finance"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/juridique"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/comptable"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/rh"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/immobilier"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/consultant"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/infographie-pro"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/photo-studio-pro"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/audio-studio-elite"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/studio-visuel-pro"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/image-pro"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/qr-code-pro"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/pro-card-elite"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/dictionnaire-elite"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/translator-elite"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/abawi-ia"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/exegetika"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/sante"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abavie"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/abspacegps"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/abzone"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/maxavis"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/tontine"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/autoroute"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/editeur-pro"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/smart-word-editor"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/smart-office"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/recrute-moi-sn"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/place-ouvrier"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/espace-ouvrier"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/news"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/digital"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/academy"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/store"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi360"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi-pay"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/plans"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/boutique-sante"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/news/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/digital/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/academy/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/podcasts"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/podcasts/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/store/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/boutique-sante/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/maxavis/*"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/outils/format-converter"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi360/crm"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi360/planification"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi360/statistiques"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi360/marketing"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/arkel-up-center"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/clair"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/abawi-bank"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/a-propos"
+function = "tools-og"
+
+[[edge_functions]]
+path = "/.netlify/edge-functions/pharmacies-open-now"
+function = "pharmacies-open-now"
+
+[[edge_functions]]
+path = "/.netlify/edge-functions/places-nearby"
+function = "places-nearby"
+
 [functions]
 
+[functions.replicate-generate]
+timeout = 26.0
+
+[functions.replicate-image-pro]
+timeout = 26.0
+
+[functions.auto-publish-marketing]
+schedule = "*/10 * * * *"
+
+[functions.auto-publish-news]
+schedule = "0 */3 * * *"
+
+[functions.job-bot-scheduled]
+schedule = "0 */3 * * *"
+
+[functions.event-bot-scheduled]
+schedule = "0 */6 * * *"
+
 [functions."*"]
+node_bundler = "esbuild"
 
 [[plugins]]
 origin = "ui"
 package = "@netlify/plugin-lighthouse"
 
 [plugins.inputs]
+
+[[headers]]
+for = "/*.html"
+
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+for = "/digital/*"
+
+[headers.values]
+Cache-Control = "public, max-age=600, stale-while-revalidate=86400"
+
+[[headers]]
+for = "/academy/*"
+
+[headers.values]
+Cache-Control = "public, max-age=600, stale-while-revalidate=86400"
+
+[[headers]]
+for = "/podcasts/*"
+
+[headers.values]
+Cache-Control = "public, max-age=600, stale-while-revalidate=86400"
 
 [[headers]]
 for = "/*"
@@ -79,6 +396,33 @@ for = "*.svg"
 Cache-Control = "public, max-age=2592000"
 
 [[headers]]
+for = "/og-tools/*"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/og/*.webp"
+
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept"
+
+[[headers]]
+for = "*.webp"
+
+[headers.values]
+Cache-Control = "public, max-age=2592000"
+Vary = "Accept"
+
+[[headers]]
+for = "*.avif"
+
+[headers.values]
+Cache-Control = "public, max-age=2592000"
+Vary = "Accept"
+
+[[headers]]
 for = "/sw.js"
 
 [headers.values]
@@ -102,6 +446,42 @@ for = "/*"
 
 [headers.values]
 Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io https://browser.sentry-cdn.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdn.jsdelivr.net https://*.ingest.sentry.io https://*.sentry.io https://plausible.io https://*.supabase.co wss://*.supabase.co https://app.paydunya.com https://api.paydunya.com https://api.groq.com https://api.anthropic.com https://api.elevenlabs.io https://api.openai.com https://api.replicate.com https://api.x.ai https://generativelanguage.googleapis.com https://api.deepseek.com https://api.moonshot.cn https://api.open-meteo.com https://*.tts.speech.microsoft.com; frame-src https://app.paydunya.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self' https://app.paydunya.com;"
+
+[[redirects]]
+from = "https://abawi-portal.com/*"
+to = "https://abawi.app/:splat"
+status = 301.0
+force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "https://www.abawi-portal.com/*"
+to = "https://abawi.app/:splat"
+status = 301.0
+force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
+
+[[redirects]]
+from = "https://www.abawi.app/*"
+to = "https://abawi.app/:splat"
+status = 301.0
+force = true
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
 
 [[redirects]]
 from = "/*"

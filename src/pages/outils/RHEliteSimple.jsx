@@ -10,6 +10,8 @@ import { useToolAccess } from '../../hooks/useToolAccess'
 import { callGroq as groqCall } from '../../lib/groqClient'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolHero from '../../components/ToolHero'
 import RichDoc from '../../components/RichDoc'
 
 const RH_SYSTEM = `Tu es un DRH expert spécialisé en droit du travail sénégalais et OHADA, gestion des ressources humaines en Afrique de l'Ouest. Tu rédiges des documents RH professionnels, conformes au Code du Travail sénégalais, à la Convention Collective Nationale Interprofessionnelle (CCNI) et aux barèmes IPRES/CSS en vigueur.
@@ -296,7 +298,10 @@ export default function RHEliteSimple() {
         description="Générez fiches de poste, contrats CDI/CDD, procédures disciplinaires, organigrammes conformes au Code du travail sénégalais et CCNI. Export PDF pro."
         keywords="RH Sénégal, contrat CDI, contrat CDD, fiche de poste, procédure disciplinaire, organigramme, code du travail sénégalais, CCNI, IPRES, CSS"
         type="article"
-      />
+       image="/og-tools/rh.jpg"/>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="RH Élite"
         icon="👥"
@@ -322,82 +327,17 @@ export default function RHEliteSimple() {
           'Utilisez la grille salariale pour négocier ou recruter au juste prix',
         ]}
       />
-      {/* Élite Header */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #3B82F6, #2563EB)', 
-        padding: '40px', 
-        borderRadius: '20px', 
-        marginBottom: '32px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ 
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(240,180,41,0.2) 0%, transparent 70%)',
-          borderRadius: '50%',
-          transform: 'translate(50%, -50%)'
-        }} />
-        <h1 style={{ 
-          color: '#FFFFFF', 
-          fontSize: '3rem', 
-          fontWeight: '900',
-          margin: '0 0 16px 0',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          RH Élite
-        </h1>
-        <p style={{ 
-          color: '#DBEAFE', 
-          fontSize: '1.2rem',
-          margin: 0,
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Gestion RH avancée avec conformité OHADA et Code Travail Sénégal
-        </p>
-        <div style={{ 
-          marginTop: '24px',
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? 8 Modules RH
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Conformité OHADA
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Calcul Paie SN
-          </div>
-        </div>
-      </div>
+      <ToolHero
+        icon="👥"
+        badge="Ressources Humaines · Sénégal"
+        title="RH"
+        titleAccent="Élite"
+        subtitle="Contrats CDI/CDD, fiches de poste, bulletins de paie, évaluation 360° — Code du travail sénégalais."
+        gradient="linear-gradient(135deg, #1e1b4b 0%, #3730a3 45%, #4f46e5 100%)"
+        glowColor="rgba(79,70,229,0.4)"
+        accentColor="#A5B4FC"
+        stats={[['📋','8 Modules RH'],['⚖️','Code Travail SN'],['💰','Paie CNSS/IPRES'],['🎯','Éval 360°']]}
+      />
 
       {/* Élite Navigation */}
       <div style={{
@@ -595,7 +535,7 @@ export default function RHEliteSimple() {
                   style={{
                     width: '100%',
                     padding: 12,
-                    background: '#1E293B',
+                    background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
                     borderRadius: 8,
                     color: 'var(--text-primary)',
@@ -614,7 +554,7 @@ export default function RHEliteSimple() {
                   style={{
                     width: '100%',
                     padding: 12,
-                    background: '#1E293B',
+                    background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
                     borderRadius: 8,
                     color: 'var(--text-primary)',
@@ -633,7 +573,7 @@ export default function RHEliteSimple() {
                   style={{
                     width: '100%',
                     padding: 12,
-                    background: '#1E293B',
+                    background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
                     borderRadius: 8,
                     color: 'var(--text-primary)',
@@ -651,7 +591,7 @@ export default function RHEliteSimple() {
                   style={{
                     width: '100%',
                     padding: 12,
-                    background: '#1E293B',
+                    background: 'var(--bg-card)',
                     border: '1px solid var(--border)',
                     borderRadius: 8,
                     color: 'var(--text-primary)',
@@ -861,7 +801,7 @@ export default function RHEliteSimple() {
                 </div>
               </div>
               
-              <div style={{ marginTop: 24, padding: 20, background: '#1E293B', borderRadius: 12 }}>
+              <div style={{ marginTop: 24, padding: 20, background: 'var(--bg-card)', borderRadius: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                   <div>
                     <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Salaire brut estimé</div>
@@ -906,7 +846,7 @@ export default function RHEliteSimple() {
                 alignItems: 'center', 
                 marginBottom: 20,
                 padding: '16px 20px',
-                background: '#1E293B',
+                background: 'var(--bg-card)',
                 borderRadius: 12
               }}>
                 <h3 style={{ color: 'var(--text-primary)', margin: 0 }}>Document RH Élite Généré</h3>

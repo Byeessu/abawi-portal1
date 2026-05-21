@@ -43,7 +43,7 @@ const TOOL_TONE = {
   'dictionnaire':  'blue',
   'smart-office':  'purple',
   'exegetika':     'teal',
-  'sante':         'red',
+  'abavie':        'green',
   'autoroute':     'orange',
   'digital':       'gold',
   'academy':       'green',
@@ -57,10 +57,21 @@ const TOOL_TONE = {
   'marketing':     'pink',
   'abawi360':      'purple',
   'abawi-plus':    'gold',
-  'abawi-pay':     'amber',
+  'abawi-pay':     'gold',
   'tontine':       'emerald',
   'maxavis':       'blue',
+  'procardElite':  'gold',
+  'qrcodepro':     'dark',
   'senticket':     'purple',
+  'recrutemoisn':  'blue',
+  'espaceouvrier': 'amber',
+  'placeouvrier':    'amber',
+  'format-converter':'blue',
+  'audio-studio': 'cyan',
+  'image-pro': 'purple',
+  'abzone':     'cyan',
+  'abspacegps': 'orange',
+  'abschool':    'emerald',
 }
 
 function Frame({ id, tone = 'gold', children, withRing = true, withGlow = true }) {
@@ -245,11 +256,21 @@ function Lib({ name, id, tone }) {
     case 'abawi-ia':
       return (
         <g>
-          <path d="M16 5l1.6 4.6L22 11l-4.4 1.4L16 17l-1.6-4.6L10 11l4.4-1.4z" fill={g} />
-          <circle cx="22.5" cy="20" r="1.5" fill={p.mid} />
-          <circle cx="9.5" cy="22" r="1.2" fill={p.mid} opacity="0.7" />
-          <circle cx="20" cy="25" r="0.9" fill={p.mid} opacity="0.5" />
-          <path d="M16 17v8" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.5" strokeDasharray="2 2" />
+          {/* Ampoule IA — corps */}
+          <path d="M12 20.5c0-2.2.8-3.5 1.5-4.5C12.3 14.8 11 12.8 11 11c0-3.3 2.2-6 5-6s5 2.7 5 6c0 1.8-1.3 3.8-2.5 5 .7 1 1.5 2.3 1.5 4.5"
+            fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" strokeLinecap="round" />
+          {/* Socle */}
+          <path d="M12.5 21h7M13 23h6M14 25h4"
+            stroke={s} strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.8" />
+          {/* Filament lumineux — cerveau IA */}
+          <path d="M14.5 17.5c.3-.8 1-1.3 1.5-1.3s1.2.5 1.5 1.3"
+            stroke={g} strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          {/* Étincelles IA — haut gauche */}
+          <path d="M8 7l1.2 3 3 .8-2.2 2 .8 3-2.8-1.6-2.8 1.6.8-3-2.2-2 3-.8z"
+            fill={g} opacity="0.85" />
+          {/* Point brillant coin haut droit */}
+          <circle cx="24" cy="7" r="1.5" fill={g} />
+          <circle cx="27" cy="11" r="0.9" fill={p.mid} opacity="0.7" />
         </g>
       )
     case 'abawi-ia-vocal':
@@ -368,11 +389,17 @@ function Lib({ name, id, tone }) {
     case 'crm':
       return (
         <g>
-          <circle cx="11" cy="11" r="3" fill={g} />
-          <circle cx="22" cy="14" r="2.4" fill="none" stroke={s} strokeWidth="1.4" />
-          <circle cx="11" cy="22" r="2.4" fill="none" stroke={s} strokeWidth="1.4" />
-          <circle cx="22" cy="23" r="2" fill="none" stroke={s} strokeWidth="1.3" />
-          <path d="M14 11h5M11 14v5M14 22h5M21 16l1 5" stroke={p.mid} strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.6" />
+          {/* Hub central — client principal */}
+          <circle cx="16" cy="16" r="3.8" fill={g} />
+          <circle cx="16" cy="16" r="1.6" fill="#fff" fillOpacity="0.55" />
+          {/* 4 contacts satellites — réseau client */}
+          <circle cx="16" cy="6"  r="2.2" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.3" />
+          <circle cx="26" cy="16" r="2.2" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.3" />
+          <circle cx="16" cy="26" r="2.2" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.3" />
+          <circle cx="6"  cy="16" r="2.2" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.3" />
+          {/* Connexions hub → satellites */}
+          <path d="M16 10.2v2.2M19.8 16h2.2M16 21.8v-2.2M12.2 16H10"
+            stroke={p.mid} strokeWidth="1.3" strokeLinecap="round" strokeOpacity="0.7" />
         </g>
       )
     case 'studio-pro':
@@ -441,20 +468,27 @@ function Lib({ name, id, tone }) {
     case 'tontine':
       return (
         <g>
-          {/* Cercle extérieur - cycle de la tontine */}
-          <circle cx="16" cy="16" r="11" fill="none" stroke={s} strokeWidth="1.5" />
-          {/* Flèches circulaires */}
-          <path d="M16 5a11 11 0 0 1 9.5 5.5" stroke={g} strokeWidth="2" strokeLinecap="round" fill="none" />
-          <path d="M16 27a11 11 0 0 1-9.5-5.5" stroke={g} strokeWidth="2" strokeLinecap="round" fill="none" />
-          {/* Personnes/membres */}
-          <circle cx="16" cy="10" r="2.5" fill={g} />
-          <circle cx="10" cy="18" r="2.5" fill={g} />
-          <circle cx="22" cy="18" r="2.5" fill={g} />
-          {/* Lignes de connexion */}
-          <path d="M16 12.5v2M12.5 17l1.5-1M19.5 17l-1.5-1" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" />
-          {/* Pièce de monnaie au centre */}
-          <circle cx="16" cy="17" r="3" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1" />
-          <text x="16" y="18.5" textAnchor="middle" fontSize="4" fill={p.to} fontWeight="bold">CFA</text>
+          {/* Anneau rotatif — cycle de la tontine */}
+          <circle cx="16" cy="16" r="10.5" fill="none" stroke={s} strokeWidth="1.3" strokeOpacity="0.55" />
+          {/* Arc clockwise haut-droite */}
+          <path d="M16 5.5a10.5 10.5 0 0 1 9.1 5.25" stroke={g} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          {/* Pointe de flèche */}
+          <path d="M25.1 10.75 L27 9.5 L24.5 8.8" stroke={g} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          {/* Arc clockwise bas */}
+          <path d="M25.1 21.25a10.5 10.5 0 0 1-18.2 0" stroke={g} strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          {/* 3 membres (nœuds du cercle) */}
+          <circle cx="16"   cy="5.5"  r="2.3" fill={g} />
+          <circle cx="25.1" cy="21.2" r="2.3" fill={g} />
+          <circle cx="6.9"  cy="21.2" r="2.3" fill={g} />
+          {/* Lignes de connexion vers centre */}
+          <path d="M16 7.8v4.5M22.9 19.6l-3.8-2.1M9.1 19.6l3.8-2.1"
+            stroke={p.mid} strokeWidth="1.1" strokeLinecap="round" strokeOpacity="0.55" />
+          {/* Pièce centrale — double cercle géométrique */}
+          <circle cx="16" cy="16" r="3.8" fill={`url(#${id}-bg)`} stroke={g} strokeWidth="1.3" />
+          <circle cx="16" cy="16" r="1.8" fill={g} />
+          {/* Motif monnaie — 4 rayons courts */}
+          <path d="M16 13.2v1.2M16 18.8v-1.2M13.2 16h1.2M18.8 16h-1.2"
+            stroke={p.from} strokeWidth="0.9" strokeLinecap="round" />
         </g>
       )
     case 'maxavis':
@@ -476,22 +510,204 @@ function Lib({ name, id, tone }) {
           <path d="M23 24l1.5 1.5L27 22" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </g>
       )
+    case 'recrutemoisn':
+      return (
+        <g>
+          {/* Candidat — tête */}
+          <circle cx="11" cy="10" r="3.2" fill={g} />
+          {/* Corps/silhouette */}
+          <path d="M5.5 23c0-4.5 2.5-6.5 5.5-6.5s5.5 2 5.5 6.5"
+            fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" strokeLinecap="round" />
+          {/* Loupe — recruteur qui cherche */}
+          <circle cx="22" cy="19" r="5.2" fill="none" stroke={s} strokeWidth="1.7" />
+          <path d="M25.7 22.7l3 3" stroke={s} strokeWidth="1.9" strokeLinecap="round" />
+          {/* Étoile talent dans la loupe */}
+          <path d="M22 15.5l.75 2.1 2.2.1-1.75 1.3.65 2.1-1.85-1.2-1.85 1.2.65-2.1-1.75-1.3 2.2-.1z"
+            fill={g} />
+        </g>
+      )
+    case 'procardElite':
+      return (
+        <g>
+          {/* Card shape */}
+          <rect x="4" y="8" width="24" height="16" rx="3" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.5" />
+          {/* Chip */}
+          <rect x="7" y="12" width="6" height="5" rx="1.2" fill={g} opacity="0.9" />
+          <path d="M7 14h6M9 12v5" stroke={`url(#${id}-bg)`} strokeWidth="0.7" />
+          {/* Contactless waves */}
+          <path d="M16 11.5c1.5 1 2 2.5 2 4s-.5 3-2 4" stroke={g} strokeWidth="1.3" fill="none" strokeLinecap="round" />
+          <path d="M18.5 10c2 1.5 3 3.5 3 6s-1 4.5-3 6" stroke={g} strokeWidth="1.3" fill="none" strokeLinecap="round" opacity="0.6" />
+          {/* Name line */}
+          <rect x="7" y="19.5" width="8" height="1.5" rx="0.75" fill={p.mid} />
+          <rect x="7" y="22" width="5" height="1" rx="0.5" fill={p.mid} opacity="0.6" />
+        </g>
+      )
+    case 'qrcodepro':
+      return (
+        <g>
+          {/* QR code outline */}
+          <rect x="6" y="6" width="10" height="10" rx="2" fill="none" stroke={s} strokeWidth="1.8" />
+          <rect x="8.5" y="8.5" width="5" height="5" rx="1" fill={g} />
+          <rect x="18" y="6" width="8" height="8" rx="2" fill="none" stroke={s} strokeWidth="1.8" />
+          <rect x="20" y="8" width="4" height="4" rx="0.8" fill={g} />
+          <rect x="6" y="18" width="8" height="8" rx="2" fill="none" stroke={s} strokeWidth="1.8" />
+          <rect x="8" y="20" width="4" height="4" rx="0.8" fill={g} />
+          {/* Dot grid bottom-right */}
+          <rect x="18" y="18" width="2.5" height="2.5" rx="0.6" fill={p.mid} />
+          <rect x="21.5" y="18" width="2.5" height="2.5" rx="0.6" fill={p.mid} />
+          <rect x="18" y="21.5" width="2.5" height="2.5" rx="0.6" fill={p.mid} />
+          <rect x="21.5" y="21.5" width="2.5" height="2.5" rx="0.6" fill={g} />
+          <rect x="18" y="25" width="2.5" height="2.5" rx="0.6" fill={p.mid} />
+          <rect x="21.5" y="25" width="2.5" height="2.5" rx="0.6" fill={g} />
+          <rect x="25" y="21.5" width="2.5" height="2.5" rx="0.6" fill={p.mid} />
+          <rect x="25" y="25" width="2.5" height="2.5" rx="0.6" fill={g} />
+        </g>
+      )
+    case 'espaceouvrier':
+      return (
+        <g>
+          {/* Casque de chantier */}
+          <path d="M8 19h16v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2z" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          <path d="M8 19c0-5 2-9 8-9s8 4 8 9" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          <path d="M5 19h22" stroke={s} strokeWidth="1.4" strokeLinecap="round" />
+          {/* Visière */}
+          <path d="M10 13h12" stroke={g} strokeWidth="1.6" strokeLinecap="round" />
+          {/* Boulon central */}
+          <circle cx="16" cy="10" r="1.2" fill={g} />
+          {/* Silhouettes communauté */}
+          <circle cx="9" cy="25.5" r="1.4" fill={p.mid} />
+          <circle cx="16" cy="25.5" r="1.4" fill={g} />
+          <circle cx="23" cy="25.5" r="1.4" fill={p.mid} />
+          <path d="M7 28c0-1.2.9-1.8 2-1.8s2 .6 2 1.8M14 28c0-1.2.9-1.8 2-1.8s2 .6 2 1.8M21 28c0-1.2.9-1.8 2-1.8s2 .6 2 1.8" stroke={s} strokeWidth="1" strokeLinecap="round" fill="none" />
+        </g>
+      )
+    case 'placeouvrier':
+      return (
+        <g>
+          {/* Pin de localisation */}
+          <path d="M16 4c-4.8 0-8.5 3.7-8.5 8.5 0 6.2 8.5 15.5 8.5 15.5s8.5-9.3 8.5-15.5C24.5 7.7 20.8 4 16 4z"
+            fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          {/* Personne (candidat) à l'intérieur du pin */}
+          <circle cx="16" cy="11" r="2.2" fill={g} />
+          <path d="M12.5 17c0-2 1.6-3.2 3.5-3.2s3.5 1.2 3.5 3.2" stroke={g} strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          {/* Étoile disponibilité */}
+          <circle cx="22" cy="7" r="2.2" fill={g} />
+          <path d="M22 5.5l.4 1.2h1.2l-1 .7.4 1.2-1-.7-1 .7.4-1.2-1-.7h1.2z" fill="#fff" fillOpacity="0.9" />
+        </g>
+      )
+    case 'abschool':
+      return (
+        <g>
+          {/* Chapeau de graduation / toque */}
+          <path d="M16 4L4 11l12 7 12-7-12-7z" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" strokeLinejoin="round" />
+          <path d="M16 18v6" stroke={s} strokeWidth="1.4" strokeLinecap="round" />
+          {/* Pompon */}
+          <circle cx="16" cy="21" r="1.6" fill={g} />
+          {/* Livre ouvert sous le chapeau */}
+          <path d="M7 24c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0" stroke={s} strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          <path d="M7 24v4c3-1.5 6-1.5 9 0v-4M16 24v4c3-1.5 6-1.5 9 0v-4" stroke={s} strokeWidth="1.2" strokeLinecap="round" fill="none" />
+          {/* Pages */}
+          <line x1="16" y1="24" x2="16" y2="28.5" stroke={s} strokeWidth="1" />
+        </g>
+      )
     case 'senticket':
       return (
         <g>
-          {/* Ticket recto */}
-          <rect x="5" y="8" width="22" height="16" rx="3" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.5" />
-          <path d="M5 16h22" stroke={s} strokeWidth="1.2" strokeDasharray="3 2" />
-          {/* QR simplifié */}
-          <rect x="8" y="11" width="7" height="7" rx="1" fill={g} />
-          <path d="M10 13h3M10 15h3" stroke="#fff" strokeWidth="1" strokeLinecap="round" />
-          {/* Texte infos */}
-          <path d="M17 12h8M17 15h6M17 18h8" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.6" />
-          {/* Scallops bordures ticket */}
-          <circle cx="5" cy="12" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
-          <circle cx="5" cy="20" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
-          <circle cx="27" cy="12" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
-          <circle cx="27" cy="20" r="1.5" fill="var(--bg-primary, #0a0a0a)" />
+          {/* Corps du ticket */}
+          <rect x="3" y="9" width="26" height="14" rx="2.5"
+            fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          {/* Perforation stub (ligne verticale à x=13.5) */}
+          <circle cx="13.5" cy="9" r="2.2" fill="var(--bg-primary, #0a0a0a)" />
+          <circle cx="13.5" cy="23" r="2.2" fill="var(--bg-primary, #0a0a0a)" />
+          <path d="M13.5 11.2v9.6" stroke={s} strokeWidth="0.9"
+            strokeDasharray="2 1.5" strokeLinecap="round" />
+          {/* Étoile dans le stub gauche — centre (8.5, 16), R=3, r=1.3 */}
+          <path d="M8.5 13 L9.3 15 L11.4 15.1 L9.7 16.4 L10.3 18.5 L8.5 17.3 L6.7 18.5 L7.3 16.4 L5.6 15.1 L7.7 15 Z"
+            fill={g} />
+          {/* Section principale — infos événement */}
+          {/* Titre (ligne épaisse) */}
+          <rect x="15.5" y="11.5" width="10.5" height="1.8" rx="0.9"
+            fill={s} fillOpacity="0.85" />
+          {/* Date / lieu */}
+          <path d="M15.5 15.5h8M15.5 18.5h9.5" stroke={p.mid}
+            strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.65" />
+          {/* Badge validé — coin bas-droit */}
+          <circle cx="26" cy="21.5" r="2" fill={g} />
+          <path d="M25.1 21.5l.65.65 1.3-1.3" stroke="#fff"
+            strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+      )
+    case 'format-converter':
+      return (
+        <g>
+          <rect x="5" y="7" width="9" height="12" rx="2" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          <path d="M8 10h4M8 12.5h3M8 15h4" stroke={p.mid} strokeWidth="1" strokeLinecap="round" />
+          <path d="M15.5 13.5l2.5-2 2.5 2" stroke={g} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          <path d="M18 11.5v5" stroke={g} strokeWidth="1.8" strokeLinecap="round" />
+          <rect x="18" y="13" width="9" height="12" rx="2" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          <path d="M20 16h4M20 18.5h3M20 21h4" stroke={g} strokeWidth="1" strokeLinecap="round" />
+        </g>
+      )
+    case 'abzone':
+      return (
+        <g>
+          {/* Zone boundary — ring dashed */}
+          <circle cx="16" cy="16" r="11" fill="none" stroke={g}
+            strokeWidth="1.5" strokeDasharray="3 2.5" />
+          {/* Zone intérieure */}
+          <circle cx="16" cy="16" r="7" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.3" />
+          {/* Marqueur central */}
+          <circle cx="16" cy="16" r="2.8" fill={g} />
+          <circle cx="16" cy="16" r="1.1" fill="#fff" fillOpacity="0.75" />
+          {/* Réticule */}
+          <path d="M6 16h6M20 16h6M16 6v6M16 20v6"
+            stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" strokeOpacity="0.55" />
+        </g>
+      )
+    case 'abspacegps':
+      return (
+        <g>
+          {/* Satellite signal */}
+          <path d="M6 6l4 4" stroke={g} strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M4 10a9 9 0 0 1 9-9" stroke={g} strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path d="M6 14a6 6 0 0 1 6-6" stroke={p.mid} strokeWidth="1.3" fill="none" strokeLinecap="round" strokeOpacity="0.7" />
+          {/* Pin GPS */}
+          <path d="M17 12c-4 0-7 3-7 7 0 5 7 11 7 11s7-6 7-11c0-4-3-7-7-7z"
+            fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.4" />
+          <circle cx="17" cy="19" r="2.5" fill={g} />
+          <circle cx="17" cy="19" r="1" fill="#fff" fillOpacity="0.7" />
+        </g>
+      )
+    case 'abavie':
+      // Coordonnées copiées verbatim depuis /abavie-logo.svg (viewBox 48×48 portion)
+      // transform : scale 0.48 + translate pour centrer dans 32×32
+      return (
+        <g transform="translate(4.3, 4.3) scale(0.48)">
+          <rect x="18" y="8"  width="12" height="32" rx="3" fill={g} />
+          <rect x="8"  y="18" width="32" height="12" rx="3" fill={g} />
+          <circle cx="24" cy="24" r="5" fill="#fff" fillOpacity="0.75" />
+        </g>
+      )
+    case 'audio-studio':
+      return (
+        <g>
+          <rect x="8" y="6" width="16" height="20" rx="3" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.5" />
+          <rect x="11" y="9" width="10" height="14" rx="2" fill="none" stroke={s} strokeWidth="1.3" />
+          <path d="M12 13h8M12 16h6M12 19h4" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
+          <circle cx="22" cy="10" r="2" fill={g} />
+          <path d="M5 14a3 3 0 003 3M5 18a3 3 0 003 3" stroke={g} strokeWidth="1.4" strokeLinecap="round" fill="none" />
+          <path d="M27 14a3 3 0 01-3 3M27 18a3 3 0 01-3 3" stroke={g} strokeWidth="1.4" strokeLinecap="round" fill="none" />
+        </g>
+      )
+    case 'image-pro':
+      return (
+        <g>
+          <rect x="5" y="7" width="22" height="18" rx="3" fill={`url(#${id}-bg)`} stroke={s} strokeWidth="1.5" />
+          <circle cx="16" cy="16" r="5" fill="none" stroke={s} strokeWidth="1.4" />
+          <circle cx="16" cy="16" r="2.5" fill={g} />
+          <path d="M5 16h6M21 16h6" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+          <path d="M16 7v4M16 21v4" stroke={p.mid} strokeWidth="1.2" strokeLinecap="round" opacity="0.5" />
+          <path d="M7 7l2-2M25 7l-2-2M7 25l2 2M25 25l-2 2" stroke={g} strokeWidth="1.3" strokeLinecap="round" />
         </g>
       )
     default:

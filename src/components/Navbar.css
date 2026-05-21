@@ -88,40 +88,46 @@
   text-decoration: none;
   flex-shrink: 0;
   isolation: isolate;
-  padding: 4px;
+  padding: 1px;
   border-radius: 50%;
 }
 .nav-logo-ring {
   position: absolute;
-  inset: 0;
+  inset: -2px;
   border-radius: 50%;
   background: conic-gradient(from 0deg,
-    var(--gold) 0deg,
-    var(--green) 120deg,
-    #8B5CF6 240deg,
-    var(--gold) 360deg);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  animation: navLogoSpin 6s linear infinite;
+    var(--green) 0deg,
+    var(--gold) 120deg,
+    var(--accent) 240deg,
+    var(--green) 360deg);
+  opacity: 1;
+  animation: navLogoSpin 5s linear infinite;
   z-index: 0;
-  filter: blur(2px);
+  filter: blur(0.3px);
+  transition: opacity 0.3s ease;
 }
-.nav-logo:hover .nav-logo-ring { opacity: 0.55; }
-.nav-logo-img {
+.nav-logo:hover .nav-logo-ring { opacity: 1; filter: blur(0px); }
+.nav-logo-img-wrap {
   position: relative;
   z-index: 1;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.nav-logo-img {
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid color-mix(in srgb, var(--gold) 35%, transparent);
-  background: var(--bg-primary);
+  object-position: center;
+  transform: scale(1.18);
+  background: #1a1a1a;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
-  box-shadow: 0 4px 14px rgba(240, 180, 41, 0.2);
 }
 .nav-logo:hover .nav-logo-img {
-  transform: scale(1.06) rotate(-2deg);
-  box-shadow: 0 8px 22px rgba(240, 180, 41, 0.45);
+  transform: scale(0.97) rotate(-2deg);
 }
 @keyframes navLogoSpin {
   to { transform: rotate(360deg); }
@@ -131,12 +137,147 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex: 1;
-  margin-left: 18px;
+  margin-left: 10px;
   min-width: 0;
-  overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  overflow: visible;
+  position: relative;
+}
+
+/* Hidden measurement strip — renders all items out-of-flow to measure natural widths */
+.nav-measure-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+  white-space: nowrap;
+}
+.nav-measure-strip > span {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* === Overflow wrap + button === */
+.nav-overflow-wrap {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+.nav-overflow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--nav-icon-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+}
+.nav-overflow-btn:hover,
+.nav-overflow-btn.is-open {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.nav-overflow-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 900;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+/* Backdrop (closes dropdown on outside click) */
+.nav-overflow-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 997;
+}
+
+/* Dropdown panel */
+.nav-overflow-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 998;
+  min-width: 210px;
+  max-width: 290px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow:
+    0 20px 54px rgba(0,0,0,0.32),
+    0 4px 16px rgba(0,0,0,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: navDropdownIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes navDropdownIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.nav-overflow-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 13px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.nav-overflow-item:hover {
+  background: var(--nav-link-hover-bg);
+  color: var(--text-primary);
+}
+.nav-overflow-item.is-active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-weight: 700;
+}
+.nav-overflow-item-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-overflow-active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-left: 8px;
 }
 
 .nav-link {
@@ -272,10 +413,10 @@ html.light .nav-chip-plus {
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
-  color: #f5c518;
-  border: 1px solid rgba(245, 197, 24, 0.45);
-  background: linear-gradient(135deg, rgba(245,197,24,0.18), rgba(0,200,83,0.12));
-  box-shadow: 0 4px 14px rgba(245,197,24,0.15);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(0,200,83,0.12));
+  box-shadow: 0 4px 14px rgba(212,175,55,0.15);
   font-size: 0.78rem;
   font-weight: 900;
   transition: all 0.2s ease;
@@ -321,26 +462,103 @@ html.light .nav-chip-abavie {
 html.light .nav-chip-abavie.is-active {
   color: #fff;
 }
+
+/* === Clair chip — sky-blue === */
+.nav-chip-abtalk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(14,165,233,0.4);
+  background: linear-gradient(135deg, rgba(14,165,233,0.16), rgba(2,132,199,0.08));
+  color: #38BDF8;
+  font-size: 0.72rem;
+  font-weight: 900;
+  transition: all 0.2s ease;
+}
+.nav-chip-abtalk:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(14,165,233,0.28);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(14,165,233,0.30), rgba(2,132,199,0.18));
+  border-color: rgba(14,165,233,0.65);
+}
+.nav-chip-abtalk.is-active {
+  color: #fff;
+  background: rgba(14,165,233,0.22);
+  border-color: rgba(14,165,233,0.85);
+  box-shadow: 0 0 0 2px rgba(14,165,233,0.15), 0 0 12px rgba(14,165,233,0.22);
+}
+[data-mode="light"] .nav-chip-abtalk,
+html.light .nav-chip-abtalk {
+  color: #0369A1;
+  background: linear-gradient(135deg, rgba(14,165,233,0.14), rgba(2,132,199,0.06));
+  border-color: rgba(14,165,233,0.3);
+}
+[data-mode="light"] .nav-chip-abtalk.is-active,
+html.light .nav-chip-abtalk.is-active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(14,165,233,0.85), rgba(2,132,199,0.75));
+}
 .nav-chip-pay:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(245,197,24,0.28);
+  box-shadow: 0 8px 22px rgba(212,175,55,0.28);
   color: #fff;
-  background: linear-gradient(135deg, rgba(245,197,24,0.32), rgba(0,200,83,0.22));
+  background: linear-gradient(135deg, rgba(212,175,55,0.32), rgba(0,200,83,0.22));
 }
 .nav-chip-pay.is-active {
   color: #fff;
-  background: rgba(245,197,24,0.25);
-  border-color: rgba(245,197,24,0.85);
-  box-shadow: 0 0 0 2px rgba(245,197,24,0.18);
+  background: rgba(212,175,55,0.25);
+  border-color: rgba(212,175,55,0.85);
+  box-shadow: 0 0 0 2px rgba(212,175,55,0.18);
 }
 [data-mode="light"] .nav-chip-pay,
 html.light .nav-chip-pay {
-  color: #8a5a06;
+  color: #7a5a10;
 }
 [data-mode="light"] .nav-chip-pay.is-active,
 html.light .nav-chip-pay.is-active {
   color: #1a1a2e;
 }
+
+/* === Arkel Up chip — violet premium === */
+.nav-chip-arkel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  margin-left: 4px;
+  padding: 0;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: #4CAF50;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.78rem;
+  font-weight: 900;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: visible;
+}
+.nav-chip-arkel::after {
+  content: '';
+  position: absolute;
+  inset: -40% -90%;
+  background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
+  animation: navArkelShine 5s linear infinite;
+  pointer-events: none;
+}
+@keyframes navArkelShine {
+  from { transform: translateX(-55%); }
+  to   { transform: translateX(55%); }
+}
+.nav-chip-arkel:hover { opacity: 0.82; transform: translateY(-1px); }
+.nav-chip-arkel.is-active { opacity: 1; }
+[data-mode="light"] .nav-chip-arkel,
+html.light .nav-chip-arkel { color: #2E7D32; }
 
 /* === Admin chip === */
 .nav-chip-admin {
@@ -366,7 +584,8 @@ html.light .nav-chip-pay.is-active {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
   margin-left: auto;
 }
 .nav-icon-btn {
@@ -435,55 +654,101 @@ html.light .nav-chip-pay.is-active {
 /* === Profile avatar ===
    box-shadow avec var(--nav-bg) crée un anneau de séparation visible
    sur n'importe quel fond, y compris fond or/jaune.              */
-.nav-profile {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+/* Pill avatar + prénom */
+.nav-profile-pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: 0.78rem;
-  letter-spacing: 0.5px;
+  gap: 8px;
+  padding: 3px 14px 3px 3px;
+  border-radius: 999px;
   text-decoration: none;
   border: 2px solid transparent;
   position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   flex-shrink: 0;
+  white-space: nowrap;
 }
-.nav-profile:hover { transform: translateY(-1px) scale(1.05); }
+.nav-profile-pill:hover { transform: translateY(-1px) scale(1.03); }
 
-/* Admin — or fixe + texte noir garanti + anneau de séparation */
-.nav-profile--admin {
+.nav-profile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 0.76rem;
+  letter-spacing: 0.5px;
+  background: rgba(255,255,255,0.18);
+  flex-shrink: 0;
+}
+
+.nav-profile-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Admin — or */
+.nav-profile-pill.nav-profile--admin {
   background: linear-gradient(135deg, #F0B429, #d99e10);
   color: #0d0800;
   box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 3px 10px rgba(0,0,0,0.35);
   border-color: rgba(240,180,41,0.6);
 }
-.nav-profile--admin:hover {
+.nav-profile-pill.nav-profile--admin:hover {
   box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 6px 16px rgba(240,180,41,0.45);
 }
 
-/* Member — violet + texte blanc + anneau de séparation */
-.nav-profile--member {
+/* Member — violet */
+.nav-profile-pill.nav-profile--member {
   background: linear-gradient(135deg, #7C3AED, #6025C8);
   color: #fff;
   box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 3px 10px rgba(0,0,0,0.3);
   border-color: rgba(124,58,237,0.5);
 }
-.nav-profile--member:hover {
+.nav-profile-pill.nav-profile--member:hover {
   box-shadow: 0 0 0 2px var(--nav-bg, var(--bg-primary)), 0 6px 16px rgba(124,58,237,0.4);
 }
 
-/* Bouton connexion — or fixe + texte très sombre + bordure visible
-   Indépendant de var(--gold) pour garantir la lisibilité sur thème or. */
+.nav-profile {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  background: transparent;
+  border: 2px solid var(--accent, #c9a84c);
+  color: var(--accent, #c9a84c);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+.nav-profile:hover {
+  transform: translateY(-1px) scale(1.08);
+  background: color-mix(in srgb, var(--accent, #c9a84c) 12%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #c9a84c) 20%, transparent);
+}
+
+/* Bouton connexion — or fixe + texte tres sombre + bordure visible
+   Independant de var(--gold) pour garantir la lisibilite sur theme or. */
+a.nav-login,
 .nav-login {
   padding: 8px 18px;
   border-radius: 999px;
   font-weight: 800;
   font-size: 0.84rem;
   background: linear-gradient(135deg, #F0B429, #d99e10);
-  color: #0d0800;
+  color: #0d0800 !important;
   text-decoration: none;
   border: 1.5px solid rgba(240,180,41,0.7);
   box-shadow:
@@ -494,12 +759,14 @@ html.light .nav-chip-pay.is-active {
   white-space: nowrap;
   flex-shrink: 0;
 }
+a.nav-login:hover,
 .nav-login:hover {
   transform: translateY(-1px);
   box-shadow:
     0 0 0 2px var(--nav-bg, var(--bg-primary)),
     0 10px 24px -6px rgba(200,130,0,0.75);
   background: linear-gradient(135deg, #FFCA40, #F0B429);
+  color: #0d0800 !important;
 }
 
 /* === Burger === */
@@ -538,16 +805,35 @@ html.light .nav-chip-pay.is-active {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* === Responsive / overflow ===
-   1. CSS media query : fallback garanti sous 1280px
-   2. .nav-overflow (JS) : se déclenche dès que le dernier lien
-      dépasse le bord droit du conteneur (détection via getBoundingClientRect)   */
-@media (max-width: 1280px) {
+/* === Responsive ===
+   Burger + full mobile drawer → only on narrow phones (< 640px).
+   On wider screens the priority-overflow dropdown handles items that don't fit. */
+@media (max-width: 640px) {
   .nav-burger { display: inline-flex; }
-  .nav-links { display: none; }
+  .nav-links  { display: none; }
+  /* Pas de séparateur quand les liens sont cachés */
+  .nav-actions { border-left: none; padding-left: 0; margin-left: auto; }
 }
-.nav-overflow .nav-burger { display: inline-flex; }
-.nav-overflow .nav-links { display: none; }
+
+/* ── Compact right actions on small phones ── */
+@media (max-width: 480px) {
+  .nav-inner { padding: 0 12px; gap: 8px; }
+  .nav-logo-img-wrap { width: 34px; height: 34px; }
+  .nav-icon-btn { width: 32px; height: 32px; border-radius: 8px; }
+  .nav-search-btn { width: 32px; height: 32px; }
+  .nav-profile { width: 32px; height: 32px; font-size: 0.72rem; }
+  .nav-profile-pill { padding: 2px 10px 2px 2px; gap: 6px; }
+  .nav-profile-avatar { width: 28px; height: 28px; font-size: 0.68rem; }
+  .nav-profile-name { font-size: 0.76rem; max-width: 64px; }
+  .nav-login { padding: 6px 12px; font-size: 0.78rem; }
+  .nav-burger { width: 34px; height: 34px; border-radius: 10px; }
+}
+
+/* ── Hide non-essential actions on very small screens (≤360px) ── */
+@media (max-width: 360px) {
+  .nav-inner { padding: 0 10px; gap: 6px; }
+  .nav-search-btn { display: none; }
+}
 
 /* === Mobile drawer === */
 .nav-drawer-overlay {
@@ -565,9 +851,11 @@ html.light .nav-chip-pay.is-active {
 }
 .nav-drawer {
   position: fixed;
-  top: 0; right: 0; bottom: 0;
+  top: 0; right: 0;
   z-index: 1000;
   width: min(340px, 90vw);
+  height: 100dvh;
+  max-height: 100dvh;
   background: var(--bg-card);
   border-left: 1px solid var(--border);
   box-shadow: -16px 0 50px rgba(0, 0, 0, 0.55);
@@ -598,7 +886,10 @@ html.light .nav-chip-pay.is-active {
 .nav-drawer-body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 14px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
   display: grid;
   gap: 6px;
 }
@@ -707,6 +998,71 @@ html.light .nav-chip-pay.is-active {
 @media (max-width: 760px) {
   .nav-annah-rescue { bottom: 90px; left: 8px; }
   .nav-annah-icon-btn { width: 34px; height: 34px; }
+}
+
+/* ── Light mode — texte visible dans dropdown overflow + drawer ── */
+html.light .nav-overflow-dropdown,
+[data-mode="light"] .nav-overflow-dropdown {
+  background: #FFFFFF;
+  border-color: #E2E4EA;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.10), 0 4px 14px rgba(0,0,0,0.07), inset 0 1px 0 rgba(0,0,0,0.04);
+}
+html.light .nav-overflow-item,
+[data-mode="light"] .nav-overflow-item {
+  color: #374151;
+}
+html.light .nav-overflow-item:hover,
+[data-mode="light"] .nav-overflow-item:hover {
+  color: #111827;
+  background: rgba(0,0,0,0.05);
+}
+html.light .nav-overflow-item.is-active,
+[data-mode="light"] .nav-overflow-item.is-active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+html.light .nav-overflow-badge,
+[data-mode="light"] .nav-overflow-badge {
+  color: var(--accent);
+}
+html.light .nav-overflow-btn,
+[data-mode="light"] .nav-overflow-btn {
+  color: #374151;
+}
+/* Drawer mobile */
+html.light .nav-drawer,
+[data-mode="light"] .nav-drawer {
+  background: #FFFFFF;
+}
+html.light .nav-drawer-link,
+[data-mode="light"] .nav-drawer-link {
+  color: #374151;
+  border-color: #E2E4EA;
+  background: #FAFAFA;
+}
+html.light .nav-drawer-link:hover,
+[data-mode="light"] .nav-drawer-link:hover {
+  color: #111827;
+  background: #F0F0F0;
+}
+html.light .nav-drawer-title,
+[data-mode="light"] .nav-drawer-title {
+  color: #111827;
+}
+html.light .nav-drawer-section-title,
+[data-mode="light"] .nav-drawer-section-title {
+  color: #6B7280;
+}
+/* Search button text */
+html.light .nav-search-btn,
+[data-mode="light"] .nav-search-btn {
+  color: #374151;
+}
+html.light .nav-search-kbd,
+[data-mode="light"] .nav-search-kbd {
+  color: #6B7280;
+  background: rgba(0,0,0,0.05);
+  border-color: #D1D5DB;
 }
 
 /* === Reduced motion === */

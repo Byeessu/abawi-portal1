@@ -29,16 +29,16 @@ function MentionsLegales() {
 
       <section className="ml-section">
         <h2>Conditions d'utilisation</h2>
-        <p>En accédant au site abawi-portal.netlify.app, vous acceptez les presentes conditions.</p>
+        <p>En accédant au site abawi.app, vous acceptez les presentes conditions.</p>
         <p>Les contenus proposes (guides PDF, fascicules, podcasts) sont protégés par le droit d'auteur. Toute reproduction non autorisee est interdite.</p>
         <p>Les prix affiches sont en Francs CFA (FCFA/XOF) et peuvent etre modifiés sans préavis.</p>
       </section>
 
       <section className="ml-section">
-        <h2>Politique de remboursément</h2>
+        <h2>Politique de remboursement</h2>
         <p><strong>Guides et fascicules :</strong> Satisfait ou remboursé sous 7 jours apres l'achat. Envoyez votre demande a contact@abawi.sn ou sur WhatsApp.</p>
         <p><strong>Abonnement ABAWI+ :</strong> Annulable a tout moment. Le mois en cours n'est pas remboursé. L'annulation prend effet a la fin du mois paye.</p>
-        <p><strong>Packs :</strong> Memes conditions que les guides individuels — remboursément sous 7 jours.</p>
+        <p><strong>Packs :</strong> Memes conditions que les guides individuels — remboursement sous 7 jours.</p>
       </section>
 
       <section className="ml-section">
@@ -54,7 +54,7 @@ function MentionsLegales() {
         <p>Le site utilise des cookies techniques nécessaires à son fonctionnement (thème, préférences, session). Aucun cookie publicitaire n'est utilisé.</p>
       </section>
 
-      <p className="ml-footer">Dernière mise à jour : avril 2026 — ABAWI SN, Dakar, Sénégal</p>
+      <p className="ml-footer">Dernière mise à jour : mai 2026 — ABAWI SN, Dakar, Sénégal</p>
     </main>
   )
 }

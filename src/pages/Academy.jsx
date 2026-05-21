@@ -6,8 +6,83 @@ import PaymentFlow from '../components/PaymentFlow'
 import ParticlesBackground from '../components/premium/ParticlesBackground'
 import GradientOrbs from '../components/premium/GradientOrbs'
 import SectionReveal from '../components/premium/SectionReveal'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CoverImage } from '../components/CoverImage'
+import { useProductAccess } from '../hooks/useProductAccess'
+import AccessBadge from '../components/AccessBadge'
+import SEO from '../components/SEO'
+
+function FasciculeCardActions({ fascicule, setModal, toggleFav, isFav }) {
+  const access = useProductAccess(fascicule, 'fascicule')
+  const navigate = useNavigate()
+
+  const prix = fascicule.prix
+  const prixBarre = fascicule.prix_barre
+  const eco = prixBarre ? Math.round((1 - prix / prixBarre) * 100) : 0
+
+  if (access.canUnlock && access.type !== 'none') {
+    return (
+      <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <AccessBadge accessType={access.type} daysLeft={access.daysLeft} plan={access.plan} compact />
+        <Link
+          to={`/academy/${slugify(fascicule.titre)}`}
+          style={{
+            width: '100%', padding: '9px', borderRadius: 10, border: 'none',
+            background: 'linear-gradient(135deg, #18A84A, #16a34a)',
+            color: '#fff', fontWeight: 800, fontSize: '0.82rem',
+            textDecoration: 'none', textAlign: 'center', display: 'block',
+            cursor: 'pointer',
+          }}
+        >
+          📖 Consulter
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '1rem', fontWeight: 800, color: '#F0B429' }}>{formatPrix(prix)}</span>
+        {prixBarre > 0 && <span style={{ fontSize: '0.75rem', color: '#8B95A5', textDecoration: 'line-through' }}>{formatPrix(prixBarre)}</span>}
+        {eco > 0 && <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#18A84A', background: 'rgba(24,168,74,0.12)', borderRadius: 6, padding: '2px 6px' }}>-{eco}%</span>}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          className="ac-pack-cta"
+          style={{ flex: 1, padding: '8px', fontSize: '0.82rem' }}
+          onClick={() => setModal(fascicule)}
+        >
+          Acheter
+        </button>
+        {access.creditCost > 0 && (
+          <button
+            onClick={() => navigate(`/academy/${slugify(fascicule.titre)}`)}
+            style={{
+              padding: '8px 12px', borderRadius: 10, border: '1px solid #8B5CF6',
+              background: 'rgba(139,92,246,0.08)', color: '#8B5CF6',
+              fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
+            }}
+            title={`Débloquer avec ${access.creditCost} crédits`}
+          >
+            🔓 {access.creditCost}c
+          </button>
+        )}
+        <button
+          onClick={() => toggleFav(fascicule.id)}
+          style={{
+            background: 'transparent', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)', padding: '7px 9px',
+            cursor: 'pointer', fontSize: '1rem',
+            color: isFav ? '#ef4444' : 'var(--text-muted)',
+          }}
+        >
+          {isFav ? '♥' : '♡'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function Academy() {
   const [serie, setSerie] = useState('Toutes')
@@ -23,6 +98,12 @@ function Academy() {
 
   return (
     <main className="ac-page">
+      <SEO
+        title="Académie ABAWI — Préparation Bac & Cours Sénégal"
+        description="Révisez votre Bac avec les meilleurs fascicules ABAWI : maths, sciences, français, anglais — adapté au programme sénégalais. S1, S2, L."
+        keywords="Bac Sénégal, révision Bac, fascicules Sénégal, cours S1 S2 L, académie, préparation examen, ABAWI Academy"
+        image="/abawi-og-banner.jpg"
+      />
       <PaymentFlow product={modal} onClose={() => setModal(null)} />
 
       {/* HERO */}
@@ -106,30 +187,7 @@ function Academy() {
               {f.chapitre > 0 && (
                 <span className="ac-card-pages">Chapitre {f.chapitre}</span>
               )}
-              <div className="ac-card-pricing">
-                <span className="ac-card-prix">{formatPrix(f.prix)}</span>
-                {f.prix_barre && <span className="ac-card-barre">{formatPrix(f.prix_barre)}</span>}
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button
-                  className="ac-pack-cta"
-                  style={{ flex: 1, padding: '8px', fontSize: '0.82rem' }}
-                  onClick={() => setModal(f)}
-                >
-                  Commander
-                </button>
-                <button
-                  onClick={() => toggleFav(f.id)}
-                  style={{
-                    background: 'transparent', border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-sm)', padding: '8px 10px',
-                    cursor: 'pointer', fontSize: '1rem',
-                    color: isFav(f.id) ? '#ef4444' : 'var(--text-muted)',
-                  }}
-                >
-                  {isFav(f.id) ? '♥' : '♡'}
-                </button>
-              </div>
+              <FasciculeCardActions fascicule={f} setModal={setModal} toggleFav={toggleFav} isFav={isFav(f.id)} />
             </div>
           </div>
         ))}

@@ -11,6 +11,8 @@ import { useToolAccess } from '../../hooks/useToolAccess'
 import { callGroq as groqCall } from '../../lib/groqClient'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolHero from '../../components/ToolHero'
 import GestionComptablePro from './GestionComptablePro'
 import RichDoc from '../../components/RichDoc'
 
@@ -327,7 +329,10 @@ export default function ComptableEliteSimple() {
         description="Générez documents comptables SYSCOHADA conformes : journal, balance, TVA, paie, reporting. Expert-comptable virtuel OHADA pour l'Afrique de l'Ouest."
         keywords="SYSCOHADA, OHADA, comptabilité Sénégal, journal comptable, balance, TVA, paie, reporting financier, expert-comptable virtuel"
         type="article"
-      />
+       image="/og-tools/comptable.jpg"/>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="Comptable Élite"
         icon="📒"
@@ -353,82 +358,17 @@ export default function ComptableEliteSimple() {
           "Le rapport IA combine toutes les données pour produire un diagnostic financier",
         ]}
       />
-      {/* Élite Header */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #3B82F6, #2563EB)', 
-        padding: '40px', 
-        borderRadius: '20px', 
-        marginBottom: '32px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ 
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(240,180,41,0.2) 0%, transparent 70%)',
-          borderRadius: '50%',
-          transform: 'translate(50%, -50%)'
-        }} />
-        <h1 style={{ 
-          color: '#FFFFFF', 
-          fontSize: '3rem', 
-          fontWeight: '900',
-          margin: '0 0 16px 0',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Comptable Élite
-        </h1>
-        <p style={{ 
-          color: '#DBEAFE', 
-          fontSize: '1.2rem',
-          margin: 0,
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Expertise comptable SYSCOHADA avec IA et conformité OHADA
-        </p>
-        <div style={{ 
-          marginTop: '24px',
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Normes SYSCOHADA
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Comptes OHADA
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'rgba(255,255,255,0.2)', 
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? Fiscalité Sénégal
-          </div>
-        </div>
-      </div>
+      <ToolHero
+        icon="📒"
+        badge="Comptabilité · OHADA"
+        title="Comptable"
+        titleAccent="Élite"
+        subtitle="Journal SYSCOHADA, balance, TVA, paie sénégalaise, KPI comptables — export PDF & Excel."
+        gradient="linear-gradient(135deg, #064e3b 0%, #065f46 40%, #047857 100%)"
+        glowColor="rgba(4,120,87,0.4)"
+        accentColor="#6EE7B7"
+        stats={[['📋','SYSCOHADA'],['⚖️','Normes OHADA'],['💰','TVA 18%'],['🏛️','CNSS · IPRES']]}
+      />
 
       {/* Élite Navigation */}
       <div style={{
@@ -957,7 +897,7 @@ export default function ComptableEliteSimple() {
 
           {/* Section: Gestion Pro */}
           {section === 'gestion_pro' && (
-            <GestionComptablePro />
+            <GestionComptablePro onBack={() => setSection('journal')} />
           )}
 
           {/* Generated Content Display */}

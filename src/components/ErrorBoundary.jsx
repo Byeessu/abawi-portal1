@@ -168,6 +168,7 @@ export default ErrorBoundary
 /**
  * Hook HOC pour wrapper facilement les composants avec ErrorBoundary
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function withErrorBoundary(Component, options = {}) {
   return function WithErrorBoundary(props) {
     return (

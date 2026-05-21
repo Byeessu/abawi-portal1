@@ -5,10 +5,10 @@
 export function AbavieLogoSVG({ size = 32 }) {
   return (
     <img
-      src="/abawi-pay-icon.jpg"
+      src="/abawi-pay-icon.webp"
       width={size}
       height={size}
-      alt="Abavie"
+      alt="Clair"
       style={{
         display: 'block',
         objectFit: 'cover',

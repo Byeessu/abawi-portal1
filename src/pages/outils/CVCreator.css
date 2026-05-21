@@ -32,8 +32,8 @@
 
 .cv-preview { background: #fff; color: #1a1a1a; border-radius: 8px; overflow: hidden; aspect-ratio: 210/297; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
 .cv-pv-header { padding: 16px 20px; }
-.cv-pv-header h2 { font-size: 1rem; font-weight: 800; margin-bottom: 2px; }
-.cv-pv-header p { font-size: 0.72rem; }
+.cv-pv-header h2 { font-size: 1rem; font-weight: 800; margin-bottom: 2px; color: inherit !important; }
+.cv-pv-header p { font-size: 0.72rem; color: inherit !important; }
 .cv-pv-section { padding: 8px 20px; }
 .cv-pv-section h3 { font-size: 0.75rem; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -63,6 +63,14 @@
 /* Analyse CV PDF upload zone */
 .cv-pdf-upload-zone { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border: 2px dashed var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 4px; }
 .cv-pdf-upload-zone:hover { border-color: var(--gold-border); color: var(--gold); }
+
+/* Actions */
+.cv-actions { display: flex; flex-direction: column; gap: 10px; padding: 16px; }
+.cv-action-btn { width: 100%; padding: 12px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px dashed var(--border); background: rgba(255,255,255,0.04); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.cv-action-btn:hover { color: var(--gold); border-color: var(--gold-border); background: rgba(240,180,41,0.06); }
+.cv-action-btn--gold { background: linear-gradient(135deg, #F0B429, #e5a820); color: #070B0F; border: none; font-weight: 800; }
+.cv-action-btn--gold:hover { box-shadow: 0 4px 16px rgba(240,180,41,0.35); transform: translateY(-1px); color: #070B0F; }
+.cv-save-notice { font-size: 0.78rem; color: var(--green); text-align: center; margin-top: 8px; }
 
 @media (max-width: 900px) {
   .cv-layout { grid-template-columns: 1fr; }

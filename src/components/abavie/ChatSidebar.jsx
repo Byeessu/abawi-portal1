@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { AbavieLogoSVG } from './AbavieLogoSVG';
+import { AbTalkLogoSVG } from '../clair/AbTalkLogoSVG';
 import StatusViewer from './StatusViewer';
 import StatusCreator from './StatusCreator';
 import ContactsList from './ContactsList';
 import CommunitiesPanel from './CommunitiesPanel';
 import CommunityFeed from './CommunityFeed';
-import { abavieSettings } from '../../lib/abavieSettings';
+import { abTalkSettings as abavieSettings } from '../../lib/abTalkSettings';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -25,11 +26,12 @@ function initials(name) {
 }
 
 export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGlobalSearch }) {
+  const navigate = useNavigate();
   const { membre } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [users, setUsers] = useState([]);
   const [contacts, setContacts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('abavie_contacts') || 'null') || [] } catch { return [] }
+    try { return JSON.parse(localStorage.getItem('abtalk_contacts') || 'null') || [] } catch { return [] }
   });
   const [search, setSearch] = useState('');
   const [tab, setTab] = useState('all');
@@ -40,17 +42,17 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [archivedConvs, setArchivedConvs] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('abavie_archived') || '[]')) } catch { return new Set() }
+    try { return new Set(JSON.parse(localStorage.getItem('abtalk_archived') || '[]')) } catch { return new Set() }
   });
   const [mutedConvs, setMutedConvs] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('abavie_muted') || '[]')) } catch { return new Set() }
+    try { return new Set(JSON.parse(localStorage.getItem('abtalk_muted') || '[]')) } catch { return new Set() }
   });
   const [pinnedConvs, setPinnedConvs] = useState(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('abavie_pinned') || '[]')) } catch { return new Set() }
+    try { return new Set(JSON.parse(localStorage.getItem('abtalk_pinned') || '[]')) } catch { return new Set() }
   });
   const [showProfile, setShowProfile] = useState(false);
   const [e2eEnabled, setE2eEnabled] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('abavie_e2e') || 'false') } catch { return false }
+    try { return JSON.parse(localStorage.getItem('abtalk_e2e') || 'false') } catch { return false }
   });
   const [pushEnabled, setPushEnabled] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -64,6 +66,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
   const [statuses, setStatuses] = useState([]);
   const [showCommunities, setShowCommunities] = useState(false);
   const [activeCommunity, setActiveCommunity] = useState(null);
+  // Business mode: navigate to dedicated full-width page
   const csvRef = useRef(null);
   const backupFileRef = useRef(null);
 
@@ -75,6 +78,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, loadConversations)
       .subscribe();
     return () => supabase.removeChannel(channel);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membre]);
 
   // Online / offline status
@@ -114,7 +118,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
 
-    const local = JSON.parse(localStorage.getItem('abavie_statuses') || '[]')
+    const local = JSON.parse(localStorage.getItem('abtalk_statuses') || '[]')
       .filter(s => new Date(s.expires_at) > new Date());
 
     // Merge Supabase + localStorage (prefer Supabase)
@@ -131,15 +135,15 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
     const handler = () => {
       setSettings(abavieSettings.get());
     };
-    window.addEventListener('abavie-settings-change', handler);
-    return () => window.removeEventListener('abavie-settings-change', handler);
+    window.addEventListener('abtalk-settings-change', handler);
+    return () => window.removeEventListener('abtalk-settings-change', handler);
   }, []);
 
   // E2E toggle
   function toggleE2E() {
     const next = !e2eEnabled;
     setE2eEnabled(next);
-    localStorage.setItem('abavie_e2e', JSON.stringify(next));
+    localStorage.setItem('abtalk_e2e', JSON.stringify(next));
     // Generate identity key and publish if enabling
     if (next) {
       import('../../lib/abavieE2EIntegration').then(m => {
@@ -182,21 +186,21 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
     const next = new Set(archivedConvs);
     next.has(convId) ? next.delete(convId) : next.add(convId);
     setArchivedConvs(next);
-    localStorage.setItem('abavie_archived', JSON.stringify([...next]));
+    localStorage.setItem('abtalk_archived', JSON.stringify([...next]));
   }
 
   function toggleMute(convId) {
     const next = new Set(mutedConvs);
     next.has(convId) ? next.delete(convId) : next.add(convId);
     setMutedConvs(next);
-    localStorage.setItem('abavie_muted', JSON.stringify([...next]));
+    localStorage.setItem('abtalk_muted', JSON.stringify([...next]));
   }
 
   function togglePin(convId) {
     const next = new Set(pinnedConvs);
     next.has(convId) ? next.delete(convId) : next.add(convId);
     setPinnedConvs(next);
-    localStorage.setItem('abavie_pinned', JSON.stringify([...next]));
+    localStorage.setItem('abtalk_pinned', JSON.stringify([...next]));
   }
 
   async function createGroup() {
@@ -224,7 +228,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
 
   function saveContacts(cs) {
     setContacts(cs);
-    localStorage.setItem('abavie_contacts', JSON.stringify(cs));
+    localStorage.setItem('abtalk_contacts', JSON.stringify(cs));
   }
 
   function deleteContact(id) {
@@ -287,10 +291,8 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
       {/* Header */}
       <div className="abv-sidebar-header">
         <div className="abv-logo">
-          <div className="abv-logo-mark">
-            <AbavieLogoSVG size={22} color="var(--text-on-accent, #fff)" />
-          </div>
-          <span className="abv-logo-text">Ab<span>avie</span></span>
+          <AbTalkLogoSVG size={32} />
+          <span className="abv-logo-text">AbTalk</span>
         </div>
         <div className="abv-sidebar-actions">
           <button className="abv-icon-btn" title="Recherche globale" onClick={onOpenGlobalSearch}>
@@ -307,6 +309,9 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
           </button>
           <button className="abv-icon-btn" title="Nouveau message" onClick={() => { setShowNewChat(v => !v); setSearch(''); }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button className="abv-icon-btn" title="Mode Business" onClick={() => navigate('/business')}>
+            <span style={{ fontSize: 13 }}>💼</span>
           </button>
           <button className="abv-icon-btn" title="Paramètres" onClick={() => setShowProfile(v => !v)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.54 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.54 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.54a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.54 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -364,17 +369,12 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
         <div className="abv-status-bar">
           {/* My status */}
           <button className="abv-status-circle abv-status-circle--mine" onClick={() => {
-            const myStatuses = statuses.filter(s => s.user_id === membre?.id);
-            if (myStatuses.length > 0) {
-              setStatusViewerUserId(membre?.id);
-              setShowStatusViewer(true);
-            } else {
-              setShowStatusCreator(true);
-            }
+            // Toujours ouvrir le créateur — l'utilisateur peut toujours ajouter un nouveau statut
+            setShowStatusCreator(true);
           }}>
             <div className="abv-status-ring">
               <div className="abv-status-inner abv-status-inner--logo">
-                <AbavieLogoSVG size={28} />
+                <AbTalkLogoSVG size={28} />
               </div>
             </div>
             <span className="abv-status-label">+</span>
@@ -389,7 +389,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
               >
                 <div className="abv-status-ring">
                   <div className="abv-status-inner abv-status-inner--logo">
-                    <AbavieLogoSVG size={28} />
+                    <AbTalkLogoSVG size={28} />
                   </div>
                 </div>
                 <span className="abv-status-label">{s.user_name?.split(' ')[0] || 'User'}</span>
@@ -520,13 +520,13 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
           <div className="abv-profile-header">
             <button className="abv-icon-btn" onClick={() => setShowProfile(false)}>✕</button>
             <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="abv-settings-logo"><AbavieLogoSVG size={22} /></span>
+              <span className="abv-settings-logo"><AbTalkLogoSVG size={22} /></span>
               Paramètres
             </h4>
           </div>
           <div className="abv-profile-body">
             <div className="abv-profile-avatar abv-profile-avatar--abavie">
-              <AbavieLogoSVG size={48} />
+              <AbTalkLogoSVG size={48} />
             </div>
             <div className="abv-profile-name">{membre?.nom || 'Utilisateur'}</div>
             <div className="abv-profile-email">{membre?.email}</div>
@@ -560,7 +560,7 @@ export default function ChatSidebar({ activeChat, onSelectChat, hidden, onOpenGl
           <div className="abv-profile-header">
             <button className="abv-icon-btn" onClick={() => setShowSettings(false)}>←</button>
             <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="abv-settings-logo"><AbavieLogoSVG size={22} /></span>
+              <span className="abv-settings-logo"><AbTalkLogoSVG size={22} /></span>
               Paramètres
             </h4>
           </div>

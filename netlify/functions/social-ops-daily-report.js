@@ -113,5 +113,5 @@ async function triggerOpsNotify(alertPayload) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(alertPayload),
     })
-  } catch {}
+  } catch { /* ignore */ }
 }

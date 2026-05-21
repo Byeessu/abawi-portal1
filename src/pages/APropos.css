@@ -1,251 +1,516 @@
 /* =========================================================
-   A PROPOS — Responsive-first, typographie fluide
-   Breakpoints : 1280 / 1024 / 768 / 640 / 480 / 360
+   A PROPOS — Premium redesign
    ========================================================= */
 
 .ap-about {
-  max-width: var(--max-width, 1200px);
+  width: 100%;
   margin: 0 auto;
-  padding: 0 clamp(16px, 4vw, 40px) clamp(60px, 8vh, 100px);
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
-/* ── Hero ── */
-.ap-about-hero {
-  text-align: center;
-  padding: clamp(40px, 7vw, 72px) 0 clamp(32px, 5vw, 56px);
+/* ── HERO ── */
+.ap-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 60px) clamp(40px, 6vw, 72px);
 }
 
-.ap-about-title {
-  font-size: clamp(1.6rem, 5vw, 2.9rem);
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+.ap-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 400px);
+  gap: clamp(32px, 5vw, 64px);
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.ap-about-subtitle {
-  color: var(--text-secondary);
-  font-size: clamp(0.95rem, 2vw, 1.1rem);
-  margin-top: 14px;
-  max-width: 560px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
-}
-
-/* ── Sections ── */
-.ap-about-section {
-  padding: clamp(28px, 5vw, 48px) 0;
-  border-top: 1px solid var(--border);
-}
-
-.ap-about-h2 {
-  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+.ap-hero-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
   font-weight: 700;
-  margin-bottom: clamp(14px, 2.5vw, 24px);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold);
+  background: var(--gold-glow);
+  border: 1px solid var(--gold-border);
+  border-radius: 100px;
+  padding: 4px 14px;
+  margin-bottom: 20px;
+}
+
+.ap-hero-title {
+  font-size: clamp(2rem, 5.5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.ap-hero-sub {
+  font-size: clamp(0.92rem, 1.6vw, 1.05rem);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 32px;
+  padding-right: 8px;
+}
+
+.ap-hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ap-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 26px;
+  border-radius: var(--radius-md, 12px);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ap-hero-btn:hover { transform: translateY(-2px); }
+
+.ap-hero-btn--gold {
+  background: var(--gold);
+  color: #fff !important;
+  box-shadow: 0 4px 16px rgba(240, 180, 41, 0.35);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+
+.ap-hero-btn--gold:hover {
+  color: #fff !important;
+}
+
+.ap-hero-btn--outline {
+  background: transparent;
+  color: var(--text-primary) !important;
+  border: 1.5px solid var(--border);
+}
+
+.ap-hero-btn--outline:hover {
+  border-color: var(--gold-border);
+  color: var(--gold) !important;
+}
+
+.ap-hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ap-hero-stat {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ap-hero-stat-val {
+  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.ap-hero-stat-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
   line-height: 1.3;
 }
 
-.ap-about-text {
-  font-size: clamp(0.92rem, 1.8vw, 1rem);
-  color: var(--text-secondary);
-  line-height: 1.85;
-  max-width: 700px;
-}
-
-/* ── Section tag ── */
-.ap-about-section-tag {
+/* ── TAG BADGES ── */
+.ap-tag {
   display: inline-block;
-  padding: 3px 12px;
+  padding: 4px 14px;
   border-radius: 100px;
-  font-size: clamp(0.66rem, 1.4vw, 0.72rem);
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  background: var(--green-glow);
+  letter-spacing: 1.2px;
+  margin-bottom: 14px;
+}
+
+.ap-tag--gold {
+  color: var(--gold);
+  background: var(--gold-glow);
+  border: 1px solid var(--gold-border);
+}
+
+.ap-tag--green {
   color: var(--green);
+  background: var(--green-glow);
   border: 1px solid var(--green-border);
+}
+
+/* ── MISSION + VISION (split) ── */
+.ap-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 588px));
+  gap: 24px;
+  padding: clamp(40px, 6vw, 64px) clamp(20px, 5vw, 60px);
+  max-width: none;
+  margin: 0;
+  justify-content: center;
+  background: var(--bg-card);
+}
+
+.ap-split-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 18px);
+  padding: clamp(32px, 4vw, 48px);
+  border-top: 3px solid transparent;
+  min-width: 0;
+}
+
+.ap-split-card--gold { border-top-color: var(--gold); }
+.ap-split-card--green { border-top-color: var(--green); }
+
+.ap-split-h2 {
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 16px;
+}
+
+.ap-split-text {
+  font-size: clamp(0.88rem, 1.6vw, 0.95rem);
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.ap-split-text strong { color: var(--text-primary); }
+
+.ap-split-text a,
+.ap-quote-text a {
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 700;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.ap-split-text a:hover,
+.ap-quote-text a:hover {
+  border-bottom-color: var(--gold);
+}
+
+/* ── GENERIC SECTIONS ── */
+.ap-section {
+  padding: clamp(40px, 6vw, 68px) clamp(20px, 5vw, 60px);
+  border-top: 1px solid var(--border);
+  max-width: none;
+  margin: 0;
+  background: var(--bg-card);
+}
+
+.ap-section-head,
+.ap-valeurs-grid,
+.ap-quotes-grid,
+.ap-brands-grid,
+.ap-contact-grid {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ap-section--dark {
+  background: var(--bg-secondary, #0a0e14);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-left: clamp(20px, 5vw, 60px);
+  padding-right: clamp(20px, 5vw, 60px);
+}
+
+.ap-section--dark .ap-section-head,
+.ap-section--dark .ap-quotes-grid,
+.ap-section--dark .ap-effet-footer {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ap-section--last {
+  padding-bottom: 0;
+}
+
+.ap-section-head {
+  text-align: center;
+  margin-bottom: clamp(28px, 4vw, 48px);
+}
+
+.ap-section-h2 {
+  font-size: clamp(1.2rem, 2.8vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.ap-section-sub {
+  font-size: clamp(0.88rem, 1.6vw, 0.95rem);
+  color: var(--text-secondary);
+  max-width: 720px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* ── VALEURS ── */
+.ap-valeurs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.ap-valeur-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  padding: clamp(24px, 3vw, 34px);
+  transition: transform 0.25s, border-color 0.25s;
+  min-width: 0;
+}
+
+.ap-valeur-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--green-border);
+}
+
+.ap-valeur-icon {
+  font-size: 1.6rem;
+  display: block;
   margin-bottom: 12px;
 }
 
-/* ── Stats ── */
-.ap-about-stats {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: clamp(10px, 2vw, 18px);
-}
-
-.ap-about-stat {
-  text-align: center;
-  padding: clamp(16px, 3vw, 26px) clamp(8px, 1.5vw, 14px);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.ap-about-stat-val {
-  display: block;
-  font-family: var(--font-display);
-  font-size: clamp(1.2rem, 3vw, 1.6rem);
-  font-weight: 800;
-  color: var(--green);
-  margin-bottom: 6px;
-}
-
-.ap-about-stat-label {
-  font-size: clamp(0.72rem, 1.5vw, 0.82rem);
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-/* ── Brands ── */
-.ap-about-brands {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(10px, 2vw, 18px);
-}
-
-.ap-about-brand {
-  padding: clamp(16px, 3vw, 26px);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  transition: transform 0.25s, border-color 0.25s;
-}
-
-.ap-about-brand:hover { transform: translateY(-3px); }
-.ap-about-brand--gold:hover { border-color: var(--gold-border); }
-.ap-about-brand--green:hover { border-color: var(--green-border); }
-.ap-about-brand--blue:hover { border-color: rgba(59, 130, 246, 0.3); }
-
-.ap-about-brand h3 {
-  font-size: clamp(0.9rem, 1.8vw, 1rem);
+.ap-valeur-titre {
+  font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 8px;
+  color: var(--text-primary);
 }
 
-.ap-about-brand--gold h3 { color: var(--gold); }
-.ap-about-brand--green h3 { color: var(--green); }
-.ap-about-brand--blue h3 { color: #3B82F6; }
-
-.ap-about-brand p {
-  font-size: clamp(0.8rem, 1.5vw, 0.86rem);
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
-/* ── Contact ── */
-.ap-about-contact {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(12px, 2.5vw, 22px);
-}
-
-.ap-about-contact-item {
-  padding: clamp(14px, 2.5vw, 22px);
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: clamp(0.82rem, 1.6vw, 0.9rem);
+.ap-valeur-texte {
+  font-size: 0.84rem;
   color: var(--text-secondary);
   line-height: 1.65;
 }
 
-.ap-about-contact-item strong { color: var(--text-primary); }
-.ap-about-contact-item a { color: var(--green); }
+/* ── QUOTES ── */
+.ap-quotes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
 
-/* ── Valeurs ── */
-.ap-about-valeurs { display: flex; flex-direction: column; gap: clamp(12px, 2vw, 20px); }
-
-.ap-about-valeur {
-  display: flex;
-  gap: clamp(12px, 2vw, 18px);
-  padding: clamp(14px, 3vw, 22px);
+.ap-quote-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  align-items: flex-start;
+  border-radius: var(--radius-md, 12px);
+  padding: clamp(24px, 3vw, 32px);
+  margin: 0;
+  position: relative;
+  min-width: 0;
 }
 
-.ap-about-valeur-icon {
-  font-size: clamp(1.4rem, 3vw, 1.8rem);
-  flex-shrink: 0;
-  line-height: 1;
-  margin-top: 2px;
-}
-
-.ap-about-valeur-titre {
-  font-size: clamp(0.92rem, 1.8vw, 1rem);
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-
-.ap-about-valeur-texte {
-  font-size: clamp(0.82rem, 1.6vw, 0.88rem);
-  color: var(--text-secondary);
-  line-height: 1.65;
-}
-
-/* ── L'effet ABAWI ── */
-.ap-about-effet-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(10px, 2vw, 18px);
-  margin-top: 8px;
-}
-
-.ap-about-effet-card {
-  padding: clamp(16px, 3vw, 22px) clamp(16px, 3vw, 26px);
-  background: var(--bg-card);
-  border: 1px solid var(--green-border);
-  border-radius: var(--radius-md);
-  border-left: 3px solid var(--green);
-}
-
-.ap-about-effet-quote {
-  font-size: clamp(0.84rem, 1.6vw, 0.92rem);
+.ap-quote-text {
+  font-size: clamp(0.86rem, 1.5vw, 0.94rem);
   color: var(--text-secondary);
   line-height: 1.75;
   font-style: italic;
 }
 
+.ap-quote-bar {
+  width: 32px;
+  height: 3px;
+  background: var(--green);
+  border-radius: 2px;
+  margin-top: 16px;
+}
+
+.ap-effet-footer {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* ── ECOSYSTEM BRANDS ── */
+.ap-brands-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.ap-brand {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  padding: clamp(18px, 2.5vw, 26px);
+  min-width: 0;
+  text-decoration: none;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.ap-brand:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.ap-brand--gold:hover { border-color: var(--gold-border); }
+.ap-brand--green:hover { border-color: var(--green-border); }
+.ap-brand--blue:hover { border-color: rgba(59, 130, 246, 0.35); }
+.ap-brand--purple:hover { border-color: rgba(139, 92, 246, 0.35); }
+
+.ap-brand-tag {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  opacity: 0.6;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ap-brand--gold .ap-brand-tag { color: var(--gold); }
+.ap-brand--green .ap-brand-tag { color: var(--green); }
+.ap-brand--blue .ap-brand-tag { color: #3B82F6; }
+.ap-brand--purple .ap-brand-tag { color: #8B5CF6; }
+
+.ap-brand-name {
+  font-size: clamp(0.88rem, 1.6vw, 0.96rem);
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.ap-brand--gold .ap-brand-name { color: var(--gold); }
+.ap-brand--green .ap-brand-name { color: var(--green); }
+.ap-brand--blue .ap-brand-name { color: #3B82F6; }
+.ap-brand--purple .ap-brand-name { color: #8B5CF6; }
+
+.ap-brand-desc {
+  font-size: clamp(0.78rem, 1.4vw, 0.83rem);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.ap-brand-arrow {
+  margin-top: 12px;
+  font-size: 0.9rem;
+  opacity: 0.4;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.ap-brand:hover .ap-brand-arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* ── CONTACT ── */
+.ap-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.ap-contact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  padding: clamp(24px, 3vw, 36px);
+  font-size: clamp(0.86rem, 1.6vw, 0.92rem);
+  min-width: 0;
+}
+
+.ap-contact-icon {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.ap-contact-card strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.ap-contact-card span,
+.ap-contact-card a {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ap-contact-card a {
+  color: var(--green);
+  text-decoration: none;
+}
+
+.ap-contact-card a:hover { text-decoration: underline; }
+
 /* =========================================================
-   RESPONSIVE BREAKPOINTS
+   RESPONSIVE
    ========================================================= */
 
-/* ── Tablet large (≤ 1024px) ── */
-@media (max-width: 1024px) {
-  .ap-about-stats { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1400px) {
+  .ap-brands-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ── Tablet (≤ 900px) ── */
-@media (max-width: 900px) {
-  .ap-about-brands { grid-template-columns: repeat(2, 1fr); }
-  .ap-about-contact { grid-template-columns: 1fr 1fr; }
-  .ap-about-effet-cards { grid-template-columns: 1fr; }
+@media (max-width: 960px) {
+  .ap-hero-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-hero-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .ap-split {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-valeurs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-/* ── Tablet small / phablet (≤ 768px) ── */
 @media (max-width: 768px) {
-  .ap-about-stats { grid-template-columns: repeat(3, 1fr); }
-  .ap-about-contact { grid-template-columns: 1fr; }
+  .ap-brands-grid { grid-template-columns: repeat(2, 1fr); }
+  .ap-quotes-grid { grid-template-columns: 1fr; }
+  .ap-contact-grid { grid-template-columns: 1fr; }
+  .ap-hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .ap-hero { padding-left: 16px; padding-right: 16px; }
+  .ap-section { padding-left: 16px; padding-right: 16px; }
+  .ap-split { padding-left: 16px; padding-right: 16px; }
+  .ap-section--dark { padding-left: 16px; padding-right: 16px; }
 }
 
-/* ── Mobile large (≤ 640px) ── */
-@media (max-width: 640px) {
-  .ap-about-stats { grid-template-columns: repeat(2, 1fr); }
-  .ap-about-brands { grid-template-columns: 1fr; }
-  .ap-about-brand { display: flex; flex-direction: column; }
-}
+@media (max-width: 540px) {
+  .ap-valeurs-grid { grid-template-columns: 1fr; }
+  .ap-brands-grid { grid-template-columns: 1fr; }
 
-/* ── Mobile (≤ 480px) ── */
-@media (max-width: 480px) {
-  .ap-about-stats { grid-template-columns: repeat(2, 1fr); }
-  .ap-about-valeur { flex-direction: row; }
-  .ap-about-valeur-icon { font-size: 1.3rem; }
-}
-
-/* ── Small mobile (≤ 380px) ── */
-@media (max-width: 380px) {
-  .ap-about-stats { grid-template-columns: 1fr 1fr; }
-  .ap-about-title { font-size: 1.55rem; }
+  .ap-hero-title {
+    font-size: 1.85rem;
+    line-height: 1.1;
+  }
+  .ap-hero-eyebrow { font-size: 0.65rem; }
+  .ap-hero-sub { font-size: 0.88rem; }
 }

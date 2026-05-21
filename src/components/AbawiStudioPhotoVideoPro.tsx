@@ -410,6 +410,49 @@ export default function AbawiStudioPhotoVideoPro() {
     }
   };
 
+  // Capture la frame vidéo courante avec filtre + réglages appliqués
+  const captureFrame = (): HTMLCanvasElement | null => {
+    const video = videoRef.current
+    if (!video || !video.videoWidth) return null
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.filter = `brightness(${brightness / 100}) contrast(${1 + (sharpness - 50) / 200})`
+    ctx.drawImage(video, 0, 0)
+    ctx.filter = 'none'
+    applyFilter(ctx, canvas.width, canvas.height)
+    return canvas
+  }
+
+  const exportHD = () => {
+    const canvas = captureFrame()
+    if (!canvas) { alert('Activez la caméra pour exporter.'); return }
+    const a = document.createElement('a')
+    a.href = canvas.toDataURL('image/png', 1)
+    a.download = `abawi-studio-hd-${Date.now()}.png`
+    a.click()
+    if (navigator.vibrate) navigator.vibrate(60)
+  }
+
+  const shareCapture = async () => {
+    const canvas = captureFrame()
+    if (!canvas) { alert('Activez la caméra pour partager.'); return }
+    canvas.toBlob(async (blob) => {
+      if (!blob) return
+      const file = new File([blob], 'abawi-studio.png', { type: 'image/png' })
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: 'ABAWI Studio', text: 'Photo professionnelle ABAWI', files: [file] }).catch(() => {})
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = 'abawi-studio.png'; a.click()
+        URL.revokeObjectURL(url)
+      }
+    }, 'image/png', 0.95)
+  }
+
   const applyFilter = (context: CanvasRenderingContext2D, width: number, height: number) => {
     const imageData = context.getImageData(0, 0, width, height);
     const data = imageData.data;
@@ -513,7 +556,26 @@ export default function AbawiStudioPhotoVideoPro() {
               Mode Vidéo
             </Button>
 
-            <Button variant="outline" onClick={() => {}}>
+            <Button variant="outline" onClick={() => {
+              const canvas = captureFrame()
+              if (!canvas) { alert('Activez la caméra pour utiliser l\'IA.'); return }
+              const ctx = canvas.getContext('2d')!
+              const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+              const d = imgData.data
+              // Enhancement IA simulé : clarity + skin boost + vignette
+              for (let i = 0; i < d.length; i += 4) {
+                const lum = (d[i]! + d[i+1]! + d[i+2]!) / 3
+                const mask = 1 - Math.abs(lum - 128) / 140
+                d[i] = Math.min(255, d[i]! + (d[i]! - lum) * 0.4 * mask)
+                d[i+1] = Math.min(255, d[i+1]! + (d[i+1]! - lum) * 0.4 * mask)
+                d[i+2] = Math.min(255, d[i+2]! + (d[i+2]! - lum) * 0.4 * mask)
+              }
+              ctx.putImageData(imgData, 0, 0)
+              const a = document.createElement('a')
+              a.href = canvas.toDataURL('image/png')
+              a.download = `abawi-ia-${Date.now()}.png`
+              a.click()
+            }}>
               <Sparkles />
               IA Premium
             </Button>
@@ -521,12 +583,24 @@ export default function AbawiStudioPhotoVideoPro() {
         </div>
 
         {/* Main Content */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1.2fr 0.8fr', 
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'clamp(280px, 1.2fr, 900px) clamp(240px, 0.8fr, 480px)',
           gap: '24px',
           marginBottom: '32px'
-        }}>
+        }}
+          // @ts-ignore
+          className="svp-main-grid"
+        >
+          <style>{`
+            @media (max-width: 820px) {
+              .svp-main-grid { grid-template-columns: 1fr !important; }
+              .svp-cam-area { min-height: 60vw !important; }
+            }
+            @media (max-width: 500px) {
+              .svp-cam-area { min-height: 75vw !important; }
+            }
+          `}</style>
           {/* Preview Section */}
           <Card>
             <CardContent>
@@ -540,20 +614,23 @@ export default function AbawiStudioPhotoVideoPro() {
                 <Badge>Live Preview</Badge>
               </div>
 
-              <div style={{
-                borderRadius: '24px',
-                minHeight: '420px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                background: '#030814',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textAlign: 'center',
-                padding: '24px',
-                position: 'relative',
-                overflow: 'hidden'
-              }}>
+              <div
+                // @ts-ignore
+                className="svp-cam-area"
+                style={{
+                  borderRadius: '24px',
+                  minHeight: '420px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: '#030814',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  padding: isCameraActive ? '0' : '24px',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
                 {isCameraActive ? (
                   <video
                     ref={videoRef}
@@ -615,11 +692,11 @@ export default function AbawiStudioPhotoVideoPro() {
                   </Button>
                 )}
                 
-                <Button variant="outline" onClick={() => {}}>
+                <Button variant="outline" onClick={exportHD}>
                   <Download />
                   Export HD
                 </Button>
-                <Button variant="outline" onClick={() => {}}>
+                <Button variant="outline" onClick={shareCapture}>
                   <Share2 />
                   Partager
                 </Button>
@@ -663,44 +740,23 @@ export default function AbawiStudioPhotoVideoPro() {
               <CardContent style={{ paddingBottom: '24px' }}>
                 <h2 style={{ fontWeight: '600', marginBottom: '20px' }}>Réglages IA</h2>
 
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    fontSize: '14px',
-                    marginBottom: '8px'
-                  }}>
-                    <span>Luminosité</span>
-                    <span>{brightness}%</span>
+                {([
+                  { label: 'Luminosité', value: brightness, set: setBrightness, min: 30, max: 200 },
+                  { label: 'Netteté', value: sharpness, set: setSharpness, min: 0, max: 100 },
+                  { label: 'Correction visage', value: faceCorrection, set: setFaceCorrection, min: 0, max: 100 },
+                ] as const).map(s => (
+                  <div key={s.label} style={{ marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '8px' }}>
+                      <span>{s.label}</span>
+                      <span style={{ color: '#06b6d4', fontWeight: 600 }}>{s.value}%</span>
+                    </div>
+                    <input
+                      type="range" min={s.min} max={s.max} value={s.value}
+                      onChange={e => s.set(Number(e.target.value))}
+                      style={{ width: '100%', accentColor: '#06b6d4', cursor: 'pointer' }}
+                    />
                   </div>
-                  <Progress value={brightness} />
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    fontSize: '14px',
-                    marginBottom: '8px'
-                  }}>
-                    <span>Netteté</span>
-                    <span>{sharpness}%</span>
-                  </div>
-                  <Progress value={sharpness} />
-                </div>
-
-                <div>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    fontSize: '14px',
-                    marginBottom: '8px'
-                  }}>
-                    <span>Correction visage</span>
-                    <span>{faceCorrection}%</span>
-                  </div>
-                  <Progress value={faceCorrection} />
-                </div>
+                ))}
               </CardContent>
             </Card>
           </div>

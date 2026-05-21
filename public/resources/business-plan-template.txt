@@ -1,0 +1,203 @@
+═══════════════════════════════════════════════════════════════════
+  TEMPLATE BUSINESS PLAN — ABAWI 2026
+  Pour entrepreneurs de la zone UEMOA
+  Version 1.0
+═══════════════════════════════════════════════════════════════════
+
+1. EXECUTIVE SUMMARY (1 page max)
+═══════════════════════════════════════════════════════════════════
+Nom du projet      : ____________________________________________
+Secteur            : ____________________________________________
+Pays cible (UEMOA) : ____________________________________________
+Problème clé       : ____________________________________________
+Solution en 1 ligne: ____________________________________________
+
+Traction actuelle  :
+  • Utilisateurs actifs      : __________
+  • Revenus mensuels (FCFA) : __________
+  • Partenaires signés       : __________
+
+Demande de financement :
+  • Montant (FCFA)  : __________
+  • Utilisation     : ___% Produit · ___% Marketing · ___% Opérations
+  • Runway cible    : __________ mois
+
+═══════════════════════════════════════════════════════════════════
+2. LE PROBLÈME & L'OPPORTUNITÉ
+═══════════════════════════════════════════════════════════════════
+Décrivez le problème vécu par votre cible :
+_________________________________________________________________
+_________________________________________________________________
+
+Taille du marché (UEMOA / pays cible) :
+  TAM (Total Addressable)  : __________ FCFA
+  SAM (Serviceable)        : __________ FCFA
+  SOM (Obtainable 3 ans)   : __________ FCFA
+
+Tendances macro confirmant l'opportunité :
+  □ Urbanisation rapide    □ Adoption mobile   □ Inclusion financière
+  □ Jeunesse digitale      □ Réforme régulatoire  □ Autre : __________
+
+═══════════════════════════════════════════════════════════════════
+3. LA SOLUTION
+═══════════════════════════════════════════════════════════════════
+Description du produit/service :
+_________________________________________________________________
+_________________________________________________________________
+
+Proposition de valeur unique (UVP) en 10 mots :
+_________________________________________________________________
+
+Différenciation vs. concurrents directs :
+  | Critère        | Vous          | Concurrent A  | Concurrent B |
+  |----------------|---------------|---------------|--------------|
+  | Prix           |               |               |              |
+  | Déploiement    |               |               |              |
+  | Support        |               |               |              |
+  | Localisation   |               |               |              |
+
+═══════════════════════════════════════════════════════════════════
+4. ANALYSE DE MARCHÉ — WAEMU
+═══════════════════════════════════════════════════════════════════
+Pays prioritaires (par ordre) :
+  1. ________________    2. ________________    3. ________________
+
+Segments cibles :
+  Primaire   : ________________________________________________
+  Secondaire : ________________________________________________
+
+Canaux de distribution privilégiés :
+  □ WhatsApp Business  □ Agents terrain    □ Partenariats B2B
+  □ App mobile         □ Web/SaaS          □ Retail physique
+
+Barrières à l'entrée identifiées :
+  Réglementaire : ________________________________________________
+  Technologique : ________________________________________________
+  Culturelle    : ________________________________________________
+
+═══════════════════════════════════════════════════════════════════
+5. MODÈLE ÉCONOMIQUE
+═══════════════════════════════════════════════════════════════════
+Streams de revenus :
+  | Source              | Prix unitaire | Marge estimée | Fréquence |
+  |---------------------|---------------|---------------|-----------|
+  |                     |               |               |           |
+  |                     |               |               |           |
+
+Coûts fixes mensuels (FCFA) :
+  • Équipe (salaires) : __________
+  • Infrastructure    : __________
+  • Marketing         : __________
+  • Légal / Admin     : __________
+  • Autres            : __________
+  TOTAL FIXES         : __________
+
+Unit Economics :
+  CAC (Coût d'acquisition)     : __________ FCFA
+  LTV (Valeur vie client)      : __________ FCFA
+  Ratio LTV/CAC                : __________
+  Payback period               : __________ mois
+
+═══════════════════════════════════════════════════════════════════
+6. GO-TO-MARKET & STRATÉGIE COMMERCIALE
+═══════════════════════════════════════════════════════════════════
+Phase 1 (Mois 1-6) — Acquisition early adopters :
+  ________________________________________________________________
+
+Phase 2 (Mois 7-12) — Scale régional :
+  ________________________________________________________________
+
+Phase 3 (Année 2+) — Expansion UEMOA :
+  ________________________________________________________________
+
+KPIs commerciaux mensuels :
+  • Leads générés      : __________
+  • Taux conversion    : __________%
+  • Churn mensuel      : __________%
+  • NPS                : __________
+
+═══════════════════════════════════════════════════════════════════
+7. ÉQUIPE & ORGANISATION
+═══════════════════════════════════════════════════════════════════
+| Rôle              | Nom | Profil | Disponibilité | Coût/mois |
+|-------------------|-----|--------|---------------|-----------|
+| CEO / Founder     |     |        |               |           |
+| CTO / Produit     |     |        |               |           |
+| Commercial        |     |        |               |           |
+| Marketing         |     |        |               |           |
+| Opérations        |     |        |               |           |
+
+Besoins de recrutement (12 prochains mois) :
+  ________________________________________________________________
+
+═══════════════════════════════════════════════════════════════════
+8. PLAN FINANCIER 3 ANS (FCFA)
+═══════════════════════════════════════════════════════════════════
+
+Année 1 :
+  | Trimestre | Revenus | Coûts   | EBITDA  | Trésorerie |
+  |-----------|---------|---------|---------|------------|
+  | T1        |         |         |         |            |
+  | T2        |         |         |         |            |
+  | T3        |         |         |         |            |
+  | T4        |         |         |         |            |
+
+Année 2 :
+  | Trimestre | Revenus | Coûts   | EBITDA  | Trésorerie |
+  |-----------|---------|---------|---------|------------|
+  | T1        |         |         |         |            |
+  | T2        |         |         |         |            |
+  | T3        |         |         |         |            |
+  | T4        |         |         |         |            |
+
+Année 3 :
+  | Trimestre | Revenus | Coûts   | EBITDA  | Trésorerie |
+  |-----------|---------|---------|---------|------------|
+  | T1        |         |         |         |            |
+  | T2        |         |         |         |            |
+  | T3        |         |         |         |            |
+  | T4        |         |         |         |            |
+
+Hypothèses clés :
+  • Taux de croissance mensuel année 1 : __________%
+  • Prix moyen par transaction           : __________ FCFA
+  • Coût serveur / utilisateur         : __________ FCFA
+
+═══════════════════════════════════════════════════════════════════
+9. ROADMAP & JALONS
+═══════════════════════════════════════════════════════════════════
+| Date cible | Jalon | Livrable | Responsable | Statut |
+|------------|-------|----------|-------------|--------|
+|            | MVP   |          |             | ☐      |
+|            | Beta  |          |             | ☐      |
+|            | V1.0  |          |             | ☐      |
+|            | Seed  |          |             | ☐      |
+|            | Serie A|         |             | ☐      |
+
+═══════════════════════════════════════════════════════════════════
+10. ANNEXE
+═══════════════════════════════════════════════════════════════════
+
+--- SWOT ---
+Forces     : _____________________________________________________
+Faiblesses : _____________________________________________________
+Opportunités : ___________________________________________________
+Menaces    : _____________________________________________________
+
+--- PESTEL ---
+Politique  : _____________________________________________________
+Économique : _____________________________________________________
+Social     : _____________________________________________________
+Technologique : __________________________________________________
+Écologique : _____________________________________________________
+Légal      : _____________________________________________________
+
+--- MATRICE DES PARTIES PRENANTES ---
+| Stakeholder | Intérêt | Influence | Stratégie |
+|-------------|---------|-----------|-----------|
+|             |         |           |           |
+
+═══════════════════════════════════════════════════════════════════
+© ABAWI 2026 — Template business plan validé par les investisseurs
+    de la communauté. Bonne chance dans votre aventure ! 🚀
+═══════════════════════════════════════════════════════════════════

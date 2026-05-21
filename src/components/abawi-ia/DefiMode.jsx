@@ -1,8 +1,17 @@
 import { useState } from 'react';
 import { callGroq } from '../../lib/abawi-ia';
 import IAResponseDisplay from '../IAResponseDisplay';
+import { useAuth } from '../../context/AuthContext'
+import { useFreeToolQuota } from '../../hooks/useFreeToolQuota'
+import FreeToolPaywall from '../../components/FreeToolPaywall'
 
-export default function DefiMode() {
+export default function DefiMode({ language = 'fr' } = {}) {
+  const { membre } = useAuth()
+  const quota = useFreeToolQuota('abawi_ia', {
+    anonymousLimit: 5, memberLimit: 10, membre, creditType: 'abawi_ia',
+  })
+  const [showPaywall, setShowPaywall] = useState(false)
+
   const [topic, setTopic] = useState('');
   const [level, setLevel] = useState(1);
   const [question, setQuestion] = useState(null);
@@ -12,8 +21,23 @@ export default function DefiMode() {
   const [round, setRound] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  async function checkAccessThen() {
+    if (quota.quotaAvailable) {
+      quota.recordUse()
+      return true
+    }
+    if (quota.canUseCredits) {
+      const result = await quota.debitCredits()
+      if (result.ok) return true
+    }
+    setShowPaywall(true)
+    return false
+  }
+
   async function nextQuestion() {
     if (!topic.trim()) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setLoading(true);
     setUserAnswer('');
     setResult(null);
@@ -36,6 +60,8 @@ JSON: {"question": "...", "reponse": "...", "indice": "...", "explication": "...
 
   async function checkAnswer() {
     if (!userAnswer.trim() || !question) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setLoading(true);
     try {
       const raw = await callGroq([
@@ -108,6 +134,19 @@ JSON: {"question": "...", "reponse": "...", "indice": "...", "explication": "...
             </>
           )}
         </>
+      )}
+
+      {showPaywall && (
+        <FreeToolPaywall
+          toolName="Défi de Connaissances"
+          usedToday={quota.usedToday}
+          limit={quota.limit}
+          membre={membre}
+          creditCost={quota.creditCost}
+          soldeCredits={quota.soldeCredits}
+          upgradeAction="generate"
+          onClose={() => setShowPaywall(false)}
+        />
       )}
     </div>
   );

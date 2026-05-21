@@ -10,7 +10,6 @@ import SyncStatus from '../../components/SyncStatus'
 import MarkdownText from '../../components/MarkdownText'
 import AutonomousMarketingExpert from '../../components/AutonomousMarketingExpert'
 import SocialConnectorExpert from '../../components/SocialConnectorExpert'
-import { Link } from 'react-router-dom'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
 
 // ═══════════════════════════════════════════════════════════════
@@ -462,6 +461,8 @@ function GenerateurIA() {
 
   const plat = PLATEFORMES.find(p => p.id === plateforme)
 
+  const { showToast } = useToast()
+
   async function generate() {
     if (!form.produit) return
     setLoading(true)
@@ -477,8 +478,12 @@ ${form.emoji ? 'Utiliser des emojis adaptés.' : 'Sans emojis.'}
 ${form.cta ? 'Inclure un appel à l\'action clair.' : ''}
 Limite : ${Math.min(chars, 1000)} caractères max.
 Adapté au marché africain francophone. Uniquement le texte du post, sans commentaire.`
-    const text = cleanIAText(await callGroq(prompt, 600))
-    setResult(text)
+    try {
+      const text = cleanIAText(await callGroq(prompt, 600))
+      setResult(text)
+    } catch (e) {
+      showToast?.('❌ ' + (e.message || 'Erreur IA'), 'error')
+    }
     setLoading(false)
   }
 
@@ -746,8 +751,8 @@ Donne des conseils pratiques adaptés au marché africain.`
           { label: 'Revenus', value: totalRevenus.toLocaleString('fr') + ' F', color: '#18A84A' },
           { label: 'ROI Global', value: roiGlobal + '%', color: roiGlobal >= 0 ? '#18A84A' : '#EF4444' },
         ].map(k => (
-          <div key={k.label} style={{ background: '#0D1117', border: `1px solid ${k.color}25`, borderRadius: '14px', padding: '16px 20px' }}>
-            <p style={{ color: '#8B95A5', fontSize: '0.72rem', fontWeight: 700, marginBottom: '6px', letterSpacing: '0.5px' }}>{k.label.toUpperCase()}</p>
+          <div key={k.label} style={{ background: 'var(--color-bg-secondary)', border: `1px solid ${k.color}25`, borderRadius: '14px', padding: '16px 20px' }}>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.72rem', fontWeight: 700, marginBottom: '6px', letterSpacing: '0.5px' }}>{k.label.toUpperCase()}</p>
             <p style={{ color: k.color, fontSize: '1.4rem', fontWeight: 900 }}>{k.value}</p>
           </div>
         ))}
@@ -769,31 +774,31 @@ Donne des conseils pratiques adaptés au marché africain.`
 
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {campagnes.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: '#4A5568' }}>Aucune campagne. Créez votre première campagne !</div>}
+        {campagnes.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)' }}>Aucune campagne. Créez votre première campagne !</div>}
         {campagnes.map(c => {
           const roi = c.depense > 0 ? (((c.revenus - c.depense) / c.depense) * 100).toFixed(1) : null
           const plat = PLATEFORMES.find(p => p.id === c.plateforme)
           return (
-            <div key={c.id} style={{ background: '#0D1117', border: '1px solid #1A2332', borderRadius: '16px', padding: '20px' }}>
+            <div key={c.id} style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '20px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '1rem' }}>{plat?.icon}</span>
-                    <h4 style={{ color: '#F0F2F5', fontWeight: 800, margin: 0 }}>{c.nom}</h4>
+                    <h4 style={{ color: 'var(--color-text-primary)', fontWeight: 800, margin: 0 }}>{c.nom}</h4>
                     <span style={{ padding: '2px 10px', borderRadius: '100px', background: (STATUT_COLOR[c.statut] || '#8B95A5') + '20', color: STATUT_COLOR[c.statut] || '#8B95A5', fontSize: '0.7rem', fontWeight: 700 }}>{c.statut}</span>
                   </div>
-                  {c.objectif && <p style={{ color: '#8B95A5', fontSize: '0.8rem', margin: '0 0 10px' }}>{c.objectif}</p>}
+                  {c.objectif && <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem', margin: '0 0 10px' }}>{c.objectif}</p>}
                   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                    <span style={{ color: '#8B95A5', fontSize: '0.8rem' }}>Budget : <strong style={{ color: '#F0F2F5' }}>{(c.budget || 0).toLocaleString('fr')} F</strong></span>
-                    <span style={{ color: '#8B95A5', fontSize: '0.8rem' }}>Dépensé : <strong style={{ color: '#F0B429' }}>{(c.depense || 0).toLocaleString('fr')} F</strong></span>
-                    <span style={{ color: '#8B95A5', fontSize: '0.8rem' }}>Revenus : <strong style={{ color: '#18A84A' }}>{(c.revenus || 0).toLocaleString('fr')} F</strong></span>
-                    {roi !== null && <span style={{ color: '#8B95A5', fontSize: '0.8rem' }}>ROI : <strong style={{ color: parseFloat(roi) >= 0 ? '#18A84A' : '#EF4444' }}>{roi}%</strong></span>}
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>Budget : <strong style={{ color: 'var(--color-text-primary)' }}>{(c.budget || 0).toLocaleString('fr')} F</strong></span>
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>Dépensé : <strong style={{ color: '#F0B429' }}>{(c.depense || 0).toLocaleString('fr')} F</strong></span>
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>Revenus : <strong style={{ color: '#18A84A' }}>{(c.revenus || 0).toLocaleString('fr')} F</strong></span>
+                    {roi !== null && <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>ROI : <strong style={{ color: parseFloat(roi) >= 0 ? '#18A84A' : '#EF4444' }}>{roi}%</strong></span>}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => getAiTips(c)} style={{ padding: '7px 12px', borderRadius: '8px', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)', color: '#EC4899', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>✨ IA</button>
                   <button onClick={() => { setSelected(c); setForm({ nom: c.nom, plateforme: c.plateforme, budget: c.budget || '', depense: c.depense || '', revenus: c.revenus || '', date_debut: c.date_debut || '', date_fin: c.date_fin || '', statut: c.statut, objectif: c.objectif || '', notes: c.notes || '' }); setShowForm(true) }}
-                    style={{ padding: '7px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid #1A2332', color: '#8B95A5', fontSize: '0.75rem', cursor: 'pointer' }}>✏️</button>
+                    style={{ padding: '7px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', fontSize: '0.75rem', cursor: 'pointer' }}>✏️</button>
                   <button onClick={() => deleteCamp(c.id)} style={{ padding: '7px 10px', borderRadius: '8px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', color: '#EF4444', fontSize: '0.75rem', cursor: 'pointer' }}>🗑️</button>
                 </div>
               </div>
@@ -806,15 +811,15 @@ Donne des conseils pratiques adaptés au marché africain.`
       {(loadingAi || aiTips) && (
         <div style={{ marginTop: '20px', background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: '16px', padding: '20px' }}>
           <p style={{ color: '#EC4899', fontWeight: 700, marginBottom: '10px' }}>✨ Conseils IA</p>
-          {loadingAi ? <p style={{ color: '#8B95A5' }}>Analyse en cours...</p> : <MarkdownText text={aiTips} compact color="#C8D3E0" />}
+          {loadingAi ? <p style={{ color: 'var(--color-text-secondary)' }}>Analyse en cours...</p> : <MarkdownText text={aiTips} compact color="#C8D3E0" />}
         </div>
       )}
 
       {/* Modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
-          <div style={{ background: '#0D1117', borderRadius: '20px', border: '1px solid #1A2332', padding: '32px', width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ color: '#F0F2F5', fontWeight: 800, marginBottom: '24px' }}>{selected ? 'Modifier la campagne' : 'Nouvelle campagne'}</h3>
+          <div style={{ background: 'var(--color-bg-secondary)', borderRadius: '20px', border: '1px solid var(--color-border)', padding: '32px', width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ color: 'var(--color-text-primary)', fontWeight: 800, marginBottom: '24px' }}>{selected ? 'Modifier la campagne' : 'Nouvelle campagne'}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div><label style={lbl}>Nom de la campagne *</label><input style={inp} value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} placeholder="Ex: Lancement Ramadan 2025" /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -851,13 +856,13 @@ Donne des conseils pratiques adaptés au marché africain.`
                 🧪 Tester / Simuler
               </button>
               <button onClick={save} disabled={saving} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'linear-gradient(135deg, #EC4899, #be185d)', color: '#fff', fontWeight: 800, border: 'none', cursor: 'pointer' }}>{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: '12px 20px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid #1A2332', color: '#8B95A5', fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
+              <button onClick={() => setShowForm(false)} style={{ padding: '12px 20px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)', fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
             </div>
             {campPreview && (
               <div style={{ marginTop: 12, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 12, padding: 10 }}>
                 <div style={{ color: '#60A5FA', fontWeight: 800, fontSize: '0.8rem', marginBottom: 4 }}>Simulation campagne</div>
-                <div style={{ color: '#C8D3E0', fontSize: '0.78rem' }}>Readiness: {campPreview.readiness ?? '—'}</div>
-                <div style={{ color: '#C8D3E0', fontSize: '0.78rem' }}>Projection: {campPreview.projection || '—'}</div>
+                <div style={{ color: 'var(--color-text-primary)', fontSize: '0.78rem' }}>Readiness: {campPreview.readiness ?? '—'}</div>
+                <div style={{ color: 'var(--color-text-primary)', fontSize: '0.78rem' }}>Projection: {campPreview.projection || '—'}</div>
                 {!!campPreview.adjustments?.length && <div style={{ color: '#F0B429', fontSize: '0.76rem', marginTop: 4 }}>Ajustements: {campPreview.adjustments.join(' • ')}</div>}
               </div>
             )}
@@ -916,30 +921,30 @@ Donne : 1) Points forts 2) Points d'amélioration 3) Recommandations stratégiqu
           { label: 'Posts publiés', value: posts.filter(p => p.statut === 'publié').length, icon: '✅', color: '#18A84A' },
           { label: 'Plateformes actives', value: Object.keys(postsByPlatform).length, iconType: 'phone', color: '#8B5CF6' },
         ].map(k => (
-          <div key={k.label} style={{ background: '#0D1117', border: `1px solid ${k.color}25`, borderRadius: '14px', padding: '16px' }}>
+          <div key={k.label} style={{ background: 'var(--color-bg-secondary)', border: `1px solid ${k.color}25`, borderRadius: '14px', padding: '16px' }}>
             <div style={{ marginBottom: '6px', display: 'flex', justifyContent: 'center' }}><IconSVG type={k.iconType} size={22} color={k.color} /></div>
             <p style={{ color: k.color, fontSize: '1.6rem', fontWeight: 900, margin: 0 }}>{k.value}</p>
-            <p style={{ color: '#8B95A5', fontSize: '0.72rem', fontWeight: 600, margin: '4px 0 0' }}>{k.label}</p>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.72rem', fontWeight: 600, margin: '4px 0 0' }}>{k.label}</p>
           </div>
         ))}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
         {/* By platform */}
-        <div style={{ background: '#0D1117', border: '1px solid #1A2332', borderRadius: '16px', padding: '20px' }}>
-          <h4 style={{ color: '#F0F2F5', fontWeight: 700, marginBottom: '16px' }}>Posts par plateforme</h4>
+        <div style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '20px' }}>
+          <h4 style={{ color: 'var(--color-text-primary)', fontWeight: 700, marginBottom: '16px' }}>Posts par plateforme</h4>
           {Object.keys(postsByPlatform).length === 0
-            ? <p style={{ color: '#4A5568', fontSize: '0.85rem' }}>Aucun post encore.</p>
+            ? <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Aucun post encore.</p>
             : Object.entries(postsByPlatform).sort((a, b) => b[1] - a[1]).map(([plat, count]) => {
               const p = PLATEFORMES.find(x => x.id === plat)
               const pct = Math.round((count / posts.length) * 100)
               return (
                 <div key={plat} style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ color: '#C8D3E0', fontSize: '0.82rem' }}>{p?.icon} {p?.label || plat}</span>
+                    <span style={{ color: 'var(--color-text-primary)', fontSize: '0.82rem' }}>{p?.icon} {p?.label || plat}</span>
                     <span style={{ color: p?.color || '#8B95A5', fontWeight: 700, fontSize: '0.82rem' }}>{count} ({pct}%)</span>
                   </div>
-                  <div style={{ height: '6px', background: '#1A2332', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ width: `${pct}%`, height: '100%', background: p?.color || '#EC4899', borderRadius: '3px', transition: 'width 0.5s ease' }} />
                   </div>
                 </div>
@@ -949,20 +954,20 @@ Donne : 1) Points forts 2) Points d'amélioration 3) Recommandations stratégiqu
         </div>
 
         {/* By status */}
-        <div style={{ background: '#0D1117', border: '1px solid #1A2332', borderRadius: '16px', padding: '20px' }}>
-          <h4 style={{ color: '#F0F2F5', fontWeight: 700, marginBottom: '16px' }}>Posts par statut</h4>
+        <div style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border)', borderRadius: '16px', padding: '20px' }}>
+          <h4 style={{ color: 'var(--color-text-primary)', fontWeight: 700, marginBottom: '16px' }}>Posts par statut</h4>
           {Object.keys(postsByStatus).length === 0
-            ? <p style={{ color: '#4A5568', fontSize: '0.85rem' }}>Aucun post encore.</p>
+            ? <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Aucun post encore.</p>
             : Object.entries(postsByStatus).map(([statut, count]) => {
               const colors = { planifié: '#3B82F6', publié: '#18A84A', brouillon: '#8B95A5', annulé: '#EF4444' }
               const pct = Math.round((count / posts.length) * 100)
               return (
                 <div key={statut} style={{ marginBottom: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ color: '#C8D3E0', fontSize: '0.82rem', textTransform: 'capitalize' }}>{statut}</span>
+                    <span style={{ color: 'var(--color-text-primary)', fontSize: '0.82rem', textTransform: 'capitalize' }}>{statut}</span>
                     <span style={{ color: colors[statut] || '#8B95A5', fontWeight: 700, fontSize: '0.82rem' }}>{count} ({pct}%)</span>
                   </div>
-                  <div style={{ height: '6px', background: '#1A2332', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ height: '6px', background: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ width: `${pct}%`, height: '100%', background: colors[statut] || '#8B95A5', borderRadius: '3px' }} />
                   </div>
                 </div>
@@ -977,15 +982,183 @@ Donne : 1) Points forts 2) Points d'amélioration 3) Recommandations stratégiqu
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h4 style={{ color: '#EC4899', fontWeight: 800, margin: 0 }}>✨ Rapport IA Marketing</h4>
           <button onClick={genererRapport} disabled={loading}
-            style={{ padding: '8px 20px', borderRadius: '10px', background: loading ? '#1A2332' : 'linear-gradient(135deg, #EC4899, #be185d)', color: loading ? '#4A5568' : '#fff', fontWeight: 700, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}>
+            style={{ padding: '8px 20px', borderRadius: '10px', background: loading ? 'var(--color-border)' : 'linear-gradient(135deg, #EC4899, #be185d)', color: loading ? 'var(--color-text-muted)' : '#fff', fontWeight: 700, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '0.85rem' }}>
             {loading ? '⏳ Analyse...' : '🤖 Générer le rapport'}
           </button>
         </div>
         {aiRapport
           ? <MarkdownText text={aiRapport} compact color="#C8D3E0" />
-          : <p style={{ color: '#4A5568', fontSize: '0.85rem', margin: 0 }}>Cliquez sur "Générer le rapport" pour obtenir une analyse IA de vos performances marketing.</p>
+          : <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', margin: 0 }}>Cliquez sur "Générer le rapport" pour obtenir une analyse IA de vos performances marketing.</p>
         }
       </div>
+    </div>
+  )
+}
+
+// ─── Auto-publish Dashboard ───────────────────────────────────────────────────
+const PLATFORM_GUIDE = [
+  { id: 'facebook',  label: 'Facebook',  color: '#1877F2', steps: ['developers.facebook.com → My Apps', 'Créer une App → Facebook Login', 'Générer un Page Access Token', 'Coller token + Page ID dans Connecteurs Sociaux'] },
+  { id: 'instagram', label: 'Instagram', color: '#E1306C', steps: ['Lier compte Instagram Business à une Page Facebook', 'Utiliser le même token Facebook (Graph API)', 'Récupérer l\'IG User ID via GET /me/accounts', 'Coller token + IG User ID dans Connecteurs Sociaux'] },
+  { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', steps: ['developer.linkedin.com → Create App', 'Activer "Share on LinkedIn" + "Sign In with LinkedIn"', 'Générer un OAuth2 Access Token (scope: w_member_social)', 'Coller token + URN (urn:li:person:XXX) dans Connecteurs Sociaux'] },
+  { id: 'twitter',   label: 'X / Twitter', color: '#1DA1F2', steps: ['developer.twitter.com → New Project/App', 'Activer OAuth2 avec scope write:tweets', 'Générer un Bearer Token', 'Coller le token dans Connecteurs Sociaux'] },
+  { id: 'whatsapp',  label: 'WhatsApp', color: '#25D366', steps: ['Meta Business Suite → WhatsApp Business API', 'Créer un Phone Number ID', 'Générer un token d\'accès permanent', 'Configurer WHATSAPP_DEFAULT_TO (numéro destinataire)'] },
+  { id: 'telegram',  label: 'Telegram', color: '#2AABEE', steps: ['Ouvrir Telegram → BotFather → /newbot', 'Récupérer le Bot Token', 'Créer/rejoindre un canal → récupérer le Chat ID', 'Coller token + Chat ID dans Connecteurs Sociaux'] },
+]
+
+function AutoPublishDashboard({ owner, toast }) {
+  const [posts, setPosts] = useState([])
+  const [connectors, setConnectors] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [tab2, setTab2] = useState('status')
+
+  useEffect(() => {
+    if (!owner) return
+    loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [owner])
+
+  async function loadData() {
+    setLoading(true)
+    try {
+      const [postsRes, connRes] = await Promise.all([
+        supabase.from('marketing_posts').select('*').eq('owner_email', owner).order('date_publication', { ascending: false }).limit(30),
+        supabase.from('site_content').select('content_key,content_value').eq('content_type', 'social_connector').eq('owner_email', owner),
+      ])
+      if (!postsRes.error) setPosts(postsRes.data || [])
+      if (!connRes.error) {
+        const cfg = {}
+        ;(connRes.data || []).forEach(r => { cfg[r.content_key] = r.content_value || {} })
+        setConnectors(cfg)
+      }
+    } catch { /* ignore */ }
+    setLoading(false)
+  }
+
+  const statutIcon = { publié: '✅', échoué: '❌', planifié: '⏳', brouillon: '📝', annulé: '🚫' }
+  const statutColor = { publié: '#18A84A', échoué: '#EF4444', planifié: '#3B82F6', brouillon: '#8B95A5', annulé: '#8B95A5' }
+
+  const scheduled = posts.filter(p => p.statut === 'planifié')
+  const published = posts.filter(p => p.statut === 'publié')
+  const failed    = posts.filter(p => p.statut === 'échoué')
+
+  const now = new Date()
+  const nextRun = new Date(now)
+  nextRun.setMinutes(Math.ceil(now.getMinutes() / 10) * 10, 0, 0)
+  const minsLeft = Math.max(0, Math.round((nextRun - now) / 60000))
+
+  return (
+    <div>
+      {/* Status header */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '28px' }}>
+        {[
+          { label: 'Statut', value: 'Actif', sub: `Prochain cycle ~${minsLeft} min`, color: '#18A84A', dot: true },
+          { label: 'Planifiés', value: scheduled.length, sub: 'en attente de publication', color: '#3B82F6' },
+          { label: 'Publiés', value: published.length, sub: 'posts auto-publiés', color: '#18A84A' },
+          { label: 'Échoués', value: failed.length, sub: 'à vérifier', color: failed.length > 0 ? '#EF4444' : '#8B95A5' },
+        ].map(k => (
+          <div key={k.label} style={{ background: 'var(--bg-card)', border: `1px solid ${k.color}25`, borderRadius: '14px', padding: '16px 20px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', fontWeight: 700, marginBottom: '4px', letterSpacing: '0.5px' }}>{k.label.toUpperCase()}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {k.dot && <span style={{ width: 8, height: 8, borderRadius: '50%', background: k.color, boxShadow: `0 0 6px ${k.color}`, display: 'inline-block', flexShrink: 0 }} />}
+              <p style={{ color: k.color, fontSize: '1.4rem', fontWeight: 900, margin: 0 }}>{k.value}</p>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.72rem', margin: '4px 0 0' }}>{k.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Sub-tabs */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
+        {[['status', 'Activité récente'], ['connectors', 'Connecteurs'], ['guide', 'Guide connexion']].map(([id, label]) => (
+          <button key={id} onClick={() => setTab2(id)}
+            style={{ padding: '8px 18px', borderRadius: '8px', border: `1px solid ${tab2 === id ? 'rgba(236,72,153,0.4)' : 'var(--border)'}`, background: tab2 === id ? 'rgba(236,72,153,0.12)' : 'transparent', color: tab2 === id ? '#EC4899' : 'var(--text-secondary)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Activity feed */}
+      {tab2 === 'status' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: 700, margin: 0 }}>30 DERNIERS POSTS</p>
+            <button onClick={loadData} style={{ padding: '6px 14px', borderRadius: '7px', background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)', color: '#EC4899', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>⟳ Actualiser</button>
+          </div>
+          {loading ? <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Chargement...</p> : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {posts.length === 0 && <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '30px' }}>Aucun post trouvé.</p>}
+              {posts.map(p => {
+                const plat = PLATEFORMES.find(x => x.id === p.plateforme)
+                return (
+                  <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', borderRadius: '10px', background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
+                    <span style={{ fontSize: '1rem', flexShrink: 0 }}>{statutIcon[p.statut] || '📌'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span style={{ color: 'var(--text-primary)', fontWeight: 700, fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px' }}>{p.titre || '(sans titre)'}</span>
+                        <span style={{ padding: '2px 8px', borderRadius: '6px', background: (statutColor[p.statut] || '#8B95A5') + '20', color: statutColor[p.statut] || '#8B95A5', fontSize: '0.68rem', fontWeight: 700, flexShrink: 0 }}>{p.statut}</span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '2px' }}>
+                        <span style={{ color: plat?.color || 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 600 }}>{p.plateforme}</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{p.date_publication} {p.heure}</span>
+                      </div>
+                    </div>
+                    {p.notes && (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.68rem', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={p.notes}>{p.notes}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Connector status */}
+      {tab2 === 'connectors' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '8px' }}>
+            Configurez vos connecteurs dans l'onglet <strong style={{ color: '#EC4899' }}>Connecteurs Sociaux</strong> pour activer la publication automatique.
+          </p>
+          {['facebook', 'instagram', 'linkedin', 'twitter', 'whatsapp', 'telegram', 'tiktok'].map(pid => {
+            const cfg = connectors[pid] || {}
+            const hasToken = !!(cfg.token || '').trim()
+            const isEnabled = !!cfg.enabled
+            const plat = PLATEFORMES.find(p => p.id === pid)
+            const status = !hasToken ? 'Non configuré' : !isEnabled ? 'Désactivé' : 'Actif'
+            const statusColor = !hasToken ? '#8B95A5' : !isEnabled ? '#F0B429' : '#18A84A'
+            return (
+              <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', borderRadius: '10px', background: 'var(--bg-primary)', border: `1px solid ${isEnabled && hasToken ? '#18A84A30' : 'var(--border)'}` }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor, flexShrink: 0, boxShadow: isEnabled && hasToken ? `0 0 6px ${statusColor}` : 'none' }} />
+                <span style={{ color: plat?.color || 'var(--text-secondary)', fontWeight: 700, fontSize: '0.85rem', minWidth: 100 }}>{plat?.label || pid}</span>
+                <span style={{ color: statusColor, fontSize: '0.78rem', fontWeight: 600 }}>{status}</span>
+                {hasToken && <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginLeft: 'auto' }}>Token: ****{(cfg.token || '').slice(-6)}</span>}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Connection guide */}
+      {tab2 === 'guide' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '4px' }}>
+            Suivez ces étapes pour connecter chaque plateforme. Une fois configuré, l'auto-publish publie automatiquement toutes les 10 minutes.
+          </p>
+          {PLATFORM_GUIDE.map(g => (
+            <div key={g.id} style={{ padding: '16px', borderRadius: '12px', background: 'var(--bg-primary)', border: `1px solid ${g.color}25` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <IconSVG type={g.id === 'twitter' ? 'twitter' : g.id === 'linkedin' ? 'linkedin' : g.id === 'instagram' ? 'instagram' : g.id === 'facebook' ? 'facebook' : g.id === 'whatsapp' ? 'whatsapp' : 'globe'} size={18} color={g.color} />
+                <span style={{ color: g.color, fontWeight: 800, fontSize: '0.9rem' }}>{g.label}</span>
+              </div>
+              <ol style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                {g.steps.map((s, i) => (
+                  <li key={i} style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{s}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -996,6 +1169,7 @@ const TABS = [
   { id: 'generateur', label: 'Générateur IA', icon: 'write' },
   { id: 'campagnes', label: 'Campagnes & ROI', icon: 'megaphone' },
   { id: 'analytics', label: 'Analytics', icon: 'chart' },
+  { id: 'autopublish', label: 'Auto-publish', icon: 'megaphone' },
   { id: 'autonomie', label: 'Autonomie Expert', icon: 'brain' },
   { id: 'connecteurs', label: 'Connecteurs Sociaux', icon: 'globe' },
 ]
@@ -1009,8 +1183,8 @@ export default function Marketing() {
     return (
       <div style={{ maxWidth: '600px', margin: '80px auto', padding: '40px 24px', textAlign: 'center' }}>
         <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📈</div>
-        <h2 style={{ color: '#F0F2F5', fontWeight: 800, marginBottom: '12px' }}>Marketing 360</h2>
-        <p style={{ color: '#8B95A5', marginBottom: '28px' }}>Accédez au module Marketing 360 avec ABAWI+</p>
+        <h2 style={{ color: 'var(--color-text-primary)', fontWeight: 800, marginBottom: '12px' }}>Marketing 360</h2>
+        <p style={{ color: 'var(--color-text-secondary)', marginBottom: '28px' }}>Accédez au module Marketing 360 avec ABAWI+</p>
         <a href="/plans" style={{ padding: '14px 32px', borderRadius: '14px', background: 'linear-gradient(135deg, #EC4899, #be185d)', color: '#fff', fontWeight: 800, textDecoration: 'none' }}>🔱 S'abonner à ABAWI+</a>
       </div>
     )
@@ -1019,18 +1193,18 @@ export default function Marketing() {
   const owner = membre?.email || ''
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 20px 80px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '32px 20px 80px' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 16px', borderRadius: '100px', background: 'rgba(236,72,153,0.12)', border: '1px solid rgba(236,72,153,0.25)', color: '#EC4899', fontSize: '0.7rem', fontWeight: 800, marginBottom: '12px', letterSpacing: '2px' }}>📈 MARKETING 360</div>
-        <h1 style={{ color: '#F0F2F5', fontWeight: 900, fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', margin: '0 0 8px' }}>
+        <h1 style={{ color: 'var(--color-text-primary)', fontWeight: 900, fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', margin: '0 0 8px' }}>
           Marketing <span style={{ background: 'linear-gradient(135deg, #EC4899, #F43F5E)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>360°</span>
         </h1>
-        <p style={{ color: '#8B95A5', fontSize: '0.9rem', margin: 0 }}>Calendrier éditorial · Génération IA · Campagnes · Analytics</p>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', margin: 0 }}>Calendrier éditorial · Génération IA · Campagnes · Analytics</p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '28px', background: '#0D1117', padding: '6px', borderRadius: '14px', border: '1px solid #1A2332', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '28px', background: 'var(--color-bg-secondary)', padding: '6px', borderRadius: '14px', border: '1px solid var(--color-border)', flexWrap: 'wrap' }}>
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             style={{ flex: 1, minWidth: '120px', padding: '10px 16px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', transition: 'all 0.2s', background: tab === t.id ? 'linear-gradient(135deg, #EC4899, #be185d)' : 'transparent', color: tab === t.id ? '#fff' : '#8B95A5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -1044,6 +1218,7 @@ export default function Marketing() {
       {tab === 'generateur' && <GenerateurIA />}
       {tab === 'campagnes' && <Campagnes owner={owner} toast={toast} />}
       {tab === 'analytics' && <Analytics owner={owner} />}
+      {tab === 'autopublish' && <AutoPublishDashboard owner={owner} toast={toast} />}
       {tab === 'autonomie' && <AutonomousMarketingExpert owner={owner} toast={toast} />}
       {tab === 'connecteurs' && <SocialConnectorExpert owner={owner} toast={toast} />}
 

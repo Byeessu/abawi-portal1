@@ -26,8 +26,8 @@
 }
 
 /* === MODE CLAIR === */
-[data-theme="light"],
-.light-mode,
+[data-mode="light"],
+html[data-mode="light"],
 html.light {
   --color-bg-primary: #F8FAFC;
   --color-bg-secondary: #FFFFFF;
@@ -406,7 +406,8 @@ hr, .divider {
     --color-border: #000000;
   }
   
-  [data-theme="light"],
+  [data-mode="light"],
+  html[data-mode="light"],
   .light-mode {
     --color-text-primary: #000000;
     --color-border: #000000;

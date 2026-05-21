@@ -1,15 +1,31 @@
 const { createClient } = require('@supabase/supabase-js')
+const crypto = require('crypto')
 
 const supabase = createClient(
-  'https://nqpfmnsecjhqxuvfkqhi.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcGZtbnNlY2pocXh1dmZrcWhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzODI0MDgsImV4cCI6MjA4OTk1ODQwOH0.BCSmlEUmieRHFzT9AfIpSbauOCd2whl-NqQW-W0HIno'
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 )
 
 const ABAWI_PLUS_IDS = ['aplus', 'aplus-mensuel', 'aplus-annuel', 'abawi-plus', 'abawi-plus-mensuel', 'abawi-plus-annuel']
 
+// Vérifie la signature PayDunya: sha512(master_key + ':' + token)
+function verifyPayDunyaHash(masterKey, token, receivedHash) {
+  if (!masterKey || !token || !receivedHash) return false
+  const expected = crypto.createHash('sha512').update(`${masterKey}:${token}`).digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(receivedHash, 'hex'))
+}
+
 exports.handler = async function (event) {
   console.log('[PayDunya IPN] Method:', event.httpMethod)
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
+
+  // 1. Vérification secret IPN (paramètre URL configuré dans le dashboard PayDunya)
+  const ipnSecret = process.env.PAYDUNYA_IPN_SECRET
+  const receivedSecret = event.queryStringParameters?.ipn_secret
+  if (ipnSecret && receivedSecret !== ipnSecret) {
+    console.warn('[PayDunya IPN] Invalid IPN secret')
+    return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) }
+  }
 
   let payload
   try {
@@ -17,6 +33,15 @@ exports.handler = async function (event) {
   } catch {
     console.error('[PayDunya IPN] JSON parse error, raw body:', event.body?.substring(0, 200))
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) }
+  }
+
+  // 2. Vérification signature HMAC PayDunya
+  const masterKey = process.env.PAYDUNYA_MASTER_KEY
+  if (masterKey && payload.hash && payload.token) {
+    if (!verifyPayDunyaHash(masterKey, payload.token, payload.hash)) {
+      console.warn('[PayDunya IPN] Invalid hash signature')
+      return { statusCode: 401, body: JSON.stringify({ error: 'Invalid signature' }) }
+    }
   }
 
   console.log('[PayDunya IPN] Status:', payload.status)

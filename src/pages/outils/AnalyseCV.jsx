@@ -1,10 +1,13 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
 import { useAuth } from '../../context/AuthContext'
-import { hasAllInclusiveAccess } from '../../lib/permissions'
+
 import { callGroq as groqClientCall } from '../../lib/groqClient'
+import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
-import PaymentFlow from '../../components/PaymentFlow'
+import TokenCounter from '../../components/TokenCounter'
+import { useToolGuard } from '../../hooks/useToolGuard'
+import ToolUpsellModal, { ToolGuardBadge } from '../../components/ToolUpsellModal'
 
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 const MAX_MB = 15
@@ -55,7 +58,7 @@ async function extractPDFText(file) {
       }
       if (fallbackText.trim().length > 30) text = fallbackText
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   // MÉTHODE 2 — extraction binaire
@@ -134,7 +137,7 @@ async function extractText(file, dataUrl) {
     const text = await file.text()
     if (text.trim().length >= 30) return text.trim()
   // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-  } catch {}
+  } catch { /* ignore */ }
   throw new Error(`Format "${ext}" non supporté. Utilisez PDF, DOCX, DOC, TXT ou image.`)
 }
 
@@ -175,18 +178,12 @@ function AnalyseCV() {
   const [analysing, setAnalysing] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
-  const [showPayment, setShowPayment] = useState(false)
-  const [paid, setPaid] = useState(false)
+  const [showPaywall, setShowPaywall] = useState(false)
   const [dragOver, setDragOver] = useState(false);
   const { themed } = useThemedStyles();
 
-  const inputRef = useRef(null)
+  const guard = useToolGuard('analyse_cv', 'analyse_cv')
   const dropRef = useRef(null)
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync from external source (localStorage, props, async result) — refactor to derived state where feasible
-    if (hasAllInclusiveAccess(membre)) setPaid(true)
-  }, [membre])
 
   function openFilePicker() {
     if (inputRef.current) {
@@ -233,7 +230,7 @@ function AnalyseCV() {
             reader.readAsDataURL(file)
           })
         // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-        } catch {}
+        } catch { /* ignore */ }
 
         // Concaténation texte (utile pour multi-files)
         const text = await extractText(file, dataUrl)
@@ -278,6 +275,9 @@ function AnalyseCV() {
 
   async function runAnalysis(text) {
     if (!text) { setError("Importez d'abord votre CV"); return }
+    const debitResult = await guard.checkAndDebit()
+    if (!debitResult.ok) return
+    await guard.recordUsage()
     setAnalysing(true)
     setError('')
     const prompt = `Tu es un expert en recrutement pour le marché africain. Analyse ce CV et réponds UNIQUEMENT en JSON valide selon ce schéma exact :
@@ -317,6 +317,12 @@ ${text.substring(0, 4000)}`
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px) 80px' }}>
+      <SEO
+        title="Analyse de CV par IA — Score ATS & optimisations"
+        description="Analysez votre CV avec l'IA : score ATS, points forts et faibles, suggestions d'amélioration personnalisées. Rapport complet pour décrocher plus d'entretiens."
+        keywords="analyse CV IA, score ATS, CV Sénégal, optimisation CV, recrutement IA, conseils CV"
+        image="/og-tools/analyse-cv.jpg"
+      />
       {/* Header */}
       <div style={themed({ marginBottom: 24 })}>
         <h1 style={themed({ fontSize: 'clamp(1.6rem,4vw,2.2rem)', fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 })}>
@@ -327,6 +333,12 @@ ${text.substring(0, 4000)}`
         </p>
       </div>
 
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <ToolGuardBadge guard={guard} />
+      </div>
       <ToolInfoPanel
         toolName="Analyse de CV par IA"
         icon="🔍"
@@ -336,7 +348,7 @@ ${text.substring(0, 4000)}`
           'Identification des points forts et axes d\'amélioration prioritaires',
           'Suggestion des mots-clés manquants pour votre secteur/poste',
           'Analyse adaptée au marché africain et international',
-          'Aperçu gratuit — rapport complet payant',
+          '2 analyses gratuites par jour — puis crédits ou ABAWI+',
         ]}
         howToUse={[
           'Importez votre CV (PDF, Word, TXT, image scannée)',
@@ -524,33 +536,17 @@ ${text.substring(0, 4000)}`
             </div>
           </div>
 
-          {/* Suggestions — preview blurred until paid */}
-          <div style={{ position: 'relative' }}>
-            <div style={{ filter: paid ? 'none' : 'blur(5px)', userSelect: paid ? 'auto' : 'none', pointerEvents: paid ? 'auto' : 'none', transition: 'filter 0.3s', background: 'rgba(24,168,74,0.08)', border: '1px solid rgba(24,168,74,0.3)', borderRadius: 16, padding: 24 }}>
-              <h3 style={{ color: '#18A84A', marginBottom: 16, fontWeight: 800 }}>📋 Suggestions par section</h3>
-              {Object.entries(result.suggestions || {}).map(([key, val]) => (
-                <div key={key} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(24,168,74,0.15)' }}>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#F0B429', marginBottom: 4 }}>
-                    {SUGGESTION_LABELS[key] || key}
-                  </div>
-                  <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{val}</div>
+          {/* Suggestions */}
+          <div style={{ background: 'rgba(24,168,74,0.08)', border: '1px solid rgba(24,168,74,0.3)', borderRadius: 16, padding: 24 }}>
+            <h3 style={{ color: '#18A84A', marginBottom: 16, fontWeight: 800 }}>📋 Suggestions par section</h3>
+            {Object.entries(result.suggestions || {}).map(([key, val]) => (
+              <div key={key} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid rgba(24,168,74,0.15)' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#F0B429', marginBottom: 4 }}>
+                  {SUGGESTION_LABELS[key] || key}
                 </div>
-              ))}
-            </div>
-            {!paid && (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(2px)', borderRadius: 16, zIndex: 10 }}>
-                <div style={{ textAlign: 'center', padding: '24px 20px', maxWidth: 340 }}>
-                  <div style={{ fontSize: '1.8rem', marginBottom: 10 }}>🔒</div>
-                  <h3 style={{ color: 'var(--text-primary)', fontWeight: 800, margin: '0 0 8px', fontSize: '1rem' }}>Suggestions détaillées prêtes</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '0 0 16px' }}>
-                    Recommandations précises pour chaque section de votre CV.
-                  </p>
-                  <button onClick={() => setShowPayment(true)} style={{ padding: '12px 28px', borderRadius: 10, background: 'linear-gradient(135deg, #F0B429, #e5a820)', border: 'none', color: '#070B0F', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 4px 16px rgba(240,180,41,0.3)' }}>
-                    Débloquer — 990 FCFA
-                  </button>
-                </div>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{val}</div>
               </div>
-            )}
+            ))}
           </div>
 
           {/* New analysis button */}
@@ -567,13 +563,15 @@ ${text.substring(0, 4000)}`
         </div>
       )}
 
-      {showPayment && (
-        <PaymentFlow
-          product={{ id: 'analyse-cv', titre: 'Analyse de CV — Rapport complet', prix: 990, type: 'outil' }}
-          onClose={() => setShowPayment(false)}
-          onSuccess={() => { setShowPayment(false); setPaid(true) }}
-        />
-      )}
+      <ToolUpsellModal
+        isOpen={guard.upsellOpen}
+        config={guard.upsellConfig}
+        onClose={guard.closeUpsell}
+        onUseCredit={async () => {
+          const r = await guard.checkAndDebit()
+          if (r.ok) guard.closeUpsell()
+        }}
+      />
 
       <style>{`@keyframes acv-spin { to { transform: rotate(360deg); } }`}</style>
     </div>

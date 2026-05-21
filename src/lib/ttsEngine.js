@@ -160,11 +160,11 @@ function playBlob(blob) {
   return new Promise((resolve, reject) => {
     if (activeAudio) {
       // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-      try { activeAudio.pause() } catch {}
+      try { activeAudio.pause() } catch { /* ignore */ }
     }
     if (activeAudioUrl) {
       // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-      try { URL.revokeObjectURL(activeAudioUrl) } catch {}
+      try { URL.revokeObjectURL(activeAudioUrl) } catch { /* ignore */ }
       activeAudioUrl = ''
     }
     const url = URL.createObjectURL(blob)
@@ -180,7 +180,7 @@ function playBlob(blob) {
       source.connect(gain)
       gain.connect(ctx.destination)
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
     audio.onended = () => {
       if (activeAudio === audio) activeAudio = null
       if (activeAudioUrl === url) activeAudioUrl = ''

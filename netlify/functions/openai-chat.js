@@ -42,7 +42,7 @@ exports.handler = async (event, context) => {
         messages,
         max_tokens: maxTokens,
         temperature,
-        response_format,
+        response_format: responseFormat,
         seed: Math.floor(Math.random() * 1000000)
       })
     })

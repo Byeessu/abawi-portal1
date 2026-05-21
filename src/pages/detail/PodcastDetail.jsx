@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { podcasts, slugify, formatPrix } from '../../data/products'
+import { podcasts, slugify, formatPrix, findSummaryForContent } from '../../data/products'
 import { useAuth } from '../../context/AuthContext'
 import { resolveFirstPlayable } from '../../lib/mediaResolver'
 import { loadPodcastOverrides, mergePodcastWithOverride } from '../../lib/podcastsRuntime'
@@ -10,8 +10,11 @@ import ContentViewer from '../../components/ContentViewer'
 import { Link } from 'react-router-dom'
 import { CoverImage } from '../../components/CoverImage'
 import { AudioPlayer } from '../../components/AudioPlayer'
-import MemberGate from '../../components/MemberGate'
+import { useProductAccess } from '../../hooks/useProductAccess'
+import AccessBadge from '../../components/AccessBadge'
+import ExpiryReminder from '../../components/ExpiryReminder'
 import ShareButtons from '../../components/ShareButtons'
+import SEO from '../../components/SEO'
 
 function PodcastPaymentOptions({ ep, onBuy }) {
   return (
@@ -153,6 +156,10 @@ function PodcastDetail() {
   const [audioCheckDone, setAudioCheckDone] = useState(false)
   const [runtimePodcasts, setRuntimePodcasts] = useState(podcasts)
 
+  function handleListenFullscreen() {
+    setViewer({ type: 'audio', src: playableSrc, titre: ep.titre })
+  }
+
   useEffect(() => {
     let cancelled = false
     loadPodcastOverrides().then((overrides) => {
@@ -175,15 +182,17 @@ function PodcastDetail() {
   useEffect(() => {
     let cancelled = false
     if (!ep) return
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync from external source (localStorage, props, async result) — refactor to derived state where feasible
-    setAudioCheckDone(false)
+
+    Promise.resolve().then(() => setAudioCheckDone(false))
     resolveFirstPlayable(audioCandidates).then((src) => {
       if (cancelled) return
-      setPlayableSrc(src || ep.audio_url || '')
-      setAudioCheckDone(true)
+      Promise.resolve().then(() => setPlayableSrc(src || ep.audio_url || ''))
+      Promise.resolve().then(() => setAudioCheckDone(true))
     })
     return () => { cancelled = true }
   }, [audioCandidates, ep])
+
+  const access = useProductAccess(ep || {}, 'podcast')
 
   if (!ep) return (
     <main className="detail">
@@ -193,11 +202,42 @@ function PodcastDetail() {
 
   const similar = runtimePodcasts.filter((p) => p.serie === ep.serie && p.id !== ep.id).slice(0, 4)
   const isFree = ep.gratuit || (!ep.premium && ep.audio_url)
+  const canListen = isFree || access.canUnlock
   const lyricsText = typeof ep.lyrics === 'string' ? ep.lyrics.trim() : ''
   const hasLyrics = lyricsText.length > 0
 
+  const podDesc = `Écoutez "${ep.titre}" — podcast ${ep.serie || 'Business & Digital'} pour entrepreneurs africains. Analyses, décryptages et conseils pratiques. ABAWI Podcasts.`
+  const podSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'PodcastEpisode',
+    name: ep.titre,
+    description: podDesc,
+    url: `https://abawi.app/podcasts/${slugify(ep.titre)}`,
+    inLanguage: 'fr',
+    partOfSeries: {
+      '@type': 'PodcastSeries',
+      name: ep.serie || 'ABAWI Podcasts',
+      url: 'https://abawi.app/podcasts',
+    },
+    author: { '@type': 'Organization', name: 'ABAWI SN' },
+    offers: ep.gratuit ? undefined : {
+      '@type': 'Offer',
+      price: ep.prix || 0,
+      priceCurrency: 'XOF',
+      availability: 'https://schema.org/InStock',
+    },
+  }
+
   return (
     <main className="detail">
+      <SEO
+        title={`${ep.titre} — Podcast ABAWI`}
+        description={podDesc}
+        keywords={`podcast business Afrique, ${ep.serie || 'entrepreneuriat'}, ${ep.titre}, ABAWI podcasts, décryptage économie`}
+        image={`/og-content/podcasts/${ep.id}.jpg`}
+        type="article"
+        structuredData={podSchema}
+      />
       {payflow && <PaymentFlow product={ep} onClose={() => setPayflow(false)} />}
       {viewer && <ContentViewer type={viewer.type} src={viewer.src} titre={viewer.titre} onClose={() => setViewer(null)} />}
 
@@ -233,15 +273,37 @@ function PodcastDetail() {
 
           <h1 className="detail-hero-title">{ep.titre}</h1>
           <div className="detail-hero-meta">
-            <span className="detail-meta-item">{isFree ? 'Accès libre' : 'Premium'}</span>
+            <span className="detail-meta-item">{isFree ? 'Accès libre' : canListen ? '✓ Vous avez accès' : 'Premium'}</span>
             <span className="detail-meta-item">{ep.serie}</span>
             <span className="detail-meta-item">Français</span>
           </div>
+          {access.reminder && (
+            <ExpiryReminder reminder={access.reminder} onDismiss={access.dismissReminder} context="product" />
+          )}
+          {canListen && !isFree && access.type !== 'public' && (
+            <div style={{ marginBottom: 12 }}>
+              <AccessBadge accessType={access.type} daysLeft={access.daysLeft} plan={access.plan} />
+            </div>
+          )}
           <p className="detail-hero-desc">
             Épisode podcast ABAWI — Analyses, interviews et décryptages pour les entrepreneurs africains.
           </p>
 
-          {isFree ? (
+          {/* Résumé audio statique s'il existe */}
+          {(() => {
+            const summary = findSummaryForContent(ep.titre)
+            if (!summary) return null
+            return (
+              <div style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 16 }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#A78BFA', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  🎙️ Résumé audio — {summary.titre.replace(/-/g, ' ')}
+                </div>
+                <audio controls style={{ width: '100%', height: 36 }} src={summary.audio_url} />
+              </div>
+            )
+          })()}
+
+          {canListen ? (
             <>
               {playableSrc ? (
                 <div style={{ width: '100%', marginBottom: 16 }}>
@@ -284,77 +346,24 @@ function PodcastDetail() {
                 <button
                   className="detail-btn detail-btn--gold"
                   style={{ background: 'linear-gradient(135deg,#18A84A,#15903f)', color: '#fff', border: 'none' }}
-                  onClick={() => setViewer({ type: 'audio', src: playableSrc, titre: ep.titre })}
+                  onClick={handleListenFullscreen}
                 >
                   🎧 Écouter en plein écran
                 </button>
               </div>
             </>
           ) : (
-            <MemberGate
-              fallback={
+            <>
+              {playableSrc && (
                 <>
-                  {playableSrc && (
-                    <>
-                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                        Extrait de 40 secondes :
-                      </p>
-                      <PreviewPlayer src={playableSrc} limit={40} />
-                    </>
-                  )}
-                  <PodcastPaymentOptions ep={ep} onBuy={() => setPayflow(true)} />
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+                    Extrait de 40 secondes :
+                  </p>
+                  <PreviewPlayer src={playableSrc} limit={40} />
                 </>
-              }
-            >
-              <>
-                {playableSrc ? (
-                  <div style={{ width: '100%', marginBottom: 16 }}>
-                    <AudioPlayer src={playableSrc} size="lg" premium={false} titre={ep.titre} serie={ep.serie} id={ep.id} />
-                  </div>
-                ) : (
-                  audioCheckDone && <p style={{ color: '#ef4444', fontSize: '0.84rem', marginBottom: 12 }}>Fichier audio introuvable pour cet épisode.</p>
-                )}
-                {playableSrc && (
-                  <div style={{ marginBottom: 14 }}>
-                    <button
-                      onClick={() => setShowLyrics(v => !v)}
-                      style={{
-                        padding: '9px 14px', borderRadius: 10, cursor: 'pointer',
-                        border: '1px solid rgba(240,180,41,0.28)', background: 'rgba(240,180,41,0.08)',
-                        color: '#F0B429', fontWeight: 700, fontSize: '0.8rem', fontFamily: 'Outfit,sans-serif',
-                      }}
-                    >
-                      {showLyrics ? 'Masquer les lyrics' : 'Afficher les lyrics'}
-                    </button>
-                    {showLyrics && (
-                      <div style={{
-                        marginTop: 10, maxHeight: 240, overflowY: 'auto',
-                        background: '#0D1117', border: '1px solid #1A2332', borderRadius: 10, padding: 12,
-                      }}>
-                        {hasLyrics ? (
-                          <p style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#D1D5DB', fontSize: '0.84rem', lineHeight: 1.6 }}>
-                            {lyricsText}
-                          </p>
-                        ) : (
-                          <p style={{ margin: 0, color: '#8B95A5', fontSize: '0.8rem' }}>
-                            Lyrics non disponibles pour cet épisode pour le moment.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="detail-hero-btns">
-                  <button
-                    className="detail-btn detail-btn--gold"
-                    style={{ background: 'linear-gradient(135deg,#18A84A,#15903f)', color: '#fff', border: 'none' }}
-                    onClick={() => setViewer({ type: 'audio', src: playableSrc, titre: ep.titre })}
-                  >
-                    🎧 Écouter en plein écran
-                  </button>
-                </div>
-              </>
-            </MemberGate>
+              )}
+              <PodcastPaymentOptions ep={ep} onBuy={() => setPayflow(true)} />
+            </>
           )}
 
           <ShareButtons titre={ep.titre} type="podcast" />

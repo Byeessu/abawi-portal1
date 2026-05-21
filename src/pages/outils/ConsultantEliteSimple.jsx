@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import SEO from '../../components/SEO'
 import { exportToPDF } from '../../lib/generatePDF'
 import { cleanIATextLight } from '../../lib/cleanText'
 import { useAuth } from '../../context/AuthContext'
@@ -9,6 +10,8 @@ import { useToolAccess } from '../../hooks/useToolAccess'
 
 import { callGroq as groqCall } from '../../lib/groqClient'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolHero from '../../components/ToolHero'
 import RichDoc from '../../components/RichDoc'
 
 const CONSULT_SYSTEM = `Tu es un consultant stratégique senior avec 15 ans d'expérience en Afrique de l'Ouest, spécialisé en management, stratégie d'entreprise, développement organisationnel et marchés africains. Tu rédiges des livrables de conseil professionnels, structurés et actionnables. Tes analyses sont rigoureuses et tes recommandations concrètes et priorisées.
@@ -245,6 +248,10 @@ export default function ConsultantEliteSimple() {
       background: 'var(--gradient-hero)',
       minHeight: '100vh'
     }}>
+      <SEO title="Consultant Élite — Proposition commerciale et rapports IA" description="Proposition commerciale, rapport de mission, étude de marché, SWOT, CR réunion, KPI dashboard par IA." image="/og-tools/consultant.jpg" />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="Consultant Élite"
         icon="🎯"
@@ -270,82 +277,17 @@ export default function ConsultantEliteSimple() {
           "Le dashboard KPI génère les indicateurs pertinents selon le secteur",
         ]}
       />
-      {/* Élite Header */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-        padding: '40px', 
-        borderRadius: '20px', 
-        marginBottom: '32px',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{ 
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(240,180,41,0.2) 0%, transparent 70%)',
-          borderRadius: '50%',
-          transform: 'translate(50%, -50%)'
-        }} />
-        <h1 style={{ 
-          color: 'var(--text-primary)', 
-          fontSize: '3rem', 
-          fontWeight: '900',
-          margin: '0 0 16px 0',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Consultant Élite
-        </h1>
-        <p style={{ 
-          color: 'var(--text-secondary)', 
-          fontSize: '1.2rem',
-          margin: 0,
-          position: 'relative',
-          zIndex: 1
-        }}>
-          Frameworks consulting avancés et livrables professionnels de tier-1
-        </p>
-        <div style={{ 
-          marginTop: '24px',
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'var(--bg-secondary)',
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? 7 Sections Conseil
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'var(--bg-secondary)',
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            🎯 Frameworks tier-1
-          </div>
-          <div style={{ 
-            padding: '8px 16px', 
-            background: 'var(--bg-secondary)',
-            borderRadius: '100px',
-            fontSize: '0.9rem',
-            fontWeight: 600
-          }}>
-            ? KPI Dashboards
-          </div>
-        </div>
-      </div>
+      <ToolHero
+        icon="🎯"
+        badge="Consulting · Afrique"
+        title="Consultant"
+        titleAccent="Élite"
+        subtitle="Propositions, rapports, études PESTEL/SWOT, KPI dashboards — niveau cabinet international."
+        gradient="linear-gradient(135deg, #0f172a 0%, #312e81 45%, #4338ca 100%)"
+        glowColor="rgba(67,56,202,0.4)"
+        accentColor="#C7D2FE"
+        stats={[['📋','7 Livrables'],['🎯','Frameworks Tier-1'],['📊','KPI Dashboard'],['🌍','Africa-first']]}
+      />
 
       {/* Élite Navigation */}
       <div style={{

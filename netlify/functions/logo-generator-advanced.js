@@ -115,7 +115,7 @@ function buildAdvancedLogoPrompt(formData) {
       role: 'system',
       content: `Tu es un expert mondial en design graphique, branding et identité visuelle. Tu travailles pour les plus grandes agences de design et tu as créé des logos pour des marques Fortune 500.
 
-Ta mission est de créer 4 logos professionnels uniques et créatifs basés sur les informations fournies. Chaque logo doit être une œuvre d\'art qui raconte une histoire et communique les valeurs de l\'entreprise.
+Ta mission est de créer 4 logos professionnels uniques et créatifs basés sur les informations fournies. Chaque logo doit être une œuvre d'art qui raconte une histoire et communique les valeurs de l'entreprise. // eslint-disable-line no-useless-escape
 
 RÉPONSES EXIGÉES:
 - UNIQUEMENT un JSON valide
@@ -124,7 +124,7 @@ RÉPONSES EXIGÉES:
 
 CHAMPS OBLIGATOIRES pour chaque logo:
 - id: numéro unique (1-4)
-- name: nom exact de l\'entreprise
+- name: nom exact de l'entreprise // eslint-disable-line no-useless-escape
 - style: style principal (modern, classic, tech, eco, bold, playful, luxury, minimalist)
 - primaryColor: couleur hexadécimale principale
 - secondaryColor: couleur hexadécimale secondaire
@@ -138,12 +138,12 @@ CHAMPS OBLIGATOIRES pour chaque logo:
 - symbolism: symbolisme et signification (ex: croissance et innovation)
 - targetPersonality: personnalité cible du logo (ex: confiant, moderne, accessible)
 - scalability: adaptation à différentes tailles (ex: excellent, lisible à 8px)
-- uniquenessScore: score d\'unicité (1-10)
+- uniquenessScore: score d'unicité (1-10)
 - marketFit: adéquation au marché (ex: parfait pour secteur tech)
 
 CRITÈRES DE QUALITÉ:
 - Créativité et originalité maximales
-- Cohérence avec l\'identité de marque
+- Cohérence avec l'identité de marque
 - Adaptabilité multi-supports
 - Mémorabilité et impact visuel
 - Pertinence sectorielle`
@@ -165,12 +165,12 @@ PRÉFÉRENCES CRÉATIVES:
 
 DIRECTIVES CRÉATIVES:
 1. Génère 4 logos uniques mais cohérents
-2. Chaque logo doit explorer une facette différente de l\'identité
+2. Chaque logo doit explorer une facette différente de l'identité
 3. Intègre les couleurs de manière créative et équilibrée
 4. Les icônes doivent être mémorables et pertinentes
 5. Les previews doivent être immédiatement reconnaissables
 6. Les descriptions doivent inspirer et convaincre
-7. Pense à l\'adaptation sur tous les supports (web, print, mobile)
+7. Pense à l'adaptation sur tous les supports (web, print, mobile)
 8. Considère la concurrence et le positionnement unique
 
 INSPIRATION SECTORIELLE:

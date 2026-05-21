@@ -3,15 +3,11 @@ import { useAuth } from '../../context/AuthContext'
 import { cleanIATextLight } from '../../lib/cleanText'
 import { useToast } from '../../context/ToastContext'
 import { run360Crud } from '../../lib/abawi360CrudClient'
+import { callGroq } from '../../lib/groqClient'
 import './Abawi360Tools.css'
 import SyncStatus from '../../components/SyncStatus'
 import MarkdownText from '../../components/MarkdownText'
-import { Link } from 'react-router-dom'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
-
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
-const GROQ_BASE_URL = import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1'
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
 const STATUTS = {
   prospect: { label: 'Prospect', color: 'var(--purple)' },
@@ -27,6 +23,7 @@ const EMPTY_CONTACT = { prenom: '', nom: '', entreprise: '', poste: '', email: '
 
 export default function CRM() {
   const { membre } = useAuth()
+  const [saving, setSaving] = useState(false)
   const toast = useToast()
   const [contacts, setContacts] = useState([])
   const [view, setView] = useState('liste')
@@ -110,40 +107,28 @@ export default function CRM() {
   }
 
   async function generateSuggestions(contact) {
-    if (!GROQ_KEY) { toast("❌ Clé GROQ manquante (VITE_GROQ_API_KEY).", 'error'); return }
     setGenerating(true)
     try {
-      const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GROQ_MODEL, max_tokens: 500, temperature: 0.7,
-          messages: [{ role: 'user', content: `Contact CRM : ${contact.prenom} ${contact.nom}, ${contact.entreprise}, secteur ${contact.secteur}, statut ${contact.statut}. Donne 3 suggestions concrètes pour faire avancer ce prospect en français.` }],
-        }),
-      })
-      const data = await res.json()
-      setAiSuggestions(cleanIATextLight(data.choices?.[0]?.message?.content || ''))
+      const text = await callGroq(
+        `Contact CRM : ${contact.prenom} ${contact.nom}, ${contact.entreprise}, secteur ${contact.secteur}, statut ${contact.statut}. Donne 3 suggestions concrètes pour faire avancer ce prospect en français.`,
+        { maxTokens: 500, temperature: 0.7 }
+      )
+      setAiSuggestions(cleanIATextLight(text || ''))
       toast('✅ Suggestions générées', 'success')
-    } catch { toast('❌ Erreur IA', 'error') }
+    } catch(e) { toast('❌ Erreur IA: ' + e.message, 'error') }
     setGenerating(false)
   }
 
   async function generateMessage(contact, type) {
-    if (!GROQ_KEY) { toast("❌ Clé GROQ manquante (VITE_GROQ_API_KEY).", 'error'); return }
     setGenerating(true)
     try {
-      const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GROQ_MODEL, max_tokens: 300, temperature: 0.7,
-          messages: [{ role: 'user', content: `Rédige un message ${type} professionnel et chaleureux en français pour contacter ${contact.prenom} ${contact.nom} de ${contact.entreprise} (secteur ${contact.secteur}). Court, efficace, 3-4 phrases max.` }],
-        }),
-      })
-      const data = await res.json()
-      setAiMessage(cleanIATextLight(data.choices?.[0]?.message?.content || ''))
+      const text = await callGroq(
+        `Rédige un message ${type} professionnel et chaleureux en français pour contacter ${contact.prenom} ${contact.nom} de ${contact.entreprise} (secteur ${contact.secteur}). Court, efficace, 3-4 phrases max.`,
+        { maxTokens: 300, temperature: 0.7 }
+      )
+      setAiMessage(cleanIATextLight(text || ''))
       toast('✅ Message généré', 'success')
-    } catch { toast('❌ Erreur IA', 'error') }
+    } catch(e) { toast('❌ Erreur IA: ' + e.message, 'error') }
     setGenerating(false)
   }
 
@@ -165,7 +150,7 @@ export default function CRM() {
   const labelStyle = { fontSize: '0.72rem', color: 'var(--t360-text-secondary)', display: 'block', marginBottom: '4px', fontWeight: 600 }
 
   return (
-    <div className="tools360-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="tools360-page" style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 24px 80px' }}>
       <div className="tools360-header">
         <div>
           <h1 className="tools360-title">👥 CRM ABAWI</h1>

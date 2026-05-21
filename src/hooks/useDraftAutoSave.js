@@ -74,7 +74,7 @@ export function useDraftAutoSave(key, value, options = {}) {
 
   const clearDraft = () => {
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    try { localStorage.removeItem(key) } catch {}
+    try { localStorage.removeItem(key) } catch { /* ignore */ }
     setRestored(null)
     setLastSavedAt(null)
   }

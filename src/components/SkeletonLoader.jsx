@@ -96,7 +96,7 @@ export function ProductSkeleton() {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: '40px',
-        maxWidth: '1200px',
+        maxWidth: '1400px',
         margin: '0 auto',
       }}
     >

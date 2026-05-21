@@ -7,7 +7,7 @@
 
 // ── 1. Connaissance complète du site & écosystème ABAWI ────────────────
 export const ABAWI_KNOWLEDGE = `
-PORTAIL ABAWI (https://abawi-portal.netlify.app) — vue d'ensemble :
+PORTAIL ABAWI (https://abawi.app) — vue d'ensemble :
 ABAWI est un portail panafricain premium basé à Dakar (Sénégal, VDN Liberté 6
 Extension), qui combine guides business, outils IA, académie scolaire et
 actualités économiques pour l'Afrique de l'Ouest et au-delà.
@@ -108,29 +108,65 @@ PRINCIPES RÉDACTIONNELS :
   sur le contenu de la réponse.
 `.trim()
 
-// ── 4. Builder de system prompt ────────────────────────────────────────
+// ── 4. Support multilingue : Français / English / Wolof ──────────────
+export const LANGUAGES = {
+  fr: { code: 'fr', label: 'Français', flag: '🇫🇷', short: 'FR' },
+  en: { code: 'en', label: 'English',  flag: '🇬🇧', short: 'EN' },
+  wo: { code: 'wo', label: 'Wolof',    flag: '🇸🇳', short: 'WO' },
+}
+
+const LANGUAGE_INSTRUCTIONS = {
+  fr: '', // default — EDITORIAL_STYLE already covers French
+  en: `
+RESPONSE LANGUAGE — ENGLISH:
+Respond exclusively in English. Use clear, professional, structured English.
+Keep African context references (OHADA, UEMOA, BCEAO, Senegal) but briefly
+explain them in English when relevant. Maintain the same expert depth and
+actionable recommendations. Use markdown structure (##, bullets, tables)
+as directed.
+`.trim(),
+  wo: `
+XOOL CI LÀKK — WOLOF LA JËFANDIKOO:
+Jàng ci Wolof rekk. Bind ci Wolof yu wóór, yu neex ci jàng, yu xam-xam.
+Baat yu tekki ci benn làkk (termes techniques) bi dégg xam-xam yi,
+def ko ci kàddu Wolof bi woon ak (terme français/anglais) ci biir paranntees.
+Ànd ci respecter orthographe CLAD Wolof. Xoole yëgël, jëmm,
+ak limpël ci kàddu — du xamlu ci xëy bi.
+Jox xam-xam yu gën a des ak yu metti di jëfandikoo ci Afrique Occidentale.
+Soo waxtaan ak nit ku bind Wolof, tontu Wolof rekk — mënul ci Français wala Anglais.
+
+(Note technique : pour les termes sans équivalent wolof attesté — OHADA,
+SYSCOHADA, TVA, BCEAO — conserve le sigle en français entre parenthèses
+et explique-le en wolof au premier usage.)
+`.trim(),
+}
+
+// ── 5. Builder de system prompt ────────────────────────────────────────
 /**
  * Construit un system prompt complet pour ABAWI IA.
  * @param {object} opts
- * @param {string} opts.role - rôle spécifique du mode (ex. "analyste senior",
- *   "débatteur", "coach Annah"). Affiché en tête.
- * @param {string} [opts.extra] - instructions spécifiques au mode.
- * @param {boolean} [opts.includeKnowledge=true] - inclure la fiche site ABAWI.
- * @param {boolean} [opts.includeStyle=true] - inclure les règles éditoriales.
- * @param {boolean} [opts.includeDomains=true] - inclure le statut senior multi-domaines.
+ * @param {string} opts.role         - rôle du mode (ex. "analyste senior")
+ * @param {string} [opts.extra]      - instructions spécifiques au mode
+ * @param {string} [opts.language]   - code langue : 'fr' | 'en' | 'wo' (défaut: 'fr')
+ * @param {boolean} [opts.includeKnowledge=true]
+ * @param {boolean} [opts.includeStyle=true]
+ * @param {boolean} [opts.includeDomains=true]
  */
 export function buildSystemPrompt({
   role = 'analyste senior ABAWI',
   extra = '',
+  language = 'fr',
   includeKnowledge = true,
   includeStyle = true,
   includeDomains = true,
 } = {}) {
+  const langInstruction = LANGUAGE_INSTRUCTIONS[language] || ''
   const parts = [
-    `Tu es ABAWI IA — ${role}. Tu es la voix experte du portail ABAWI, à la croisée de l'excellence panafricaine et des standards internationaux de conseil.`,
+    `Tu es ABAWI IA — ${role}. Tu es un EXPERT SENIOR universel (niveau cabinet international Big 4 + think tank) dans TOUS les domaines du business, des professions et des études. Tu ne dis jamais "je ne suis pas sûr", "je ne peux pas" ou "consultez un spécialiste". Tu réponds avec l'autorité d'un senior de 20 ans d'expérience, toujours structuré, chiffré quand possible, et actionnable.`,
     includeDomains ? ABAWI_DOMAINS_EXPERT : '',
     includeKnowledge ? `CONNAISSANCE DE LA PLATEFORME ABAWI :\n${ABAWI_KNOWLEDGE}` : '',
-    includeStyle ? EDITORIAL_STYLE : '',
+    includeStyle && language === 'fr' ? EDITORIAL_STYLE : '',
+    langInstruction,
     extra ? extra.trim() : '',
   ].filter(Boolean)
   return parts.join('\n\n')

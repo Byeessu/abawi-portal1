@@ -5,6 +5,9 @@ import { callGroq, extractTextFromAnyFile } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
+import { useAuth } from '../../context/AuthContext'
+import { useFreeToolQuota } from '../../hooks/useFreeToolQuota'
+import FreeToolPaywall from '../../components/FreeToolPaywall'
 
 // =====================================================================
 // Stockage multi-conversations (ChatGPT/Claude-like)
@@ -48,7 +51,7 @@ function loadStore() {
         }
       }
     }
-  } catch {}
+  } catch { /* ignore */ }
   // 2) Migration depuis l'ancienne clé (historique unique)
   try {
     const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || '[]')
@@ -56,7 +59,7 @@ function loadStore() {
       const conv = makeConversation(legacy)
       return { conversations: [conv], activeId: conv.id }
     }
-  } catch {}
+  } catch { /* ignore */ }
   return { conversations: [], activeId: null }
 }
 
@@ -65,7 +68,7 @@ function saveStore(store) {
     localStorage.setItem(STORE_KEY, JSON.stringify(store))
     // Nettoie la legacy après migration réussie
     localStorage.removeItem(LEGACY_KEY)
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 function formatRelativeTime(ts) {
@@ -110,10 +113,17 @@ Réessayez dans 1 à 2 minutes. Si l'erreur persiste, simplifiez la question ou 
 // Composant principal
 // =====================================================================
 
-export default function RechercheMode() {
+export default function RechercheMode({ language = 'fr' } = {}) {
+  const { membre } = useAuth()
+  const quota = useFreeToolQuota('abawi_ia', {
+    anonymousLimit: 5, memberLimit: 10, membre, creditType: 'abawi_ia',
+  })
+  const [showPaywall, setShowPaywall] = useState(false)
+
   const location = useLocation();
   const inputRef = useRef(null);
   const bottomRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   // Store complet
   const [store, setStore] = useState(() => loadStore());
@@ -140,13 +150,14 @@ export default function RechercheMode() {
     saveStore(store);
   }, [store]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [history, loading]);
+  // NOTE: pas de scroll auto — la fenêtre reste stable pour que l'utilisateur
+  // voie le début de la réponse et descende s'il le souhaite.
 
   // Pré-remplit la question via location.state (ex: depuis Hero)
   useEffect(() => {
     const stateQuery = location.state?.query;
     if (stateQuery) {
-      setQuery(stateQuery);
+      Promise.resolve().then(() => setQuery(stateQuery));
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [location.state]);
@@ -224,14 +235,29 @@ export default function RechercheMode() {
         }
       }));
       setFileContext(contents.join('\n\n'));
-    } catch {}
+    } catch { /* ignore */ }
     setFileLoading(false);
+  }
+
+  async function checkAccessThen() {
+    if (quota.quotaAvailable) {
+      quota.recordUse()
+      return true
+    }
+    if (quota.canUseCredits) {
+      const result = await quota.debitCredits()
+      if (result.ok) return true
+    }
+    setShowPaywall(true)
+    return false
   }
 
   // ── Recherche IA ────────────────────────────────────────────────────
   async function search() {
     const q = (query || '').trim();
     if (!q && !fileContext) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setLoading(true);
 
     // Si pas de conversation active, en créer une à la volée
@@ -255,7 +281,7 @@ export default function RechercheMode() {
       const messages = [
         {
           role: 'system',
-          content: buildSystemPrompt({
+          content: buildSystemPrompt({ language,
             role: "analyste senior issu d'un cabinet international de stratégie et de conseil",
             extra: `STRUCTURE SPÉCIFIQUE :
 - Pour une analyse SWOT : sections ## FORCES, ## FAIBLESSES, ## OPPORTUNITÉS, ## MENACES.
@@ -511,7 +537,7 @@ export default function RechercheMode() {
       )}
 
       {/* ── Fil de la conversation active (flex:1, scroll interne) ── */}
-      <div style={{
+      <div ref={chatContainerRef} style={{
         flex: 1, minHeight: 0, overflowY: 'auto',
         padding: '16px 16px 8px', overscrollBehavior: 'contain',
       }}>
@@ -615,6 +641,19 @@ export default function RechercheMode() {
         }}>{loading ? '…' : '→'}</button>
       </div>
       </div>
+
+      {showPaywall && (
+        <FreeToolPaywall
+          toolName="Recherche IA"
+          usedToday={quota.usedToday}
+          limit={quota.limit}
+          membre={membre}
+          creditCost={quota.creditCost}
+          soldeCredits={quota.soldeCredits}
+          upgradeAction="generate"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
     </div>
   );
 }

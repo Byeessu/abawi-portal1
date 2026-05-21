@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E"/>
+      <stop offset="100%" stop-color="#15803D"/>
+    </linearGradient>
+    <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#EAB308"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="4" y="4" width="112" height="112" rx="26" fill="url(#ig)"/>
+
+  <!-- Glow overlay top-left -->
+  <ellipse cx="35" cy="30" rx="30" ry="22" fill="white" opacity="0.08"/>
+
+  <!-- Ticket white shape -->
+  <rect x="16" y="28" width="88" height="64" rx="10" fill="white" opacity="0.96"/>
+
+  <!-- Left notch -->
+  <circle cx="16" cy="60" r="9" fill="url(#ig)"/>
+  <!-- Right notch -->
+  <circle cx="104" cy="60" r="9" fill="url(#ig)"/>
+
+  <!-- Perforation -->
+  <line x1="57" y1="33" x2="57" y2="87" stroke="#D1FAE5" stroke-width="2" stroke-dasharray="3.5 4"/>
+
+  <!-- Star left side -->
+  <path d="M37 44 L40.2 54.2 L51 54.2 L42.4 60.6 L45.6 70.8 L37 64.4 L28.4 70.8 L31.6 60.6 L23 54.2 L33.8 54.2 Z"
+        fill="url(#sg)"/>
+
+  <!-- SN right side -->
+  <text x="81" y="67"
+        font-family="'Arial Black', Arial, sans-serif"
+        font-size="20" font-weight="900"
+        fill="#15803D" text-anchor="middle"
+        letter-spacing="-0.5">SN</text>
+</svg>

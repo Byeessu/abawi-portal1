@@ -1,0 +1,329 @@
+/* ══════════════════════════════════════════════════════
+   TOOL HERO — Design ultra-premium ABAWI
+   ══════════════════════════════════════════════════════ */
+.th {
+  --th-accent: #3B82F6;
+  --th-from:   #1e3a5f;
+  --th-to:     #1d4ed8;
+
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  isolation: isolate;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow:
+    0 24px 64px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(255,255,255,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ── Fond dégradé ── */
+.th-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, var(--th-from) 0%, color-mix(in srgb, var(--th-from) 60%, var(--th-to)) 50%, var(--th-to) 100%);
+}
+
+/* ── Grille de fond ── */
+.th-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at 60% 40%, black 25%, transparent 72%);
+}
+
+/* ── Orbes lumineux ── */
+.th-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(55px);
+}
+.th-orb--1 {
+  width: 320px; height: 320px;
+  top: -80px; right: -60px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--th-accent) 40%, transparent) 0%, transparent 70%);
+  animation: thOrb1 9s ease-in-out infinite;
+}
+.th-orb--2 {
+  width: 220px; height: 220px;
+  bottom: -60px; left: 20%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  animation: thOrb2 12s ease-in-out infinite;
+}
+.th-orb--3 {
+  width: 180px; height: 180px;
+  top: 30%; right: 25%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--th-accent) 25%, transparent) 0%, transparent 70%);
+  animation: thOrb3 7s ease-in-out infinite;
+  filter: blur(40px);
+}
+
+/* ── Particules ── */
+.th-dot {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  background: var(--th-accent);
+}
+.th-dot--1 { width:5px; height:5px; top:22%; left:28%; opacity:0.6; animation:thDot 6s ease-in-out infinite; }
+.th-dot--2 { width:3px; height:3px; bottom:30%; right:18%; opacity:0.5; animation:thDot 8s ease-in-out infinite 1.5s; }
+.th-dot--3 { width:4px; height:4px; top:60%; left:55%; opacity:0.4; animation:thDot 7s ease-in-out infinite 3s; }
+.th-dot--4 { width:3px; height:3px; top:15%; right:38%; opacity:0.55; animation:thDot 5s ease-in-out infinite 0.8s; }
+
+/* ══ TOPBAR — Logo + Nom outil ══ */
+.th-topbar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px clamp(18px,3vw,36px) 0;
+  flex-wrap: wrap;
+}
+
+/* Nom de l'outil */
+.th-topbar-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.th-topbar-brand {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.th-topbar-sep {
+  color: rgba(255,255,255,0.3);
+  font-size: 0.9rem;
+}
+.th-topbar-tool {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Topbar actions */
+.th-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.th-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.85);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.th-back-link:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.35);
+  color: #fff;
+}
+
+/* Badge */
+.th-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  backdrop-filter: blur(8px);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.th-badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--th-accent);
+  box-shadow: 0 0 5px var(--th-accent);
+  animation: thBadgePulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ══ BODY — Icône + Contenu ══ */
+.th-body {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(16px,3vw,32px);
+  padding: clamp(18px,3vw,32px) clamp(18px,3vw,36px) clamp(22px,3vw,36px);
+  flex-wrap: wrap;
+}
+
+/* Icône outil */
+.th-icon-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.th-icon-halo {
+  position: absolute;
+  inset: -12px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--th-accent) 30%, transparent);
+  filter: blur(18px);
+  pointer-events: none;
+}
+.th-icon {
+  position: relative;
+  width: clamp(64px,10vw,88px);
+  height: clamp(64px,10vw,88px);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.14);
+  backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255,255,255,0.26);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(2rem,5vw,2.8rem);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* Contenu texte */
+.th-content {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.th-title {
+  margin: 0;
+  font-size: clamp(1.45rem,3.5vw,2.5rem);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+.th-title-accent {
+  color: var(--th-accent);
+  filter: drop-shadow(0 0 10px var(--th-accent));
+}
+
+.th-sub {
+  margin: 0;
+  font-size: clamp(0.84rem,1.5vw,0.97rem);
+  color: rgba(255,255,255,0.78);
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+/* Stats pills */
+.th-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.th-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-size: 0.75rem;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: background 0.2s, border-color 0.2s;
+}
+.th-stat:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.3);
+}
+.th-stat-icon { font-size: 0.85em; }
+
+/* ══ TICKER BAS ══ */
+.th-ticker-wrap {
+  position: relative;
+  z-index: 10;
+  height: 26px;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(4px);
+}
+.th-ticker {
+  white-space: nowrap;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  animation: thTicker 30s linear infinite;
+}
+
+/* ── Keyframes ── */
+@keyframes thRingSpin  { to { transform: rotate(360deg); } }
+@keyframes thTicker    { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes thOrb1      { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-20px,-16px) scale(1.1); } }
+@keyframes thOrb2      { 0%,100% { transform: translate(0,0); } 50% { transform: translate(14px,10px); } }
+@keyframes thOrb3      { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-10px,12px) scale(1.08); } }
+@keyframes thDot       { 0%,100% { transform: translate(0,0) scale(1); opacity:0.5; } 50% { transform: translate(8px,-10px) scale(1.5); opacity:1; } }
+@keyframes thBadgePulse{ 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.7); } }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .th { border-radius: 18px; margin-bottom: 18px; }
+  .th-topbar { padding: 12px 16px 0; gap: 10px; }
+  .th-body { padding: 14px 16px 18px; gap: 14px; }
+  .th-topbar-tool { display: none; }
+  .th-logo-circle { width: 38px; height: 38px; }
+  .th-icon { border-radius: 16px; }
+  .th-title { font-size: 1.3rem; }
+  .th-sub { font-size: 0.82rem; }
+  .th-ticker-wrap { height: 22px; }
+  .th-ticker { font-size: 0.58rem; }
+}
+@media (max-width: 400px) {
+  .th-badge { display: none; }
+  .th-body { flex-direction: column; }
+  .th-icon { width: 56px; height: 56px; font-size: 1.7rem; }
+}

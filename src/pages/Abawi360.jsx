@@ -35,7 +35,7 @@ const ICON_MAP = {
 export default function Abawi360() {
   const { isMember, isAdmin } = useAuth()
   return (
-    <div className="abawi360-page" style={{ maxWidth: '1100px', margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="abawi360-page" style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 24px 80px' }}>
       <div className="abawi360-hero" style={{
         position: 'relative',
         background: 'var(--gradient-hero)',

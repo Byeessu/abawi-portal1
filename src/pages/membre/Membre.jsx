@@ -1,11 +1,89 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { guides, allFascicules, podcasts } from '../../data/products'
+import { guides, allFascicules, podcasts, slugify } from '../../data/products'
 import { supabase } from '../../lib/supabase'
 import './Membre.css'
 import { Link } from 'react-router-dom'
 import { CoverImage } from '../../components/CoverImage'
 import { AudioPlayer } from '../../components/AudioPlayer'
+
+// ─── Forgot Password Modal ────────────────────────────────────────────────────
+function ForgotPasswordModal({ onClose }) {
+  const { requestPasswordReset, confirmPasswordReset } = useAuth()
+  const [step, setStep] = useState('request')
+  const [email, setEmail] = useState('')
+  const [token, setToken] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [err, setErr] = useState('')
+  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleRequest(e) {
+    e.preventDefault(); setErr(''); setMsg(''); setLoading(true)
+    const r = await requestPasswordReset(email)
+    if (r.success) {
+      setMsg(`Un code à 6 chiffres a été généré. Saisissez-le ci-dessous pour réinitialiser votre mot de passe.`)
+      setStep('confirm')
+    } else {
+      setErr(r.error)
+    }
+    setLoading(false)
+  }
+
+  async function handleConfirm(e) {
+    e.preventDefault(); setErr(''); setMsg(''); setLoading(true)
+    if (newPw !== confirmPw) { setErr('Les mots de passe ne correspondent pas'); setLoading(false); return }
+    if (newPw.length < 6) { setErr('Le mot de passe doit contenir au moins 6 caractères'); setLoading(false); return }
+    const r = await confirmPasswordReset(email, token, newPw)
+    if (r.success) {
+      setMsg('Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.')
+      setStep('done')
+    } else {
+      setErr(r.error)
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="mb-viewer-overlay" onClick={onClose}>
+      <div className="mb-login-card" style={{ maxWidth: 420, width: '90%' }} onClick={(e) => e.stopPropagation()}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+          {step === 'request' ? '🔑 Mot de passe oublié' : step === 'confirm' ? '🔐 Nouveau mot de passe' : '✅ Terminé'}
+        </h2>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 16 }}>
+          {step === 'request' ? 'Entrez votre email pour recevoir un code de réinitialisation.' :
+           step === 'confirm' ? 'Saisissez le code reçu et votre nouveau mot de passe.' :
+           'Votre mot de passe a été mis à jour.'}
+        </p>
+        {err && <p className="mb-login-err">{err}</p>}
+        {msg && <p style={{ background: 'rgba(0,200,83,0.1)', color: '#00c853', padding: '10px 14px', borderRadius: 10, fontSize: '0.82rem', marginBottom: 12 }}>{msg}</p>}
+
+        {step === 'request' && (
+          <form onSubmit={handleRequest} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <input className="mb-input" type="email" placeholder="Votre email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <button className="mb-btn mb-btn--gold" type="submit" disabled={loading}>{loading ? 'Envoi...' : 'Envoyer le code'}</button>
+          </form>
+        )}
+
+        {step === 'confirm' && (
+          <form onSubmit={handleConfirm} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <input className="mb-input" placeholder="Code à 6 chiffres" value={token} onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))} required maxLength={6} />
+            <input className="mb-input" type="password" placeholder="Nouveau mot de passe" value={newPw} onChange={(e) => setNewPw(e.target.value)} required />
+            <input className="mb-input" type="password" placeholder="Confirmer le mot de passe" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} required />
+            <button className="mb-btn mb-btn--gold" type="submit" disabled={loading}>{loading ? 'Mise à jour...' : 'Réinitialiser'}</button>
+          </form>
+        )}
+
+        {step === 'done' && (
+          <button className="mb-btn mb-btn--gold" onClick={onClose}>Se connecter</button>
+        )}
+
+        <button onClick={onClose} style={{ marginTop: 14, background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem' }}>Annuler</button>
+      </div>
+    </div>
+  )
+}
 
 // ─── Login Form ───────────────────────────────────────────────────────────────
 function LoginForm() {
@@ -16,6 +94,7 @@ function LoginForm() {
   const [err, setErr] = useState('')
   const [expired, setExpired] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault(); setErr(''); setExpired(false); setLoading(true)
@@ -27,18 +106,22 @@ function LoginForm() {
 
   return (
     <main className="mb-login-page">
+      {showForgot && <ForgotPasswordModal onClose={() => setShowForgot(false)} />}
       <div className="mb-login-card">
+        <div className="mb-login-logo">
+          <img src="/favicon-symbol.png" alt="ABAWI" loading="eager" decoding="async" width="52" height="52" />
+        </div>
         <h1 className="mb-login-title">Espace <span style={{ color: 'var(--gold)' }}>Membre</span></h1>
-        <p className="mb-login-sub">Connectez-vous a votre compte ABAWI+</p>
+        <p className="mb-login-sub">Connectez-vous à votre compte ABAWI+</p>
         {err && <p className="mb-login-err">{err}</p>}
         {expired && (
           <div className="mb-login-expired">
-            <p>Votre abonnement a expire.</p>
+            <p>Votre abonnement a expiré.</p>
             <Link to="/plans" className="mb-btn mb-btn--gold mb-btn--sm" style={{ marginTop: 8 }}>Renouveler mon abonnement</Link>
           </div>
         )}
         <form onSubmit={handleSubmit} className="mb-login-form">
-          <input className="mb-input" placeholder="Email ou numero WhatsApp" value={id} onChange={(e) => setId(e.target.value)} required />
+          <input className="mb-input" placeholder="Email ou numéro WhatsApp" value={id} onChange={(e) => setId(e.target.value)} required />
           <div className="mb-input-pw-wrap">
             <input className="mb-input" type={showPw ? 'text' : 'password'} placeholder="Mot de passe" value={pw} onChange={(e) => setPw(e.target.value)} required />
             <button type="button" className="mb-pw-toggle" onClick={() => setShowPw((v) => !v)} tabIndex={-1}>
@@ -48,7 +131,7 @@ function LoginForm() {
           <button className="mb-btn mb-btn--gold" type="submit" disabled={loading}>{loading ? 'Connexion...' : 'Se connecter'}</button>
         </form>
         <p className="mb-login-links">
-          <a href="https://wa.me/221775185050?text=Mot%20de%20passe%20oublie" target="_blank" rel="noopener noreferrer">Mot de passe oublie ?</a>
+          <button onClick={() => setShowForgot(true)} style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: 'inherit', padding: 0, textDecoration: 'underline' }}>Mot de passe oublié ?</button>
           {' | '}<Link to="/plans">Pas encore membre ? S'abonner</Link>
         </p>
       </div>
@@ -89,6 +172,41 @@ function AccessItem({ icon, label, desc, unlocked }) {
   )
 }
 
+// ─── Credit Transaction Row ───────────────────────────────────────────────────
+function CreditTxRow({ tx }) {
+  const isDebit = (tx.amount || tx.montant || 0) < 0
+  const amount = Math.abs(tx.amount || tx.montant || 0)
+  const label = tx.description || tx.tool_name || tx.product_id || 'Transaction'
+  const date = new Date(tx.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  return (
+    <div className="mb-credit-tx">
+      <div className="mb-credit-tx-left">
+        <span className={`mb-credit-tx-icon ${isDebit ? 'mb-credit-tx-icon--debit' : 'mb-credit-tx-icon--credit'}`}>
+          {isDebit ? '−' : '+'}
+        </span>
+        <div>
+          <div className="mb-credit-tx-label">{label}</div>
+          <div className="mb-credit-tx-date">{date}</div>
+        </div>
+      </div>
+      <span className={`mb-credit-tx-amount ${isDebit ? 'mb-credit-tx-amount--debit' : 'mb-credit-tx-amount--credit'}`}>
+        {isDebit ? '−' : '+'}{amount} cr.
+      </span>
+    </div>
+  )
+}
+
+// ─── Profile Field ────────────────────────────────────────────────────────────
+function ProfileField({ label, value }) {
+  return (
+    <div className="mb-profile-field">
+      <span className="mb-profile-field-label">{label}</span>
+      <span className="mb-profile-field-value">{value}</span>
+    </div>
+  )
+}
+
 // ─── Main Membre Component ────────────────────────────────────────────────────
 function Membre() {
   const { membre, logout, refreshMembre, isAdmin, isMember } = useAuth()
@@ -102,37 +220,49 @@ function Membre() {
   const [savingProfile, setSavingProfile] = useState(false)
   const [creditTxs, setCreditTxs] = useState([])
   const [creditTxsLoading, setCreditTxsLoading] = useState(false)
+  const [userPacks, setUserPacks] = useState([])
+  const [userPacksLoading, setUserPacksLoading] = useState(false)
+  const [showUpsell, setShowUpsell] = useState(() => {
+    try { return localStorage.getItem('abawi_upsell_closed') !== '1' } catch { return true }
+  })
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: review hook dependencies
+  const isFreePlan = (membre?.plan_type || '').toLowerCase() === 'gratuit'
+
+  function closeUpsell() {
+    setShowUpsell(false)
+    try { localStorage.setItem('abawi_upsell_closed', '1') } catch { /* ignore */ }
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { refreshMembre() }, [])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (tab === 'achats' && membre) loadPurchases()
     if (tab === 'credits' && membre) loadCreditTxs()
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: review hook dependencies
+    if (tab === 'packs' && membre) loadUserPacks()
   }, [tab, membre])
 
   async function loadPurchases() {
     if (!membre?.email) return
     setPurchasesLoading(true)
-    const { data } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('email', membre.email)
-      .order('created_at', { ascending: false })
+    const { data } = await supabase.from('payments').select('*').eq('email', membre.email).order('created_at', { ascending: false })
     setPurchases(data || [])
     setPurchasesLoading(false)
+  }
+
+  async function loadUserPacks() {
+    if (!membre?.id) return
+    setUserPacksLoading(true)
+    const { data } = await supabase.from('user_packs').select('*').eq('user_id', membre.id).order('created_at', { ascending: false })
+    setUserPacks(data || [])
+    setUserPacksLoading(false)
   }
 
   async function loadCreditTxs() {
     if (!membre?.email) return
     setCreditTxsLoading(true)
-    const { data } = await supabase
-      .from('credit_transactions')
-      .select('*')
-      .eq('email', membre.email)
-      .order('created_at', { ascending: false })
-      .limit(50)
+    const { data } = await supabase.from('credit_transactions').select('*').eq('email', membre.email).order('created_at', { ascending: false }).limit(50)
     setCreditTxs(data || [])
     setCreditTxsLoading(false)
   }
@@ -154,37 +284,41 @@ function Membre() {
   const daysLeft = membre.date_fin ? Math.max(0, Math.ceil((new Date(membre.date_fin) - new Date()) / 86400000)) : 0
   const isActive = isAdmin || (membre.isActive !== false && daysLeft > 0)
   const initials = ((membre.prenom?.[0] || '') + (membre.nom?.[0] || '')).toUpperCase() || '?'
+  const creditBalance = membre.credits ?? 0
 
   const filteredGuides = guides.filter((g) => !search || g.titre.toLowerCase().includes(search.toLowerCase()))
   const filteredFasc = allFascicules.filter((f) => !search || f.titre.toLowerCase().includes(search.toLowerCase()))
 
   const TABS = [
-    { key: 'espace', label: 'Mon espace', icon: '🏠' },
-    { key: 'acces', label: 'Mes accès', icon: '🔑' },
-    { key: 'achats', label: 'Mes achats', icon: '🛒' },
+    { key: 'espace',  label: 'Mon espace', icon: '🏠' },
+    { key: 'packs',   label: 'Mes packs',  icon: '📦' },
     { key: 'credits', label: 'Mes crédits', icon: '💰' },
-    { key: 'profil', label: 'Mon profil', icon: '👤' },
+    { key: 'acces',   label: 'Mes accès',   icon: '🔑' },
+    { key: 'achats',  label: 'Historique',  icon: '🛒' },
+    { key: 'profil',  label: 'Mon profil',  icon: '👤' },
   ]
 
   const ACCESS_ITEMS = [
-    { icon: '📚', label: 'Guides Digital', desc: `${guides.length} guides business & stratégie`, unlocked: isMember },
-    { icon: '🎓', label: 'Academy', desc: `${allFascicules.length} fascicules & cours Bac`, unlocked: isMember },
-    { icon: '🎧', label: 'Podcasts', desc: `${podcasts.length} épisodes premium`, unlocked: isMember },
-    { icon: '🛠️', label: 'Outils & IA', desc: 'CV, Business Plan, Factures, IA élite', unlocked: isMember },
-    { icon: '💬', label: 'Groupe WhatsApp VIP', desc: 'Communauté privée ABAWI+', unlocked: isMember },
-    { icon: '📋', label: 'Templates Business', desc: 'Modèles professionnels téléchargeables', unlocked: isMember },
-    { icon: '⚙️', label: 'Panel Admin', desc: 'Gestion complète du portail', unlocked: isAdmin },
+    { icon: '📚', label: 'Guides Digital',      desc: `${guides.length} guides business & stratégie`,   unlocked: isMember },
+    { icon: '🎓', label: 'Academy',             desc: `${allFascicules.length} fascicules & cours Bac`,  unlocked: isMember },
+    { icon: '🎧', label: 'Podcasts',            desc: `${podcasts.length} épisodes premium`,             unlocked: isMember },
+    { icon: '🛠️', label: 'Outils & IA',         desc: 'CV, Business Plan, Factures, IA élite',          unlocked: isMember },
+    { icon: '💬', label: 'Groupe WhatsApp VIP', desc: 'Communauté privée ABAWI+',                       unlocked: isMember },
+    { icon: '📋', label: 'Templates Business',  desc: 'Modèles professionnels téléchargeables',          unlocked: isMember },
+    { icon: '⚙️', label: 'Panel Admin',          desc: 'Gestion complète du portail',                    unlocked: isAdmin },
   ]
 
   return (
     <main className="mb-page">
       <PdfViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
 
-      {/* HEADER */}
+      {/* ══ HEADER ══ */}
       <div className="mb-header">
         <div className="mb-header-left">
           <div className="mb-avatar" style={{
-            background: isAdmin ? 'linear-gradient(135deg, #F0B429, #e5a820)' : 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+            background: isAdmin
+              ? 'linear-gradient(135deg, #F0B429, #e5a820)'
+              : 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
             color: isAdmin ? '#070B0F' : '#fff',
           }}>{initials}</div>
           <div>
@@ -197,11 +331,13 @@ function Membre() {
         <div className="mb-header-right">
           {isAdmin ? (
             <span className="mb-admin-badge">⚙️ ADMIN</span>
+          ) : isFreePlan ? (
+            <span className="mb-badge-vip mb-badge-vip--free">🌱 Gratuit</span>
           ) : (
             <span className="mb-badge-vip">💎 ABAWI+</span>
           )}
-          <div className={`mb-status ${isActive ? 'mb-status--active' : 'mb-status--expired'}`}>
-            {isAdmin ? 'Accès total' : isActive ? `Actif — ${daysLeft}j restants` : 'Expiré'}
+          <div className={`mb-status ${isActive && !isFreePlan ? 'mb-status--active' : isFreePlan ? 'mb-status--active' : 'mb-status--expired'}`}>
+            {isAdmin ? 'Accès total' : isFreePlan ? 'Compte gratuit' : isActive ? `Actif — ${daysLeft}j restants` : 'Expiré'}
           </div>
           {!isAdmin && isActive && daysLeft <= 7 && (
             <div className="mb-alert mb-alert--danger">
@@ -212,14 +348,27 @@ function Membre() {
           {!isAdmin && !isActive && (
             <Link to="/plans" className="mb-btn mb-btn--gold mb-btn--sm">Renouveler l'abonnement</Link>
           )}
-          {isAdmin && (
-            <Link to="/admin" className="mb-admin-link">⚙️ Panel Admin</Link>
-          )}
+          {isAdmin && <Link to="/admin" className="mb-admin-link">⚙️ Panel Admin</Link>}
           <button className="mb-logout" onClick={logout}>Déconnexion</button>
         </div>
       </div>
 
-      {/* TABS */}
+      {/* ── Upsell banner — free users ── */}
+      {isFreePlan && showUpsell && (
+        <div className="mb-upsell">
+          <span className="mb-upsell-icon">💎</span>
+          <div className="mb-upsell-body">
+            <div className="mb-upsell-title">Passez à ABAWI+</div>
+            <div className="mb-upsell-sub">Guides premium, outils IA, Academy, ABAWI 360 et bien plus. Sans engagement.</div>
+          </div>
+          <div className="mb-upsell-actions">
+            <Link to="/plans" className="mb-btn mb-btn--gold mb-btn--sm">Découvrir ABAWI+</Link>
+            <button className="mb-upsell-close" onClick={closeUpsell} title="Fermer">✕</button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ TABS ══ */}
       <div className="mb-tabs">
         {TABS.map((t) => (
           <button key={t.key} className={`mb-tab ${tab === t.key ? 'mb-tab--active' : ''}`} onClick={() => setTab(t.key)}>
@@ -231,7 +380,6 @@ function Membre() {
       {/* ══ TAB: MON ESPACE ══ */}
       {tab === 'espace' && (
         <div>
-          {/* Search */}
           <input className="mb-search" placeholder="Rechercher un guide, fascicule..." value={search} onChange={(e) => setSearch(e.target.value)} />
 
           {/* Guides */}
@@ -299,11 +447,9 @@ function Membre() {
                       <span className="mb-pod-serie">{ep.serie}</span>
                       <h3 className="mb-pod-title">{ep.titre}</h3>
                     </div>
-                    {ep.audio_url ? (
-                      <AudioPlayer src={ep.audio_url} size="md" titre={ep.titre} serie={ep.serie} id={ep.id} />
-                    ) : (
-                      <span className="mb-pod-soon">Audio bientot disponible</span>
-                    )}
+                    {ep.audio_url
+                      ? <AudioPlayer src={ep.audio_url} size="md" titre={ep.titre} serie={ep.serie} id={ep.id} />
+                      : <span className="mb-pod-soon">Audio bientôt disponible</span>}
                   </div>
                 ))}
               </div>
@@ -331,59 +477,59 @@ function Membre() {
         </div>
       )}
 
-      {/* ══ TAB: MES ACCÈS ══ */}
-      {tab === 'acces' && (
+      {/* ══ TAB: MES PACKS ══ */}
+      {tab === 'packs' && (
         <div>
-          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#F0F2F5', marginBottom: 20 }}>
-            🔑 Droits d'accès — {isMember ? 'ABAWI+' : 'Non membre'}
+          <h3 className="mb-section-title mb-section-title--gold" style={{ marginBottom: 20 }}>
+            📦 Mes packs achetés ({userPacks.length})
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {ACCESS_ITEMS.map((item, i) => <AccessItem key={i} {...item} />)}
-          </div>
-          {!isMember && (
-            <div style={{ marginTop: 28, padding: '20px', borderRadius: 14, background: 'linear-gradient(135deg, rgba(240,180,41,0.08), rgba(240,180,41,0.04))', border: '1px solid rgba(240,180,41,0.2)', textAlign: 'center' }}>
-              <p style={{ color: '#F0F2F5', fontWeight: 700, marginBottom: 12, fontSize: '1rem' }}>Débloquez tout avec ABAWI+</p>
-              <Link to="/plans" className="mb-btn mb-btn--gold">S'abonner — 4 900 F/mois</Link>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══ TAB: MES ACHATS ══ */}
-      {tab === 'achats' && (
-        <div>
-          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#F0F2F5', marginBottom: 20 }}>🛒 Historique d'achats</h3>
-          {purchasesLoading ? (
-            <div style={{ textAlign: 'center', color: '#8B95A5', padding: 40 }}>Chargement...</div>
-          ) : purchases.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '3rem', marginBottom: 12 }}>🛒</div>
-              <p>Aucun achat enregistré</p>
+          {userPacksLoading ? (
+            <div className="mb-empty-state"><div className="mb-empty-state-icon">⏳</div><p>Chargement...</p></div>
+          ) : userPacks.length === 0 ? (
+            <div className="mb-empty-state">
+              <div className="mb-empty-state-icon">📦</div>
+              <p className="mb-empty-state-title">Aucun pack acheté</p>
+              <p className="mb-empty-state-sub">Vos packs apparaîtront ici après achat.</p>
+              <Link to="/digital" className="mb-btn mb-btn--gold mb-btn--sm" style={{ marginTop: 16 }}>Explorer les packs →</Link>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {purchases.map((p) => {
-                const sc = p.statut === 'paid' ? '#18A84A' : p.statut === 'pending' ? '#F0B429' : '#ef4444'
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {userPacks.map((up) => {
+                const isAcademy = up.pack_type === 'academy'
+                const basePath = isAcademy ? '/academy' : '/digital'
+                const color = isAcademy ? 'green' : 'gold'
+                const productList = isAcademy ? allFascicules : guides
+                const ids = Array.isArray(up.product_ids) ? up.product_ids : []
+                const included = productList.filter((p) => ids.includes(String(p.id)))
                 return (
-                  <div key={p.id} style={{
-                    padding: '14px 18px', borderRadius: 12,
-                    background: '#0D1117', border: '1px solid #1A2332',
-                    display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-                  }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#F0F2F5', marginBottom: 4 }}>
-                        {p.product_title || p.product_id || 'Produit ABAWI'}
+                  <div key={up.id} style={{ background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: '20px 24px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                      <div>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: `var(--${color})` }}>{isAcademy ? 'Pack Academy' : 'Pack Digital'}</span>
+                        <h4 style={{ margin: '6px 0 0', fontSize: '1.05rem', color: 'var(--text-primary)' }}>{up.pack_name}</h4>
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                      </div>
+                      <span style={{ fontSize: '0.78rem', color: up.status === 'active' ? '#00c853' : '#ef4444', fontWeight: 700, background: up.status === 'active' ? 'rgba(0,200,83,0.1)' : 'rgba(239,68,68,0.1)', padding: '4px 10px', borderRadius: 20 }}>
+                        {up.status === 'active' ? '✓ Actif' : up.status}
+                      </span>
                     </div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color: '#18A84A' }}>
-                      {(p.montant || 0).toLocaleString()} FCFA
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 12 }}>{included.length} produit(s) inclus</div>
+                    <div className="mb-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                      {included.map((p) => (
+                        <Link key={p.id} to={`${basePath}/${slugify(p.titre)}`} className="mb-card" style={{ textDecoration: 'none' }}>
+                          <CoverImage titre={p.titre} categorie={p.categorie || p.matiere} type={isAcademy ? 'fascicule' : 'guide'} brand={isAcademy ? 'academy' : 'digital'} serie={p.serie} matiere={p.matiere} size="sm" />
+                          <div className="mb-card-body">
+                            <h3 className="mb-card-title" style={{ fontSize: '0.82rem' }}>{p.titre}</h3>
+                            <div className="mb-card-btns">
+                              {p.drive_url && <span className="mb-btn mb-btn--green mb-btn--sm" style={{ pointerEvents: 'none' }}>Lire</span>}
+                              {p.file_url && <span className="mb-btn mb-btn--outline mb-btn--sm" style={{ pointerEvents: 'none' }}>PDF</span>}
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                    <span style={{ padding: '4px 12px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700, background: `${sc}15`, color: sc }}>
-                      {p.statut === 'paid' ? '✅ Payé' : p.statut === 'pending' ? '⏳ En attente' : '❌ Échoué'}
-                    </span>
+                    {included.length === 0 && (
+                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 8 }}>Produits non listés — contactez le support.</p>
+                    )}
                   </div>
                 )
               })}
@@ -394,58 +540,123 @@ function Membre() {
 
       {/* ══ TAB: MES CRÉDITS ══ */}
       {tab === 'credits' && (
-        <div style={{ maxWidth: 720 }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#F0F2F5', marginBottom: 24 }}>💰 Mes crédits</h3>
+        <div className="mb-credits-page">
 
           {/* Solde */}
-          <div style={{ padding: 24, borderRadius: 16, background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', marginBottom: 24, textAlign: 'center' }}>
-            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', fontWeight: 700, marginBottom: 8 }}>Solde disponible</div>
-            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#fff' }}>{membre?.credits || 0}</div>
-            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>crédits</div>
-            {isAdmin && (
-              <div style={{ marginTop: 12, fontSize: '0.78rem', color: 'rgba(255,255,255,0.9)', background: 'rgba(255,255,255,0.15)', padding: '6px 14px', borderRadius: 100, display: 'inline-block' }}>
-                ⚙️ Admin — accès illimité
+          <div className="mb-credit-balance-card">
+            <div className="mb-credit-balance-left">
+              <span className="mb-credit-balance-icon">💰</span>
+              <div>
+                <div className="mb-credit-balance-label">Solde actuel</div>
+                <div className="mb-credit-balance-value">{creditBalance.toLocaleString()}</div>
+                <div className="mb-credit-balance-unit">crédits disponibles</div>
               </div>
-            )}
-            {!isAdmin && (
-              <Link to="/plans" style={{ marginTop: 16, display: 'inline-block', padding: '10px 24px', borderRadius: 10, background: '#fff', color: '#7C3AED', fontWeight: 800, fontSize: '0.88rem', textDecoration: 'none' }}>
-                ➕ Recharger mes crédits
-              </Link>
-            )}
+            </div>
+            <Link to="/plans" className="mb-btn mb-btn--gold mb-btn--sm">Recharger →</Link>
           </div>
 
-          {/* Historique */}
-          <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#F0F2F5', marginBottom: 14 }}>Historique</h4>
-          {creditTxsLoading ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Chargement...</p>
-          ) : creditTxs.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Aucune transaction pour le moment.</p>
+          {/* Infos usage */}
+          <div className="mb-credit-info-grid">
+            <div className="mb-credit-info-card">
+              <div className="mb-credit-info-icon">🤖</div>
+              <div className="mb-credit-info-title">ABAWI IA</div>
+              <div className="mb-credit-info-cost">~2–5 cr. / génération</div>
+            </div>
+            <div className="mb-credit-info-card">
+              <div className="mb-credit-info-icon">📄</div>
+              <div className="mb-credit-info-title">Business Plan</div>
+              <div className="mb-credit-info-cost">~20–50 cr. / document</div>
+            </div>
+            <div className="mb-credit-info-card">
+              <div className="mb-credit-info-icon">📷</div>
+              <div className="mb-credit-info-title">Studio Photo</div>
+              <div className="mb-credit-info-cost">~5–10 cr. / export</div>
+            </div>
+            <div className="mb-credit-info-card">
+              <div className="mb-credit-info-icon">⚖️</div>
+              <div className="mb-credit-info-title">Juridique Élite</div>
+              <div className="mb-credit-info-cost">~15–30 cr. / document</div>
+            </div>
+          </div>
+
+          {/* Historique transactions */}
+          <div className="mb-credit-history">
+            <h3 className="mb-section-title mb-section-title--gold" style={{ marginBottom: 16 }}>
+              📋 Historique des transactions
+            </h3>
+
+            {creditTxsLoading ? (
+              <div className="mb-empty-state">
+                <div className="mb-empty-state-icon">⏳</div>
+                <p>Chargement...</p>
+              </div>
+            ) : creditTxs.length === 0 ? (
+              <div className="mb-empty-state">
+                <div className="mb-empty-state-icon">💳</div>
+                <p className="mb-empty-state-title">Aucune transaction</p>
+                <p className="mb-empty-state-sub">Vos transactions de crédits apparaîtront ici dès que vous utiliserez un outil IA.</p>
+                <Link to="/outils" className="mb-btn mb-btn--gold mb-btn--sm" style={{ marginTop: 16 }}>Explorer les outils →</Link>
+              </div>
+            ) : (
+              <div className="mb-credit-tx-list">
+                {creditTxs.map((tx, i) => <CreditTxRow key={tx.id || i} tx={tx} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ══ TAB: MES ACCÈS ══ */}
+      {tab === 'acces' && (
+        <div>
+          <h3 className="mb-section-title mb-section-title--white" style={{ marginBottom: 20 }}>
+            🔑 Droits d'accès — {isMember ? 'ABAWI+' : 'Non membre'}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {ACCESS_ITEMS.map((item, i) => <AccessItem key={i} {...item} />)}
+          </div>
+          {!isMember && (
+            <div className="mb-upsell-cta">
+              <p>Débloquez tout avec ABAWI+</p>
+              <Link to="/plans" className="mb-btn mb-btn--gold">S'abonner — 4 900 F/mois</Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ TAB: HISTORIQUE ACHATS ══ */}
+      {tab === 'achats' && (
+        <div>
+          <h3 className="mb-section-title mb-section-title--white" style={{ marginBottom: 20 }}>
+            🛒 Historique d'achats
+          </h3>
+          {purchasesLoading ? (
+            <div className="mb-empty-state">
+              <div className="mb-empty-state-icon">⏳</div>
+              <p>Chargement...</p>
+            </div>
+          ) : purchases.length === 0 ? (
+            <div className="mb-empty-state">
+              <div className="mb-empty-state-icon">🛒</div>
+              <p className="mb-empty-state-title">Aucun achat enregistré</p>
+              <p className="mb-empty-state-sub">Vos achats et renouvellements d'abonnement apparaîtront ici.</p>
+            </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {creditTxs.map((tx) => {
-                const isDebit = tx.type === 'debit'
-                const isRecharge = tx.type === 'recharge'
-                const color = isDebit ? '#ef4444' : isRecharge ? '#18A84A' : '#F0B429'
-                const sign = isDebit ? '-' : '+'
+            <div className="mb-purchase-list">
+              {purchases.map((p) => {
+                const sc = p.statut === 'paid' ? 'green' : p.statut === 'pending' ? 'gold' : 'red'
+                const scColor = sc === 'green' ? 'var(--green)' : sc === 'gold' ? 'var(--gold)' : 'var(--red)'
                 return (
-                  <div key={tx.id} style={{
-                    padding: '14px 18px', borderRadius: 12,
-                    background: '#0D1117', border: '1px solid #1A2332',
-                    display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-                  }}>
-                    <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#F0F2F5', marginBottom: 4 }}>
-                        {tx.description}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {new Date(tx.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  <div key={p.id} className="mb-purchase-row">
+                    <div className="mb-purchase-info">
+                      <div className="mb-purchase-title">{p.product_title || p.product_id || 'Produit ABAWI'}</div>
+                      <div className="mb-purchase-date">
+                        {new Date(p.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
                       </div>
                     </div>
-                    <div style={{ fontSize: '1rem', fontWeight: 800, color }}>
-                      {sign}{tx.montant}
-                    </div>
-                    <span style={{ padding: '4px 12px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700, background: `${color}15`, color }}>
-                      {isDebit ? 'Débit' : isRecharge ? 'Recharge' : tx.type === 'refund' ? 'Remboursement' : tx.type === 'bonus' ? 'Bonus' : tx.type}
+                    <div className="mb-purchase-amount">{(p.montant || 0).toLocaleString()} FCFA</div>
+                    <span className="mb-purchase-badge" style={{ color: scColor, background: `${scColor}18`, border: `1px solid ${scColor}33` }}>
+                      {p.statut === 'paid' ? '✅ Payé' : p.statut === 'pending' ? '⏳ En attente' : '❌ Échoué'}
                     </span>
                   </div>
                 )
@@ -457,62 +668,56 @@ function Membre() {
 
       {/* ══ TAB: MON PROFIL ══ */}
       {tab === 'profil' && (
-        <div style={{ maxWidth: 520 }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#F0F2F5', marginBottom: 24 }}>👤 Mon profil</h3>
+        <div style={{ maxWidth: 540 }}>
+          <h3 className="mb-section-title mb-section-title--white" style={{ marginBottom: 24 }}>
+            👤 Mon profil
+          </h3>
 
           {!editProfile ? (
-            <div style={{ background: '#0D1117', border: '1px solid #1A2332', borderRadius: 16, padding: 24 }}>
-              {[
-                { label: 'Prénom', value: membre.prenom },
-                { label: 'Nom', value: membre.nom },
-                { label: 'Email', value: membre.email },
-                { label: 'Téléphone', value: membre.telephone || '—' },
-                { label: 'Rôle', value: membre.role === 'admin' ? '⚙️ Administrateur' : '💎 Membre ABAWI+' },
-                { label: 'Abonnement', value: isAdmin ? 'Accès total (admin)' : isActive ? `Actif — expire le ${new Date(membre.date_fin).toLocaleDateString('fr-FR')}` : 'Expiré' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700 }}>{label}</span>
-                  <span style={{ fontSize: '0.88rem', color: '#F0F2F5', fontWeight: 500, textAlign: 'right', flex: 1, marginLeft: 16 }}>{value}</span>
-                </div>
-              ))}
+            <div className="mb-profile-card">
+              <ProfileField label="Prénom"       value={membre.prenom} />
+              <ProfileField label="Nom"           value={membre.nom} />
+              <ProfileField label="Email"         value={membre.email} />
+              <ProfileField label="Téléphone"     value={membre.telephone || '—'} />
+              <ProfileField label="Rôle"          value={membre.role === 'admin' ? '⚙️ Administrateur' : '💎 Membre ABAWI+'} />
+              <ProfileField
+                label="Abonnement"
+                value={isAdmin ? 'Accès total (admin)' : isActive ? `Actif — expire le ${new Date(membre.date_fin).toLocaleDateString('fr-FR')}` : 'Expiré'}
+              />
               <button
+                className="mb-profile-edit-btn"
                 onClick={() => { setProfileData({ prenom: membre.prenom, nom: membre.nom, telephone: membre.telephone || '' }); setEditProfile(true) }}
-                style={{ marginTop: 20, width: '100%', padding: '11px', borderRadius: 10, background: 'rgba(240,180,41,0.1)', border: '1px solid rgba(240,180,41,0.25)', color: '#F0B429', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem', fontFamily: 'Outfit, sans-serif' }}
               >
                 ✏️ Modifier mon profil
               </button>
             </div>
           ) : (
-            <div style={{ background: '#0D1117', border: '1px solid #1A2332', borderRadius: 16, padding: 24 }}>
-              {[
-                { key: 'prenom', label: 'Prénom' },
-                { key: 'nom', label: 'Nom' },
-                { key: 'telephone', label: 'Téléphone' },
-              ].map(({ key, label }) => (
-                <div key={key} style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#8B95A5', marginBottom: 6 }}>{label}</label>
+            <div className="mb-profile-card">
+              {[{ key: 'prenom', label: 'Prénom' }, { key: 'nom', label: 'Nom' }, { key: 'telephone', label: 'Téléphone' }].map(({ key, label }) => (
+                <div key={key} className="mb-profile-edit-field">
+                  <label className="mb-profile-edit-label">{label}</label>
                   <input
+                    className="mb-input"
                     value={profileData[key] || ''}
                     onChange={e => setProfileData(p => ({ ...p, [key]: e.target.value }))}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 8, background: '#070B0F', border: '1px solid #1A2332', color: '#F0F2F5', fontSize: '0.88rem', outline: 'none', fontFamily: 'Outfit, sans-serif', boxSizing: 'border-box' }}
                   />
                 </div>
               ))}
-              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                <button onClick={saveProfile} disabled={savingProfile} style={{ flex: 1, padding: '11px', borderRadius: 10, background: 'linear-gradient(135deg, #F0B429, #e5a820)', border: 'none', color: '#070B0F', fontWeight: 800, cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+              <div className="mb-profile-edit-actions">
+                <button onClick={saveProfile} disabled={savingProfile} className="mb-btn mb-btn--gold" style={{ flex: 1 }}>
                   {savingProfile ? 'Sauvegarde...' : '✅ Sauvegarder'}
                 </button>
-                <button onClick={() => setEditProfile(false)} style={{ padding: '11px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid #1A2332', color: '#8B95A5', cursor: 'pointer', fontFamily: 'Outfit, sans-serif' }}>
+                <button onClick={() => setEditProfile(false)} className="mb-btn mb-btn--outline">
                   Annuler
                 </button>
               </div>
             </div>
           )}
 
-          {/* Danger zone */}
-          <div style={{ marginTop: 24, padding: 18, borderRadius: 12, background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)' }}>
-            <div style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 700, marginBottom: 10 }}>Zone de déconnexion</div>
-            <button onClick={logout} style={{ padding: '9px 20px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem', fontFamily: 'Outfit, sans-serif' }}>
+          {/* Déconnexion */}
+          <div className="mb-danger-zone">
+            <div className="mb-danger-zone-title">Zone de déconnexion</div>
+            <button onClick={logout} className="mb-danger-btn">
               🚪 Se déconnecter
             </button>
           </div>

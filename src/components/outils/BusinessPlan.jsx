@@ -52,27 +52,11 @@ export default function BusinessPlan() {
   async function enrichirIA() {
     setLoading(true);
     try {
-      const rawSnippet = rawDataText ? rawDataText.slice(0, 10000) : '';
-      const raw = await callGroq(`Tu es un consultant en stratégie PME. À partir des éléments suivants, rédige une synthèse exécutive en français (10 à 16 phrases) : marché, risques, priorités 12 mois, leviers de croissance.
-
-Règles :
-- Utilise prioritairement les données fournies ci-dessous.
-- Distingue clairement les informations réelles des hypothèses si elles sont nécessaires.
-- Ne cite aucune marque de plateforme ou logiciel.
-
-Sources chiffrées :
-
-Entreprise : ${form.societe}
-Secteur : ${form.secteur}
-Mission : ${form.mission || 'non fournie'}
-Effectif cible : ${form.effectif}
-Chiffres CA N-2,N-1,N : ${ca.join(' / ')}
-Charges : ${ch.join(' / ')}
-Marges % : ${marge.join(' / ')}
-Croissance CA : ${croissance}
-
-Données brutes supplémentaires (peuvent contenir chiffres/tableaux) :
-${rawSnippet || '(aucune)'}`);
+      const rawSnippet = rawDataText ? rawDataText.slice(0, 50000) : '';
+      const raw = await callGroq(
+        `Entreprise : ${form.societe}\nSecteur : ${form.secteur}\nMission : ${form.mission || 'non fournie'}\nEffectif cible : ${form.effectif}\nCA N-2/N-1/N (FCFA) : ${ca.join(' / ')}\nCharges N-2/N-1/N : ${ch.join(' / ')}\nMarges % : ${marge.join(' / ')}\nCroissance CA : ${croissance}\n\nDonnées brutes supplémentaires :\n${rawSnippet || '(aucune)'}\n\n---\nRédige une synthèse exécutive en français (12 à 18 phrases) couvrant : marché, risques, priorités 12 mois, leviers de croissance.\nRègle absolue : exploite TOUTES les données fournies ci-dessus. Si tu formules une hypothèse, signale-la explicitement entre crochets [Hypothèse].`,
+        { maxTokens: 2000, temperature: 0.2, system: "Tu es Associé Senior dans un cabinet de conseil stratégique (niveau McKinsey / BCG Afrique). Tu analyses les données EXACTEMENT telles que fournies sans les minimiser ni les enjoliver. Chaque hypothèse est explicitement signalée. Ton style est dense, chiffré, actionnable." }
+      );
       setSyntheseIA(cleanIATextLight(raw));
     } finally {
       setLoading(false);
@@ -86,45 +70,18 @@ ${rawSnippet || '(aucune)'}`);
     }
     setLoading(true);
     try {
-      const rawSnippet = rawDataText.slice(0, 14000);
-      const raw = await callGroq(`Tu es un cabinet de conseil stratégique. Tu dois produire un "business plan" structuré et actionnable à partir de données brutes.
-
-Entrées :
-- Projet : ${form.societe || '(non fourni)'}
-- Secteur : ${form.secteur || '(non fourni)'}
-- Mission : ${form.mission || '(non fournie)'}
-- Effectif visé : ${form.effectif || '(non fourni)'}
-- CA N-2/N-1/N : ${ca.join(' / ')}
-- Charges N-2/N-1/N : ${ch.join(' / ')}
-- Marges % : ${marge.join(' / ')}
-- Croissance CA : ${croissance}
-- Données brutes importées :
-${rawSnippet}
-
-Sortie (Markdown, en FR) :
-1) Résumé exécutif (8-12 lignes)
-2) Données réelles vs hypothèses
-   - Liste "Réel" (données réellement présentes dans les imports + les champs calculés)
-   - Liste "À valider" (manquants ou incertains) + comment les obtenir
-3) Marché : segmentation + TAM/SAM/SOM si possible (sinon indiquer les hypothèses)
-4) Proposition de valeur : 5-7 points
-5) Stratégie GTM : plan 90 jours + 12 mois (axes + actions + KPI)
-6) Opérations : processus clés + besoins
-7) Risques majeurs + atténuations
-8) KPIs prioritaires (5 à 10)
-9) Projections financières (3 ans) :
-   - Résultats & marges (si calculables à partir des données)
-   - Sinon : scénarios chiffrés avec hypothèses explicites
-
-Ne cite aucune marque de plateforme ou logiciel.
-Ne renvoie pas de code.`, 5000);
+      const rawSnippet = rawDataText.slice(0, 80000);
+      const raw = await callGroq(
+        `Projet : ${form.societe || '(non fourni)'}\nSecteur : ${form.secteur || '(non fourni)'}\nMission : ${form.mission || '(non fournie)'}\nEffectif visé : ${form.effectif || '(non fourni)'}\nCA N-2/N-1/N (FCFA) : ${ca.join(' / ')}\nCharges N-2/N-1/N : ${ch.join(' / ')}\nMarges % : ${marge.join(' / ')}\nCroissance CA : ${croissance}\n\nDOCUMENTS SOURCES IMPORTÉS :\n${rawSnippet}\n\n---\nProduis un business plan structuré (Markdown, FR) en 9 sections :\n1) Résumé exécutif (12-16 lignes)\n2) Données réelles vs hypothèses — "Réel" (présent dans les imports) | "À valider" + comment obtenir\n3) Marché : segmentation + TAM/SAM/SOM (chiffré si données disponibles, sinon hypothèses explicites)\n4) Proposition de valeur : 6-8 points\n5) Stratégie GTM : plan 90 jours + 12 mois (axes + actions + KPI mesurables)\n6) Opérations : processus clés + ressources critiques\n7) Risques majeurs + atténuations concrètes\n8) KPIs prioritaires (6-10)\n9) Projections financières 3 ans avec résultats, marges et scénarios explicitement liés aux données fournies\n\nREGLE : exploite chaque chiffre et fait fourni dans les sources. Signale [Hypothèse] si tu extrapoles.`,
+        { maxTokens: 6000, temperature: 0.2, system: "Tu es Associé Senior dans un cabinet de conseil stratégique (niveau McKinsey / BCG Afrique). Tu t'appuies EXCLUSIVEMENT sur les données fournies. Chaque hypothèse est signalée [Hypothèse]. Ton analyse est chiffrée, dense et actionnalble. Pas de rembourrage." }
+      );
       setSyntheseIA(cleanIATextLight(raw));
     } finally {
       setLoading(false);
     }
   }
 
-  const fileSlug = (form.societe || 'business-plan').replace(/[^\wÀ-ÿ\-]+/gi, '-').slice(0, 48) || 'business-plan';
+  const fileSlug = (form.societe || 'business-plan').replace(/[^\wÀ-ÿ-]+/gi, '-').slice(0, 48) || 'business-plan';
 
   return (
     <main className="cv-page">

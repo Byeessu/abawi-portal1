@@ -82,7 +82,7 @@ async function extractFileText(file) {
       pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
       const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise
       let t = ''
-      for (let i = 1; i <= Math.min(pdf.numPages, 60); i++) {
+      for (let i = 1; i <= Math.min(pdf.numPages, 200); i++) {
         const pg = await pdf.getPage(i)
         t += (await pg.getTextContent()).items.map(x => x.str).join(' ') + '\n'
       }
@@ -209,6 +209,7 @@ export default function DissecteurInfosElite() {
   const [history, setHistory] = useState(() => { try { return JSON.parse(localStorage.getItem('abawi_dissecteur_v3') || '[]') } catch { return [] } })
   const [error, setError] = useState('')
   const [charCount, setCharCount] = useState(0)
+  const [currentSrc, setCurrentSrc] = useState('')
   const dropRef = useRef(null)
 
   // Hook pour l'historique
@@ -247,14 +248,32 @@ export default function DissecteurInfosElite() {
       const sources = (await getSources()).filter(s => s && s.trim().length > 30)
       if (!sources.length) throw new Error(sourceType === 'files' ? `Aucun fichier n'a pu être lu. Formats supportés : PDF, Word (DOCX), Excel, TXT. Vérifiez que les fichiers ne sont pas corrompus.` : 'Source vide ou illisible. Vérifiez votre contenu.')
       const combined = sources.map((s, i) => sources.length > 1 ? `=== SOURCE ${i + 1}: ${sourceFiles[i]?.name || `URL ${i+1}`} ===\n${s}` : s).join('\n\n')
-      const src = combined.slice(0, 28000)
+      const src = combined.slice(0, 15000)
+      setCurrentSrc(src)
       setCharCount(src.length)
       const queue = TABS.filter(t => enabled[t.id])
       let done = 0
+      const localResults = {}
       for (const tab of queue) {
         setLoadingStep(`${tab.icon} Génération ${tab.label}...`)
-        const raw = await groqJSON(PROMPTS[tab.id](src), tab.tokens)
-        const parsed = safeJSON(raw, DEFAULTS[tab.id])
+        let parsed = DEFAULTS[tab.id]
+        try {
+          let raw
+          try {
+            raw = await groqJSON(PROMPTS[tab.id](src), tab.tokens)
+          } catch (err) {
+            if (err.message === 'REQUEST_TOO_LARGE') {
+              raw = await groqJSON(PROMPTS[tab.id](src.slice(0, 7000)), tab.tokens)
+            } else {
+              throw err
+            }
+          }
+          parsed = safeJSON(raw, DEFAULTS[tab.id])
+        } catch (err) {
+          console.error(`[Dissecteur] Erreur onglet ${tab.id}:`, err)
+          parsed = { ...DEFAULTS[tab.id], _error: err.message }
+        }
+        localResults[tab.id] = parsed
         setResults(prev => ({ ...prev, [tab.id]: parsed }))
         done++; setProgress(Math.round((done / queue.length) * 100))
         setActiveTab(tab.id)
@@ -264,16 +283,38 @@ export default function DissecteurInfosElite() {
       const next = [row, ...history].slice(0, 20)
       setHistory(next); localStorage.setItem('abawi_dissecteur_v3', JSON.stringify(next))
       // Sauvegarder dans le gestionnaire d'historique
-      saveToHistory({ source: src.slice(0, 500), results, sections: queue.map(t => t.id), chars: src.length }, retention)
+      saveToHistory({ source: src.slice(0, 500), results: localResults, sections: queue.map(t => t.id), chars: src.length }, retention)
       // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-      try { await supabase.from('ai_jobs').insert({ tool: 'dissecteur-elite-v3', job_type: 'analysis', payload: row, created_at: row.created_at }) } catch {}
+      try { await supabase.from('ai_jobs').insert({ tool: 'dissecteur-elite-v3', job_type: 'analysis', payload: row, created_at: row.created_at }) } catch { /* ignore */ }
     } catch (e) { setError(`Erreur : ${e.message}`) }
     finally { setLoading(false) }
   }
 
-  const hasResults = Object.keys(results).length > 0
-  const inp = { width: '100%', boxSizing: 'border-box', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', padding: '10px 12px', fontFamily: 'inherit', fontSize: '0.86rem' }
+  async function retryTab(tabId) {
+    const tab = TABS.find(t => t.id === tabId)
+    if (!tab || !currentSrc) return
+    setResults(prev => { const n = { ...prev }; delete n[tabId]; return n })
+    setLoadingStep(`⟳ Regénération ${tab.label}...`)
+    setLoading(true)
+    try {
+      let raw
+      try {
+        raw = await groqJSON(PROMPTS[tab.id](currentSrc), tab.tokens)
+      } catch (err) {
+        if (err.message === 'REQUEST_TOO_LARGE') {
+          raw = await groqJSON(PROMPTS[tab.id](currentSrc.slice(0, 7000)), tab.tokens)
+        } else throw err
+      }
+      setResults(prev => ({ ...prev, [tabId]: safeJSON(raw, DEFAULTS[tab.id]) }))
+    } catch (err) {
+      setResults(prev => ({ ...prev, [tabId]: { ...DEFAULTS[tab.id], _error: err.message } }))
+    } finally {
+      setLoading(false)
+      setLoadingStep('')
+    }
+  }
 
+  const hasResults = Object.keys(results).length > 0
   const totalEnabledSections = TABS.filter(t => enabled[t.id]).length
 
   return (
@@ -292,7 +333,8 @@ export default function DissecteurInfosElite() {
         </div>
       </div>
 
-    <div className="dissecteur-source-pane">
+    <div className={`dissecteur-layout ${hasResults ? 'dissecteur-layout--with-results' : ''}`}>
+    <div className="dissecteur-input-panel">
     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Source d'analyse</div>
 
     {/* Source type selector */}
@@ -421,51 +463,74 @@ export default function DissecteurInfosElite() {
         {hasResults && (
           <div id="dissecteur-export">
             {/* Tab bar */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
-              {TABS.filter(t => results[t.id] !== undefined).map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`dissecteur-tab-btn dissecteur-tab-btn--${t.id}`}
-                  style={{
-                    border: `1px solid ${activeTab === t.id ? ACCENT[t.id] : 'var(--border)'}`,
-                    background: activeTab === t.id ? ACCENT[t.id] + '18' : 'var(--bg-card)',
-                    color: activeTab === t.id ? ACCENT[t.id] : 'var(--text-secondary)'
-                  }}
-                >
-                  {t.icon} {t.label}
-                </button>
-              ))}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', borderBottom: '2px solid var(--border)', paddingBottom: 2 }}>
+              {TABS.filter(t => results[t.id] !== undefined).map(t => {
+                const hasErr = results[t.id]?._error
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveTab(t.id)}
+                    className={`dissecteur-tab-btn dissecteur-tab-btn--${t.id}`}
+                    style={{
+                      border: `1.5px solid ${hasErr ? 'rgba(239,68,68,0.5)' : activeTab === t.id ? ACCENT[t.id] : 'var(--border)'}`,
+                      background: hasErr ? 'rgba(239,68,68,0.08)' : activeTab === t.id ? ACCENT[t.id] + '18' : 'var(--bg-card)',
+                      color: hasErr ? '#EF4444' : activeTab === t.id ? ACCENT[t.id] : 'var(--text-secondary)',
+                      borderBottom: `2px solid ${activeTab === t.id ? (hasErr ? '#EF4444' : ACCENT[t.id]) : 'transparent'}`
+                    }}
+                  >
+                    {hasErr ? '⚠️' : t.icon} {t.label}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Active section */}
             <div id={`section-${activeTab}`}>
-              {activeTab === 'summary' && results.summary && (
-                <><SectionActions tabId="summary" data={results.summary} label="Resume" /><SummaryPanel data={results.summary} /></>
-              )}
-              {activeTab === 'strategy' && results.strategy && (
-                <><SectionActions tabId="strategy" data={results.strategy} label="Strategie" /><StrategyPanel data={results.strategy} /></>
-              )}
-              {activeTab === 'dictionary' && results.dictionary && (
-                <><SectionActions tabId="dictionary" data={results.dictionary} label="Dictionnaire" /><DictionaryPanel data={results.dictionary} /></>
-              )}
-              {activeTab === 'flashcards' && results.flashcards && (
-                <><SectionActions tabId="flashcards" data={results.flashcards} label="Flashcards" /><FlashcardsPanel cards={results.flashcards} /></>
-              )}
-              {activeTab === 'quiz' && results.quiz && (
-                <><SectionActions tabId="quiz" data={results.quiz} label="Quiz" /><QuizPanel questions={results.quiz} /></>
-              )}
-              {activeTab === 'report' && results.report && (
-                <><SectionActions tabId="report" data={results.report} label="Rapport" /><ReportPanel data={results.report} /></>
-              )}
-              {activeTab === 'trends' && results.trends && (
-                <><SectionActions tabId="trends" data={results.trends} label="Tendances" /><TrendsPanel data={results.trends} /></>
-              )}
-              {activeTab === 'slides' && results.slides && (
-                <><SectionActions tabId="slides" data={results.slides} label="Slides" /><SlidesPanel slides={results.slides} /></>
-              )}
-              {activeTab === 'infographic' && results.infographic && (
-                <><SectionActions tabId="infographic" data={results.infographic} label="Infographie" /><InfographicPanel cards={results.infographic} /></>
+              {/* Error state per tab */}
+              {results[activeTab]?._error ? (
+                <div style={{ background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.3)', borderRadius: 14, padding: '24px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>⚠️</div>
+                  <div style={{ color: '#EF4444', fontWeight: 700, marginBottom: 6 }}>Échec de génération — {TABS.find(t => t.id === activeTab)?.label}</div>
+                  <div style={{ color: '#FCA5A5', fontSize: '0.82rem', marginBottom: 18 }}>
+                    {results[activeTab]._error === 'REQUEST_TOO_LARGE'
+                      ? 'Source trop volumineuse. La prochaine tentative utilisera un contexte réduit automatiquement.'
+                      : results[activeTab]._error}
+                  </div>
+                  <button onClick={() => retryTab(activeTab)} disabled={loading}
+                    style={{ padding: '10px 24px', background: 'linear-gradient(135deg, var(--accent), var(--accent2))', border: 'none', borderRadius: 10, color: 'white', fontWeight: 800, cursor: 'pointer', fontSize: '0.9rem' }}>
+                    ⟳ Réessayer cette section
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {activeTab === 'summary' && results.summary && (
+                    <><SectionActions tabId="summary" data={results.summary} label="Resume" /><SummaryPanel data={results.summary} /></>
+                  )}
+                  {activeTab === 'strategy' && results.strategy && (
+                    <><SectionActions tabId="strategy" data={results.strategy} label="Strategie" /><StrategyPanel data={results.strategy} /></>
+                  )}
+                  {activeTab === 'dictionary' && results.dictionary && (
+                    <><SectionActions tabId="dictionary" data={results.dictionary} label="Dictionnaire" /><DictionaryPanel data={results.dictionary} /></>
+                  )}
+                  {activeTab === 'flashcards' && results.flashcards && (
+                    <><SectionActions tabId="flashcards" data={results.flashcards} label="Flashcards" /><FlashcardsPanel cards={results.flashcards} /></>
+                  )}
+                  {activeTab === 'quiz' && results.quiz && (
+                    <><SectionActions tabId="quiz" data={results.quiz} label="Quiz" /><QuizPanel questions={results.quiz} /></>
+                  )}
+                  {activeTab === 'report' && results.report && (
+                    <><SectionActions tabId="report" data={results.report} label="Rapport" /><ReportPanel data={results.report} /></>
+                  )}
+                  {activeTab === 'trends' && results.trends && (
+                    <><SectionActions tabId="trends" data={results.trends} label="Tendances" /><TrendsPanel data={results.trends} /></>
+                  )}
+                  {activeTab === 'slides' && results.slides && (
+                    <><SectionActions tabId="slides" data={results.slides} label="Slides" /><SlidesPanel slides={results.slides} /></>
+                  )}
+                  {activeTab === 'infographic' && results.infographic && (
+                    <><SectionActions tabId="infographic" data={results.infographic} label="Infographie" /><InfographicPanel cards={results.infographic} /></>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -489,6 +554,7 @@ export default function DissecteurInfosElite() {
           </div>
         </div>
       )}
+      </div>
     </main>
   )
 }

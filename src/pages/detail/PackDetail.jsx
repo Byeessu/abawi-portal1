@@ -48,7 +48,7 @@ function PackDetail() {
           </div>
           <p className="detail-hero-desc">{pack.description || (pack.contenu || []).join(', ')}</p>
           <div className="detail-hero-btns">
-            <button className={`detail-btn detail-btn--${color}`} onClick={() => setModal({ id: pack.id, titre: pack.nom, prix: pack.prix })}>
+            <button className={`detail-btn detail-btn--${color}`} onClick={() => setModal({ id: pack.id, titre: pack.nom, prix: pack.prix, type: 'pack', pack_type: isAcademy ? 'academy' : 'digital', pack_name: pack.nom, product_ids: (pack.contenu || []).map(String) })}>
               Acheter ce pack — {formatPrix(pack.prix)}
             </button>
             <a href={waLink(pack.nom, pack.prix)} target="_blank" rel="noopener noreferrer" className="detail-btn detail-btn--outline">
@@ -115,7 +115,7 @@ function PackDetail() {
             <span className="detail-sticky-prix" style={{ color: `var(--${color})` }}>{formatPrix(pack.prix)}</span>
           </div>
           <div className="detail-sticky-btns">
-            <button className={`detail-btn detail-btn--${color}`} onClick={() => setModal({ id: pack.id, titre: pack.nom, prix: pack.prix })}>Acheter — {formatPrix(pack.prix)}</button>
+            <button className={`detail-btn detail-btn--${color}`} onClick={() => setModal({ id: pack.id, titre: pack.nom, prix: pack.prix, type: 'pack', pack_type: isAcademy ? 'academy' : 'digital', pack_name: pack.nom, product_ids: (pack.contenu || []).map(String) })}>Acheter — {formatPrix(pack.prix)}</button>
             <a href={waLink(pack.nom, pack.prix)} target="_blank" rel="noopener noreferrer" className="detail-btn detail-btn--outline">WhatsApp</a>
           </div>
         </div>

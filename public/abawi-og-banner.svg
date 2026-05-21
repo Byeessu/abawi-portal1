@@ -1,0 +1,202 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <!-- Fond principal dégradé -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#04080E"/>
+      <stop offset="45%"  stop-color="#08101A"/>
+      <stop offset="100%" stop-color="#0B0C1E"/>
+    </linearGradient>
+
+    <!-- Glow vert gauche -->
+    <radialGradient id="glowGreen" cx="28%" cy="48%" r="42%">
+      <stop offset="0%"   stop-color="#18A84A" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#18A84A" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Glow or droite -->
+    <radialGradient id="glowGold" cx="82%" cy="30%" r="35%">
+      <stop offset="0%"   stop-color="#F0B429" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#F0B429" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Glow violet bas droite -->
+    <radialGradient id="glowPurple" cx="90%" cy="80%" r="30%">
+      <stop offset="0%"   stop-color="#8B5CF6" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Anneau tournant conic — simulé en SVG -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#18A84A"/>
+      <stop offset="40%"  stop-color="#F0B429"/>
+      <stop offset="75%"  stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#18A84A"/>
+    </linearGradient>
+
+    <!-- Dégradé barre bas -->
+    <linearGradient id="barGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#18A84A" stop-opacity="0.9"/>
+      <stop offset="33%"  stop-color="#F0B429" stop-opacity="0.9"/>
+      <stop offset="66%"  stop-color="#8B5CF6" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#18A84A" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Clip cercle logo -->
+    <clipPath id="logoCircle">
+      <circle cx="260" cy="300" r="168"/>
+    </clipPath>
+
+    <!-- Masque pour le logo avec clip -->
+    <clipPath id="innerLogoCircle">
+      <circle cx="260" cy="300" r="162"/>
+    </clipPath>
+
+    <!-- Filtre glow texte -->
+    <filter id="textGlow" x="-20%" y="-40%" width="140%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Filtre blur doux -->
+    <filter id="softBlur">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <!-- ══ FOND ══ -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Orbes de couleur -->
+  <ellipse cx="260" cy="300" rx="360" ry="300" fill="url(#glowGreen)"/>
+  <ellipse cx="980" cy="190" rx="280" ry="240" fill="url(#glowGold)"/>
+  <ellipse cx="1080" cy="520" rx="240" ry="200" fill="url(#glowPurple)"/>
+
+  <!-- Grille de fond -->
+  <g stroke="#18A84A" stroke-opacity="0.055" stroke-width="1">
+    <!-- Horizontales -->
+    <line x1="0" y1="70"  x2="1200" y2="70"/>
+    <line x1="0" y1="140" x2="1200" y2="140"/>
+    <line x1="0" y1="210" x2="1200" y2="210"/>
+    <line x1="0" y1="280" x2="1200" y2="280"/>
+    <line x1="0" y1="350" x2="1200" y2="350"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="490" x2="1200" y2="490"/>
+    <line x1="0" y1="560" x2="1200" y2="560"/>
+    <!-- Verticales -->
+    <line x1="100" y1="0" x2="100" y2="580"/>
+    <line x1="200" y1="0" x2="200" y2="580"/>
+    <line x1="300" y1="0" x2="300" y2="580"/>
+    <line x1="400" y1="0" x2="400" y2="580"/>
+    <line x1="500" y1="0" x2="500" y2="580"/>
+    <line x1="600" y1="0" x2="600" y2="580"/>
+    <line x1="700" y1="0" x2="700" y2="580"/>
+    <line x1="800" y1="0" x2="800" y2="580"/>
+    <line x1="900" y1="0" x2="900" y2="580"/>
+    <line x1="1000" y1="0" x2="1000" y2="580"/>
+    <line x1="1100" y1="0" x2="1100" y2="580"/>
+  </g>
+
+  <!-- Points déco -->
+  <circle cx="100" cy="70"  r="2.5" fill="#18A84A" fill-opacity="0.5"/>
+  <circle cx="500" cy="70"  r="2"   fill="#F0B429" fill-opacity="0.4"/>
+  <circle cx="900" cy="140" r="2.5" fill="#8B5CF6" fill-opacity="0.45"/>
+  <circle cx="200" cy="350" r="2"   fill="#18A84A" fill-opacity="0.4"/>
+  <circle cx="700" cy="420" r="2.5" fill="#F0B429" fill-opacity="0.35"/>
+  <circle cx="1100" cy="280" r="2"  fill="#8B5CF6" fill-opacity="0.4"/>
+  <circle cx="400" cy="490" r="2"   fill="#18A84A" fill-opacity="0.35"/>
+  <circle cx="800" cy="560" r="2.5" fill="#F0B429" fill-opacity="0.3"/>
+
+  <!-- Ligne diagonale déco -->
+  <line x1="480" y1="0" x2="480" y2="580" stroke="#18A84A" stroke-opacity="0.12" stroke-width="1.5"/>
+
+  <!-- ══ CERCLE LOGO ══ -->
+  <!-- Halo externe flou -->
+  <circle cx="260" cy="300" r="185" fill="none" stroke="url(#ringGrad)" stroke-width="6" stroke-opacity="0.25" filter="url(#softBlur)"/>
+  <!-- Anneau principal multicolore -->
+  <circle cx="260" cy="300" r="173" fill="none" stroke="url(#ringGrad)" stroke-width="8" stroke-opacity="0.95"/>
+  <!-- Fond sombre du cercle -->
+  <circle cx="260" cy="300" r="162" fill="#111418"/>
+  <!-- Image logo clippée dans le cercle -->
+  <image href="/favicon-abawi.png" x="98" y="138" width="324" height="324" clip-path="url(#innerLogoCircle)" preserveAspectRatio="xMidYMid slice"/>
+  <!-- Bordure interne fine -->
+  <circle cx="260" cy="300" r="162" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+  <!-- ══ CONTENU TEXTE ══ -->
+
+  <!-- Badge "PORTAIL PREMIUM" -->
+  <rect x="500" y="95" width="288" height="32" rx="16" fill="#18A84A" fill-opacity="0.15" stroke="#18A84A" stroke-opacity="0.45" stroke-width="1"/>
+  <circle cx="520" cy="111" r="4" fill="#18A84A"/>
+  <text x="534" y="116" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#18A84A" letter-spacing="2">PORTAIL PREMIUM AFRICAIN</text>
+
+  <!-- Titre principal ABAWI -->
+  <text x="500" y="185" font-family="Arial Black, Arial, sans-serif" font-size="72" font-weight="900" fill="#FFFFFF" letter-spacing="-1" filter="url(#textGlow)">ABAWI</text>
+
+  <!-- Séparateur coloré -->
+  <rect x="500" y="200" width="60" height="4" rx="2" fill="#18A84A"/>
+  <rect x="568" y="200" width="40" height="4" rx="2" fill="#F0B429"/>
+  <rect x="616" y="200" width="30" height="4" rx="2" fill="#8B5CF6"/>
+
+  <!-- Sous-titre -->
+  <text x="500" y="248" font-family="Arial, sans-serif" font-size="20" font-weight="400" fill="#9BAAB8">Intelligence · Création · Excellence</text>
+
+  <!-- Description -->
+  <text x="500" y="290" font-family="Arial, sans-serif" font-size="15.5" fill="#7A8899" letter-spacing="0.2">30+ outils IA, guides business premium, académie Bac,</text>
+  <text x="500" y="312" font-family="Arial, sans-serif" font-size="15.5" fill="#7A8899" letter-spacing="0.2">finance OHADA — conçu pour entrepreneurs africains.</text>
+
+  <!-- Pills services -->
+  <!-- Ligne 1 -->
+  <rect x="500" y="340" width="126" height="30" rx="15" fill="#18A84A" fill-opacity="0.12" stroke="#18A84A" stroke-opacity="0.35" stroke-width="1"/>
+  <text x="513" y="360" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#18A84A">🤖 IA Expert 24h/24</text>
+
+  <rect x="638" y="340" width="116" height="30" rx="15" fill="#F0B429" fill-opacity="0.12" stroke="#F0B429" stroke-opacity="0.35" stroke-width="1"/>
+  <text x="651" y="360" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#F0B429">📚 Guides Premium</text>
+
+  <rect x="766" y="340" width="122" height="30" rx="15" fill="#8B5CF6" fill-opacity="0.12" stroke="#8B5CF6" stroke-opacity="0.35" stroke-width="1"/>
+  <text x="779" y="360" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#8B5CF6">⚖️ OHADA · BCEAO</text>
+
+  <!-- Ligne 2 -->
+  <rect x="500" y="382" width="110" height="30" rx="15" fill="#F0B429" fill-opacity="0.10" stroke="#F0B429" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="513" y="402" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#F0B429">💰 Finance Élite</text>
+
+  <rect x="622" y="382" width="112" height="30" rx="15" fill="#18A84A" fill-opacity="0.10" stroke="#18A84A" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="635" y="402" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#18A84A">🎓 Academy Bac</text>
+
+  <rect x="746" y="382" width="116" height="30" rx="15" fill="#8B5CF6" fill-opacity="0.10" stroke="#8B5CF6" stroke-opacity="0.3" stroke-width="1"/>
+  <text x="759" y="402" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#8B5CF6">🌍 Communauté</text>
+
+  <!-- Ligne 3 -->
+  <rect x="500" y="424" width="108" height="30" rx="15" fill="#18A84A" fill-opacity="0.08" stroke="#18A84A" stroke-opacity="0.25" stroke-width="1"/>
+  <text x="513" y="444" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#6B8C7A">🎙 Podcasts</text>
+
+  <rect x="620" y="424" width="100" height="30" rx="15" fill="#F0B429" fill-opacity="0.08" stroke="#F0B429" stroke-opacity="0.25" stroke-width="1"/>
+  <text x="633" y="444" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#8C7A4A">💻 Store IT</text>
+
+  <rect x="732" y="424" width="144" height="30" rx="15" fill="#8B5CF6" fill-opacity="0.08" stroke="#8B5CF6" stroke-opacity="0.25" stroke-width="1"/>
+  <text x="745" y="444" font-family="Arial, sans-serif" font-size="12.5" font-weight="600" fill="#7A6A9C">📊 ABAWI 360 · CRM</text>
+
+  <!-- URL site -->
+  <text x="500" y="490" font-family="Arial, sans-serif" font-size="13" fill="#3D5050" letter-spacing="0.5">abawi.app</text>
+
+  <!-- ══ BARRE BAS ══ -->
+  <rect x="0" y="585" width="1200" height="45" fill="#050A0E"/>
+  <rect x="0" y="585" width="1200" height="2" fill="url(#barGrad)" opacity="0.8"/>
+
+  <!-- Ticker texte bas -->
+  <text x="60" y="614" font-family="Arial, sans-serif" font-size="11.5" font-weight="700" fill="#18A84A" letter-spacing="2" opacity="0.85">
+    ABAWI DIGITAL  ·  GUIDES PREMIUM  ·  OUTILS IA  ·  BUSINESS PLAN  ·  CV PRO  ·  FINANCE OHADA  ·  JURIDIQUE ÉLITE  ·  ACADÉMIE BAC  ·  PODCASTS  ·  STORE IT  ·  COMMUNAUTÉ AFRICAINE  ·  ABAWI 360  ·  CRM  ·  PLANIFICATION  ·  MARKETING
+  </text>
+
+  <!-- Éléments déco coins -->
+  <!-- Coin haut gauche -->
+  <line x1="20" y1="20" x2="60" y2="20" stroke="#18A84A" stroke-width="2" stroke-opacity="0.6"/>
+  <line x1="20" y1="20" x2="20" y2="60" stroke="#18A84A" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- Coin haut droite -->
+  <line x1="1180" y1="20" x2="1140" y2="20" stroke="#F0B429" stroke-width="2" stroke-opacity="0.6"/>
+  <line x1="1180" y1="20" x2="1180" y2="60" stroke="#F0B429" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- Coin bas gauche -->
+  <line x1="20" y1="565" x2="60" y2="565" stroke="#8B5CF6" stroke-width="2" stroke-opacity="0.6"/>
+  <line x1="20" y1="565" x2="20" y2="525" stroke="#8B5CF6" stroke-width="2" stroke-opacity="0.6"/>
+  <!-- Coin bas droite -->
+  <line x1="1180" y1="565" x2="1140" y2="565" stroke="#18A84A" stroke-width="2" stroke-opacity="0.6"/>
+  <line x1="1180" y1="565" x2="1180" y2="525" stroke="#18A84A" stroke-width="2" stroke-opacity="0.6"/>
+</svg>

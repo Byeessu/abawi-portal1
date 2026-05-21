@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Allow: /.netlify/functions/sitemap-news
 
 # Zones privées
 Disallow: /admin
@@ -7,5 +8,9 @@ Disallow: /news/admin
 Disallow: /api/
 Disallow: /.netlify/
 
-# Sitemap
-Sitemap: https://abawi-portal.netlify.app/sitemap.xml
+# Sitemaps
+Sitemap: https://abawi.app/sitemap.xml
+Sitemap: https://abawi.app/sitemap-pages.xml
+Sitemap: https://abawi.app/sitemap-digital.xml
+Sitemap: https://abawi.app/sitemap-academy.xml
+Sitemap: https://abawi.app/sitemap-podcasts.xml

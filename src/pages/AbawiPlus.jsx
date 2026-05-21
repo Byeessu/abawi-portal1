@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { waLink } from '../data/products'
 import './AbawiPlus.css'
 import PaymentFlow from '../components/PaymentFlow'
-import { Link } from 'react-router-dom'
 
 /* ── Tiers tarifaires alignés ── */
 const TIERS = [
@@ -11,7 +10,7 @@ const TIERS = [
     credits: '15 crédits', periode: '/mois',
     note: 'Découverte, outils basiques',
     color: '#6B7280',
-    features: ['Accès limité aux guides', '15 crédits IA/mois', 'Outils basiques', 'Support communauté'],
+    features: ['Accès limité aux guides', '15 crédits/mois', 'Outils basiques', 'Support communauté'],
     cta: 'Commencer gratuitement',
   },
   {
@@ -19,7 +18,7 @@ const TIERS = [
     credits: '100 crédits', periode: '/mois',
     note: 'Guides premium + essentiels',
     color: '#3B82F6',
-    features: ['Bibliothèque guides complète', '100 crédits IA/mois', 'Outils essentiels', 'Podcasts inclus'],
+    features: ['Bibliothèque guides complète', '100 crédits/mois', 'Outils essentiels', 'Podcasts inclus'],
     cta: "S'abonner",
     productId: 'aplus-starter',
   },
@@ -29,7 +28,7 @@ const TIERS = [
     note: 'Outils IA avancés + priorité',
     color: '#F0B429', featured: true,
     badge: 'POPULAIRE',
-    features: ['Tout Starter +', '300 crédits IA/mois', 'Outils IA avancés', 'Annah prioritaire', 'Academy complète'],
+    features: ['Tout Starter +', '300 crédits/mois', 'Outils IA avancés', 'Annah prioritaire', 'Academy complète'],
     cta: "S'abonner",
     productId: 'aplus-pro',
   },
@@ -38,7 +37,7 @@ const TIERS = [
     credits: '600 crédits', periode: '/mois',
     note: 'ABAWI 360 complet + exports',
     color: '#8B5CF6',
-    features: ['Tout Pro +', '600 crédits IA/mois', 'ABAWI 360 activé', 'CRM + Marketing', 'Exports professionnels'],
+    features: ['Tout Pro +', '600 crédits/mois', 'ABAWI 360 activé', 'CRM + Marketing', 'Exports professionnels'],
     cta: "S'abonner",
     productId: 'aplus-360',
   },
@@ -47,7 +46,7 @@ const TIERS = [
     credits: '1 000 crédits', periode: '/mois',
     note: 'Niveau cabinet, analyses étendues',
     color: '#18A84A',
-    features: ['Tout 360 +', '1 000 crédits IA/mois', 'Studio Pro inclus', 'Analyses approfondies', 'Packs documents illimités'],
+    features: ['Tout 360 +', '1 000 crédits/mois', 'Studio Pro inclus', 'Analyses approfondies', 'Packs documents illimités'],
     cta: "S'abonner",
     productId: 'aplus-elite',
   },
@@ -226,7 +225,7 @@ export default function AbawiPlus() {
             ))}
           </div>
           {[
-            ['Crédits IA/mois',        '15',     '100',    '300',    '600',    '1 000',  '∞'],
+            ['Crédits/mois',           '15',     '100',    '300',    '600',    '1 000',  '∞'],
             ['Guides premium',         'Limité',  '✓',      '✓',      '✓',      '✓',      '✓'],
             ['Podcasts & Academy',     '—',       '✓',      '✓',      '✓',      '✓',      '✓'],
             ['Outils IA avancés',      '—',       '—',      '✓',      '✓',      '✓',      '✓'],

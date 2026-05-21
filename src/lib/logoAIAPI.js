@@ -112,7 +112,7 @@ function buildAdvancedLogoPrompt(formData) {
       role: 'system',
       content: `Tu es un expert mondial en design graphique, branding et identité visuelle. Tu travailles pour les plus grandes agences de design et tu as créé des logos pour des marques Fortune 500.
 
-Ta mission est de créer 4 logos professionnels uniques et créatifs basés sur les informations fournies. Chaque logo doit être une œuvre d\'art qui raconte une histoire et communique les valeurs de l\'entreprise.
+Ta mission est de créer 4 logos professionnels uniques et créatifs basés sur les informations fournies. Chaque logo doit être une œuvre d'art qui raconte une histoire et communique les valeurs de l'entreprise.
 
 RÉPONSES EXIGÉES:
 - UNIQUEMENT un JSON valide
@@ -121,7 +121,7 @@ RÉPONSES EXIGÉES:
 
 CHAMPS OBLIGATOIRES pour chaque logo:
 - id: numéro unique (1-4)
-- name: nom exact de l\'entreprise
+- name: nom exact de l'entreprise
 - style: style principal (modern, classic, tech, eco, bold, playful, luxury, minimalist)
 - primaryColor: couleur hexadécimale principale
 - secondaryColor: couleur hexadécimale secondaire
@@ -135,12 +135,12 @@ CHAMPS OBLIGATOIRES pour chaque logo:
 - symbolism: symbolisme et signification (ex: croissance et innovation)
 - targetPersonality: personnalité cible du logo (ex: confiant, moderne, accessible)
 - scalability: adaptation à différentes tailles (ex: excellent, lisible à 8px)
-- uniquenessScore: score d\'unicité (1-10)
+- uniquenessScore: score d'unicité (1-10)
 - marketFit: adéquation au marché (ex: parfait pour secteur tech)
 
 CRITÈRES DE QUALITÉ:
 - Créativité et originalité maximales
-- Cohérence avec l\'identité de marque
+- Cohérence avec l'identité de marque
 - Adaptabilité multi-supports
 - Mémorabilité et impact visuel
 - Pertinence sectorielle`
@@ -162,12 +162,12 @@ PRÉFÉRENCES CRÉATIVES:
 
 DIRECTIVES CRÉATIVES:
 1. Génère 4 logos uniques mais cohérents
-2. Chaque logo doit explorer une facette différente de l\'identité
+2. Chaque logo doit explorer une facette différente de l'identité
 3. Intègre les couleurs de manière créative et équilibrée
 4. Les icônes doivent être mémorables et pertinentes
 5. Les previews doivent être immédiatement reconnaissables
 6. Les descriptions doivent inspirer et convaincre
-7. Pense à l\'adaptation sur tous les supports (web, print, mobile)
+7. Pense à l'adaptation sur tous les supports (web, print, mobile)
 8. Considère la concurrence et le positionnement unique
 
 FORMAT JSON EXACT:
@@ -332,43 +332,43 @@ function generateAdvancedDefaultLogos() {
 }
 
 // Parsing et validation de la réponse
-function parseLogoResponse(response) {
+function parseLogoResponse(response, formData) {
   try {
     // Extraire le JSON de la réponse
     const jsonMatch = response.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       throw new Error('Format de réponse invalide')
     }
-    
+
     const parsed = JSON.parse(jsonMatch[0])
-    
+
     // Validation basique
     if (!parsed.logos || !Array.isArray(parsed.logos)) {
       throw new Error('Structure de réponse invalide')
     }
-    
+
     if (parsed.logos.length !== 4) {
       throw new Error('Nombre de logos incorrect')
     }
-    
+
     // Validation des champs requis
     parsed.logos.forEach((logo, index) => {
       const requiredFields = ['name', 'style', 'primaryColor', 'secondaryColor', 'icon', 'preview']
       const missingFields = requiredFields.filter(field => !logo[field])
-      
+
       if (missingFields.length > 0) {
         throw new Error(`Logo ${index + 1}: champs manquants: ${missingFields.join(', ')}`)
       }
     })
-    
+
     return parsed
-    
+
   } catch (error) {
     console.error('Erreur parsing logo response:', error)
-    
+
     // Fallback avec logos par défaut
     return {
-      logos: generateDefaultLogos(formData)
+      logos: generateFallbackLogos(formData || {})
     }
   }
 }

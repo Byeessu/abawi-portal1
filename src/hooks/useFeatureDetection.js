@@ -141,6 +141,7 @@ export function useFeatureDetection() {
       motionQuery.removeEventListener('change', handleMotionChange)
       darkQuery.removeEventListener('change', handleDarkChange)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return features

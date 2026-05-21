@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { speak as speakTTS, stopSpeaking } from '../../lib/ttsEngine'
-import IAResponseDisplay from '../../components/IAResponseDisplay'
+import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel';
 import QuizMode from '../../components/abawi-ia/QuizMode';
 import RechercheMode from '../../components/abawi-ia/RechercheMode';
@@ -10,6 +9,10 @@ import DebatMode from '../../components/abawi-ia/DebatMode';
 import ApprentissageMode from '../../components/abawi-ia/ApprentissageMode';
 import SimulationMode from '../../components/abawi-ia/SimulationMode';
 import AnnahMode from '../../components/abawi-ia/AnnahMode';
+import { LANGUAGES } from '../../lib/abawi-persona';
+import { useAuth } from '../../context/AuthContext'
+import { useToolGuard } from '../../hooks/useToolGuard'
+import ToolUpsellModal, { ToolGuardBadge } from '../../components/ToolUpsellModal'
 
 const MODES = [
   { id: 'quiz', icon: '🧠', label: 'Quiz Intelligent', desc: "Testez vos connaissances dans n'importe quel domaine", color: 'var(--purple)', gradient: 'linear-gradient(135deg, var(--purple), var(--accent))' },
@@ -34,22 +37,45 @@ const MODE_COMPONENTS = {
 const IA_STORAGE_KEYS = ['abawi_recherche_history', 'abawi_annah_messages']
 
 export default function AbawiIA() {
+  const { membre } = useAuth()
+  const guard = useToolGuard('abawi_ia', 'abawi_ia')
+
   const location = useLocation();
   const [activeMode, setActiveMode] = useState(() => {
     if (location.hash === '#annah') return 'annah';
     return 'recherche';
   });
   const [resetKey, setResetKey] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [language, setLanguage] = useState(() => {
+    try { return localStorage.getItem('abawi_ia_lang') || 'fr' } catch { return 'fr' }
+  });
 
   function handleReset() {
-    IA_STORAGE_KEYS.forEach(k => { try { localStorage.removeItem(k) } catch {} })
+    IA_STORAGE_KEYS.forEach(k => { try { localStorage.removeItem(k) } catch { /* ignore */ } })
+    setResetKey(k => k + 1)
+  }
+
+  function handleLangChange(code) {
+    setLanguage(code)
+    try { localStorage.setItem('abawi_ia_lang', code) } catch { /* ignore */ }
     setResetKey(k => k + 1)
   }
 
   const ModeComp = MODE_COMPONENTS[activeMode] || RechercheMode;
 
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--bg-primary)', paddingBottom: 80 }}>
+    <>
+      <SEO
+        title="ABAWI IA — Coach expert senior multilingue"
+        description="Coach IA expert senior : 7 modes (quiz, recherche, simulation, débat, apprentissage, assistant vocal). FR · EN · Wolof. Réponses stratégiques de niveau McKinsey."
+        keywords="IA Sénégal, coach IA, assistant IA, quiz IA, simulation business, débat IA, Wolof IA"
+        image="/og-tools/abawi-ia.jpg"
+      />
+      <main style={{
+        minHeight: '100vh', background: 'var(--bg-primary)', paddingBottom: 80,
+        ...(isFullscreen ? { position: 'fixed', inset: 0, zIndex: 9999, paddingBottom: 0, overflowY: 'auto' } : {})
+    }}>
       <style>{`
         @keyframes abia-spin { to { transform: rotate(360deg); } }
         @keyframes abia-pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }
@@ -65,9 +91,16 @@ export default function AbawiIA() {
         <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 3rem)', fontWeight: 900, color: 'var(--text-primary)', marginBottom: 12, lineHeight: 1.1 }}>
           ABAWI <span style={{ color: '#8B5CF6' }}>Intelligence</span> Artificielle
         </h1>
-        <p style={{ color: 'var(--text-secondary)', maxWidth: 540, margin: '0 auto', fontSize: '0.95rem', lineHeight: 1.55 }}>
+        <p style={{ color: 'var(--text-secondary)', maxWidth: 560, margin: '0 auto 14px', fontSize: '0.95rem', lineHeight: 1.55 }}>
           Quiz, recherche experte, débats, apprentissage guidé, simulation professionnelle et Annah — tout en un.
         </p>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {[['🇫🇷', 'Français'], ['🇬🇧', 'English'], ['🇸🇳', 'Wolof']].map(([flag, lang]) => (
+            <span key={lang} style={{ padding: '4px 14px', borderRadius: 100, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', fontSize: '0.78rem', fontWeight: 700, color: '#8B5CF6' }}>
+              {flag} {lang}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* MODES */}
@@ -75,13 +108,13 @@ export default function AbawiIA() {
         <ToolInfoPanel
           toolName="ABAWI IA"
           icon="🤖"
-          description="Assistant IA expert multi-modes : quiz, recherche, défi, débat, apprentissage, simulation, vocal"
+          description="Coach IA expert senior multilingue — Français, English, Wolof. 7 modes : quiz, recherche, défi, débat, apprentissage, simulation, vocal."
           benefits={[
-            'Apprenez, testez et débattez dans n\'importe quel domaine avec un niveau expert élite',
-            'Mode Annah : réponses stratégiques + lecture audio instantanée',
-            'Adapté au contexte africain (droit OHADA, économie, culture, langues locales)',
-            'Simulez entretiens, négociations, présentations pour vous entraîner',
-            'Parcours d\'apprentissage guidé avec progression personnalisée',
+            '🇫🇷 Français · 🇬🇧 English · 🇸🇳 Wolof — changez de langue en un clic, la préférence est mémorisée',
+            'Expertise senior universelle : OHADA, finance, droit, marketing, technologie, santé, culture africaine',
+            'Mode Annah : coach vocal premium avec réponses stratégiques + lecture audio instantanée',
+            'Simulez entretiens d\'embauche, négociations et présentations — l\'IA joue le rôle face à vous',
+            'Parcours d\'apprentissage guidé adapté à votre niveau avec progression personnalisée',
           ]}
           howToUse={[
             'Choisissez un mode parmi les 7 disponibles en haut de page',
@@ -97,6 +130,9 @@ export default function AbawiIA() {
             'Pour le défi : commencez facile et montez en difficulté — l\'IA s\'adapte',
           ]}
         />
+        <div style={{ marginTop: 8 }}>
+          <ToolGuardBadge guard={guard} />
+        </div>
         {/* Barre de modes — scroll horizontal sur mobile, wrapping sur desktop */}
         <div style={{
           display: 'flex', gap: 8, alignItems: 'center',
@@ -125,6 +161,27 @@ export default function AbawiIA() {
                 <span style={{ display: 'inline' }}>{m.label}</span>
               </button>
             ))}
+            {/* ── Language selector ── */}
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '4px 8px', borderRadius: 100, border: '1px solid var(--border)', background: 'var(--bg-secondary)', flexShrink: 0 }}>
+              {Object.values(LANGUAGES).map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleLangChange(lang.code)}
+                  title={lang.label}
+                  style={{
+                    padding: '4px 9px', borderRadius: 100, border: 'none',
+                    background: language === lang.code ? 'var(--accent, #8B5CF6)' : 'transparent',
+                    color: language === lang.code ? '#fff' : 'var(--text-secondary)',
+                    cursor: 'pointer', fontWeight: 700, fontSize: '0.72rem',
+                    transition: 'all 0.18s', fontFamily: 'Outfit,sans-serif',
+                    letterSpacing: '0.4px',
+                  }}
+                >
+                  {lang.flag} {lang.short}
+                </button>
+              ))}
+            </div>
+
             <button
               className="ia-reset-btn"
               onClick={handleReset}
@@ -141,13 +198,58 @@ export default function AbawiIA() {
             >
               ↺ Réinitialiser
             </button>
+
+            {!isFullscreen ? (
+              <button
+                onClick={() => setIsFullscreen(true)}
+                title="Plein écran"
+                style={{
+                  padding: 'clamp(6px,1.2vw,8px) clamp(10px,1.8vw,16px)',
+                  borderRadius: 100, border: '1px solid var(--border)',
+                  background: 'transparent', color: 'var(--text-muted)',
+                  cursor: 'pointer', fontSize: 'clamp(0.68rem,1.5vw,0.76rem)',
+                  fontWeight: 600, fontFamily: 'Outfit,sans-serif',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 5,
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                ⛶ Plein écran
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsFullscreen(false)}
+                title="Revenir aux outils"
+                style={{
+                  padding: 'clamp(6px,1.2vw,8px) clamp(10px,1.8vw,16px)',
+                  borderRadius: 100, border: '1px solid #EF4444',
+                  background: 'rgba(239,68,68,0.1)', color: '#EF4444',
+                  cursor: 'pointer', fontSize: 'clamp(0.68rem,1.5vw,0.76rem)',
+                  fontWeight: 600, fontFamily: 'Outfit,sans-serif',
+                  transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 5,
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}
+              >
+                ← Revenir aux outils
+              </button>
+            )}
           </div>
         </div>
 
         {/* Rendu du mode actif — key=resetKey force le remontage complet */}
-        <ModeComp key={resetKey} />
+        <ModeComp key={resetKey} language={language} />
       </div>
+
+      <ToolUpsellModal
+        isOpen={guard.upsellOpen}
+        config={guard.upsellConfig}
+        onClose={guard.closeUpsell}
+        onUseCredit={async () => {
+          const r = await guard.checkAndDebit()
+          if (r.ok) guard.closeUpsell()
+        }}
+      />
     </main>
+    </>
   );
 }
 

@@ -50,7 +50,8 @@ export default function InstallPrompt() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInstalled])
 
   const handleInstall = async () => {
     if (!deferredPrompt) return
@@ -101,19 +102,27 @@ export default function InstallPrompt() {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-        <div
-          style={{
-            width: '56px',
-            height: '56px',
-            background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
-            borderRadius: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '28px',
-          }}
-        >
-          🚀
+        <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+          <div style={{
+            position: 'absolute', inset: -2, borderRadius: '50%',
+            background: 'conic-gradient(from 0deg,#18A84A 0deg,#F0B429 120deg,#6366F1 240deg,#18A84A 360deg)',
+            animation: 'abawiBadgeSpin 5s linear infinite',
+            filter: 'blur(0.8px)',
+          }} />
+          <img
+            src="/favicon-abawi-64.webp"
+            alt="ABAWI"
+            width="56"
+            height="56"
+            loading="lazy"
+            decoding="async"
+            style={{
+              position: 'relative', zIndex: 1, display: 'block',
+              width: 56, height: 56, borderRadius: '50%',
+              objectFit: 'cover', objectPosition: 'center',
+              border: '2.5px solid #0D1117', background: '#1a1a1a',
+            }}
+          />
         </div>
         <div style={{ flex: 1 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: '700' }}>

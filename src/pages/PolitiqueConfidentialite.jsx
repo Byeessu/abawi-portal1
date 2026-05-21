@@ -1,11 +1,17 @@
 import './MentionsLegales.css'
+import SEO from '../components/SEO'
 
 function PolitiqueConfidentialite() {
   return (
     <main className="ml-page">
+      <SEO
+        title="Politique de Confidentialité — ABAWI"
+        description="Politique de confidentialité d'ABAWI : collecte, utilisation et protection de vos données personnelles. Conforme à la loi sénégalaise et au RGPD."
+        noindex={false}
+      />
       <h1 className="ml-title">Politique de confidentialité</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
-        Dernière mise à jour : avril 2026
+        Dernière mise à jour : mai 2026
       </p>
 
       <section className="ml-section">

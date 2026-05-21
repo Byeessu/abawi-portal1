@@ -2,123 +2,19 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
 import PaymentFlow from '../components/PaymentFlow'
-
-const PLANS = [
-  {
-    id: 'gratuit',
-    nom: 'Gratuit',
-    prix: 0,
-    credits: 15,
-    couleur: '#4A5568',
-    badge: null,
-    features: [
-      { ok: true,  label: '15 crédits IA / mois' },
-      { ok: true,  label: 'Guides gratuits' },
-      { ok: true,  label: 'Podcasts gratuits' },
-      { ok: true,  label: 'Outils IA basiques' },
-      { ok: false, label: 'Guides premium' },
-      { ok: false, label: 'ABAWI 360' },
-      { ok: false, label: 'Support prioritaire' },
-    ],
-  },
-  {
-    id: 'starter',
-    nom: 'Starter',
-    prix: 4990,
-    credits: 100,
-    couleur: '#3B82F6',
-    badge: null,
-    features: [
-      { ok: true,  label: '100 crédits IA / mois' },
-      { ok: true,  label: 'Tous les guides premium' },
-      { ok: true,  label: 'Fascicules scolaires' },
-      { ok: true,  label: 'Outils IA avancés' },
-      { ok: true,  label: 'Support email' },
-      { ok: false, label: 'ABAWI 360' },
-      { ok: false, label: 'Annah prioritaire' },
-    ],
-  },
-  {
-    id: 'pro',
-    nom: 'Pro',
-    prix: 9990,
-    credits: 300,
-    couleur: '#F0B429',
-    badge: '⭐ Populaire',
-    popular: true,
-    features: [
-      { ok: true, label: '300 crédits IA / mois' },
-      { ok: true, label: 'Accès illimité guides + fascicules' },
-      { ok: true, label: 'ABAWI 360 (CRM, Stats, Marketing)' },
-      { ok: true, label: 'Outils IA élite' },
-      { ok: true, label: 'Support prioritaire' },
-      { ok: true, label: 'Téléchargement PDF illimité' },
-      { ok: false, label: 'Annah prioritaire' },
-    ],
-  },
-  {
-    id: 'elite',
-    nom: 'Elite',
-    prix: 19990,
-    credits: 1000,
-    couleur: '#8B5CF6',
-    badge: null,
-    features: [
-      { ok: true, label: '1000 crédits IA / mois' },
-      { ok: true, label: 'Tout inclus Plan Pro' },
-      { ok: true, label: 'Analyses financières avancées' },
-      { ok: true, label: 'Business plans illimités' },
-      { ok: true, label: 'Support dédié WhatsApp' },
-      { ok: true, label: 'Bêta nouvelles fonctionnalités' },
-      { ok: false, label: 'Annah prioritaire' },
-    ],
-  },
-  {
-    id: '360',
-    nom: '360',
-    prix: 14990,
-    credits: 600,
-    couleur: '#14B8A6',
-    badge: '🌀 ABAWI 360',
-    features: [
-      { ok: true, label: '600 crédits IA / mois' },
-      { ok: true, label: 'Tout inclus Plan Pro' },
-      { ok: true, label: 'ABAWI 360 complet (CRM + Planif + Stats + Marketing)' },
-      { ok: true, label: 'Outils IA Élite complets' },
-      { ok: true, label: 'Support prioritaire WhatsApp' },
-      { ok: true, label: 'Exports pro + tableaux avancés' },
-      { ok: false, label: 'Annah prioritaire' },
-    ],
-  },
-  {
-    id: 'vip',
-    nom: 'VIP',
-    prix: 49990,
-    credits: 9999,
-    couleur: '#F59E0B',
-    badge: '👑 VIP',
-    features: [
-      { ok: true, label: 'Crédits illimités' },
-      { ok: true, label: 'Accès total à tout le contenu' },
-      { ok: true, label: 'Annah prioritaire + assistance continue' },
-      { ok: true, label: 'Priorité absolue sur tout' },
-      { ok: true, label: 'Facture mensuelle fournie' },
-      { ok: true, label: 'Badge VIP visible' },
-      { ok: true, label: 'Accès anticipé aux nouveautés' },
-    ],
-  },
-]
+import { PLANS } from '../data/plans'
+import SEO from '../components/SEO'
 
 const CREDIT_PACKS = [
-  { id: 'pack-50',   nom: 'Pack Starter',  credits: 50,   prix: 2500,  bonus: 0,   popular: false },
+  { id: 'pack-50',   nom: 'Pack Mini',     credits: 50,   prix: 2500,  bonus: 0,   popular: false },
   { id: 'pack-100',  nom: 'Pack Standard', credits: 100,  prix: 4500,  bonus: 10,  popular: false },
-  { id: 'pack-200',  nom: 'Pack Pro',      credits: 200,  prix: 8000,  bonus: 25,  popular: true  },
+  { id: 'pack-200',  nom: 'Pack Plus',     credits: 200,  prix: 8000,  bonus: 25,  popular: true  },
   { id: 'pack-500',  nom: 'Pack Business', credits: 500,  prix: 17500, bonus: 75,  popular: false },
-  { id: 'pack-1000', nom: 'Pack Elite',    credits: 1000, prix: 30000, bonus: 200, popular: false },
+  { id: 'pack-1000', nom: 'Pack Max',      credits: 1000, prix: 30000, bonus: 200, popular: false },
 ]
 
 const COMPARISON = [
-  { feature: 'Crédits IA / mois',        gratuit: '15',     starter: '100',   pro: '300',   elite: '1000',  '360': '600', vip: '∞' },
+  { feature: 'Crédits / mois',           gratuit: '15',     starter: '100',   pro: '300',   elite: '1000',  '360': '600', vip: '∞' },
   { feature: 'Guides premium',           gratuit: '—',      starter: '✅',    pro: '✅',    elite: '✅',    '360': '✅', vip: '✅' },
   { feature: 'Fascicules scolaires',     gratuit: '—',      starter: '✅',    pro: '✅',    elite: '✅',    '360': '✅', vip: '✅' },
   { feature: 'ABAWI 360',                gratuit: '—',      starter: '—',     pro: 'Partiel', elite: '✅',  '360': 'Complet', vip: '✅' },
@@ -140,9 +36,15 @@ export default function Plans() {
 
   return (
     <main style={{ minHeight: '100vh', background: 'var(--bg-primary)', fontFamily: 'Outfit, sans-serif' }}>
+      <SEO
+        title="ABAWI Premium — Abonnements & Tarifs"
+        description="Choisissez votre plan ABAWI Premium : accès illimité aux guides, outils IA et académie pour entrepreneurs africains."
+        keywords="abonnement ABAWI, plan premium, tarifs, crédits, ABAWI+, business plan, guides premium Afrique"
+        image="/abawi-og-banner.jpg"
+      />
       {/* === HERO === */}
       <section style={{ background: 'linear-gradient(180deg, rgba(240,180,41,0.05) 0%, transparent 100%)', borderBottom: '1px solid rgba(240,180,41,0.08)', padding: '60px 24px 40px', textAlign: 'center' }}>
-        <span style={{ display: 'inline-block', padding: '4px 18px', borderRadius: '100px', background: 'rgba(240,180,41,0.1)', border: '1px solid rgba(240,180,41,0.25)', color: '#F0B429', fontSize: '0.72rem', fontWeight: 800, letterSpacing: '2px', marginBottom: '16px' }}>💎 ABAWI PLUS</span>
+        <span style={{ display: 'inline-block', padding: '4px 18px', borderRadius: '100px', background: 'rgba(240,180,41,0.1)', border: '1px solid rgba(240,180,41,0.25)', color: '#F0B429', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '2px', marginBottom: '16px' }}>💎 ABAWI PLUS</span>
         <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '12px' }}>
           Choisissez votre plan
         </h1>
@@ -157,12 +59,12 @@ export default function Plans() {
             <span style={{ position: 'absolute', top: 2, left: billingAnnuel ? 24 : 2, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
           </button>
           <span style={{ fontSize: '0.85rem', fontWeight: 700, color: billingAnnuel ? 'var(--text-primary)' : 'var(--text-secondary)' }}>Annuel</span>
-          {billingAnnuel && <span style={{ padding: '2px 10px', borderRadius: 100, background: 'rgba(24,168,74,0.15)', color: '#18A84A', fontSize: '0.72rem', fontWeight: 800 }}>-17% économisé</span>}
+          {billingAnnuel && <span style={{ padding: '2px 10px', borderRadius: 100, background: 'rgba(24,168,74,0.15)', color: '#18A84A', fontSize: '0.75rem', fontWeight: 800 }}>-17% économisé</span>}
         </div>
       </section>
 
       {/* === TABS === */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px' }}>
         <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '40px', paddingTop: '24px', overflowX: 'auto' }}>
           {[
             { id: 'plans',   label: '💎 Plans d\'abonnement' },
@@ -193,7 +95,7 @@ export default function Plans() {
                   transform: isPopular ? 'translateY(-6px)' : 'none',
                 }}>
                   {plan.badge && (
-                    <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', padding: '4px 16px', borderRadius: 100, background: plan.couleur, color: '#fff', fontSize: '0.72rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                    <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', padding: '4px 16px', borderRadius: 100, background: plan.couleur, color: '#fff', fontSize: '0.75rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       {plan.badge}
                     </div>
                   )}
@@ -208,7 +110,7 @@ export default function Plans() {
                       </>
                     )}
                     <div style={{ color: plan.couleur, fontSize: '0.78rem', fontWeight: 700, marginTop: '4px' }}>
-                      {plan.credits === 9999 ? '∞ crédits IA' : `${plan.credits} crédits IA/mois`}
+                      {plan.credits === 9999 ? '∞ crédits' : `${plan.credits} crédits/mois`}
                     </div>
                   </div>
                   <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -246,7 +148,7 @@ export default function Plans() {
         {activeTab === 'credits' && (
           <div>
             <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-              <h2 style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: '1.4rem', marginBottom: '8px' }}>Packs de crédits IA</h2>
+              <h2 style={{ color: 'var(--text-primary)', fontWeight: 900, fontSize: '1.4rem', marginBottom: '8px' }}>Packs de crédits</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Les crédits servent à utiliser tous les outils IA ABAWI. Ils ne expirent jamais.</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', paddingBottom: '60px' }}>
@@ -258,7 +160,7 @@ export default function Plans() {
                   transform: pack.popular ? 'translateY(-4px)' : 'none',
                 }}>
                   {pack.popular && (
-                    <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', padding: '3px 14px', borderRadius: 100, background: '#F0B429', color: '#070B0F', fontSize: '0.68rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                    <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', padding: '3px 14px', borderRadius: 100, background: '#F0B429', color: '#070B0F', fontSize: '0.75rem', fontWeight: 800, whiteSpace: 'nowrap' }}>
                       ⭐ Meilleur rapport
                     </div>
                   )}
@@ -322,7 +224,7 @@ export default function Plans() {
       <section style={{ maxWidth: '760px', margin: '0 auto', padding: '0 24px 80px' }}>
         <h2 style={{ textAlign: 'center', color: 'var(--text-primary)', fontWeight: 900, marginBottom: '28px', fontSize: '1.4rem' }}>Questions fréquentes</h2>
         {[
-          { q: 'Comment fonctionne les crédits IA ?', r: 'Chaque utilisation d\'un outil IA (génération de CV, analyse juridique, business plan...) consomme des crédits. Les plans incluent un quota mensuel renouvelable. Vous pouvez aussi acheter des packs supplémentaires qui n\'expirent jamais.' },
+          { q: 'Comment fonctionne les crédits ?', r: 'Chaque utilisation d\'un outil IA (génération de CV, analyse juridique, business plan...) consomme des crédits. Les plans incluent un quota mensuel renouvelable. Vous pouvez aussi acheter des packs supplémentaires qui n\'expirent jamais.' },
           { q: 'Puis-je annuler à tout moment ?', r: 'Oui. Aucun engagement. Votre accès reste actif jusqu\'à la fin de la période payée.' },
           { q: 'Comment payer ?', r: 'Wave, Orange Money, Free Money ou carte bancaire. Paiement sécurisé via PayDunya.' },
           { q: 'Que contient ABAWI 360 ?', r: 'CRM (gestion clients), Planification de projets, Statistiques business, Marketing & Calendrier de contenu — tout pour gérer votre entreprise en un seul endroit.' },

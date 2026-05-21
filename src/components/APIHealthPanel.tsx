@@ -249,7 +249,7 @@ export default function APIHealthPanel({ compact = false }: APIHealthPanelProps)
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#22c55e' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--green)' }}>
               {statistics.healthy}
             </div>
             <div style={{ fontSize: '0.9rem', color: themeColors.textSecondary }}>
@@ -257,7 +257,7 @@ export default function APIHealthPanel({ compact = false }: APIHealthPanelProps)
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--red)' }}>
               {statistics.error}
             </div>
             <div style={{ fontSize: '0.9rem', color: themeColors.textSecondary }}>
@@ -393,7 +393,7 @@ export default function APIHealthPanel({ compact = false }: APIHealthPanelProps)
                 )}
                 
                 {api.errorCount > 0 && (
-                  <div style={{ color: '#ef4444' }}>
+                  <div style={{ color: 'var(--red)' }}>
                     Erreurs: {api.errorCount}
                   </div>
                 )}

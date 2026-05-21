@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createInvoice, waLink, isPaydunyaConfigured } from '../config/paydunya'
 import { trackEvent, captureError } from '../lib/observability'
 
@@ -40,11 +40,7 @@ const METHODS = [
     desc: 'Paiement instantané',
     color: '#1BA8F5',
     svg: (
-      <svg width="32" height="32" viewBox="0 0 40 40">
-        <rect width="40" height="40" rx="10" fill="#1BA8F5"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
-          fontSize="16" fontWeight="900" fill="white" fontFamily="Arial">W</text>
-      </svg>
+      <img src="/logo-wave.jfif" alt="Wave" width={32} height={32} style={{ borderRadius: 8, objectFit: 'cover', display: 'block' }} />
     ),
   },
   {
@@ -53,11 +49,7 @@ const METHODS = [
     desc: 'Orange Money Sénégal',
     color: '#FF6600',
     svg: (
-      <svg width="32" height="32" viewBox="0 0 40 40">
-        <rect width="40" height="40" rx="10" fill="#FF6600"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
-          fontSize="12" fontWeight="900" fill="white" fontFamily="Arial">OM</text>
-      </svg>
+      <img src="/logo-orange-money.png" alt="Orange Money" width={32} height={32} style={{ borderRadius: 8, objectFit: 'cover', display: 'block' }} />
     ),
   },
   {
@@ -66,11 +58,7 @@ const METHODS = [
     desc: 'Free Money Sénégal',
     color: '#E30613',
     svg: (
-      <svg width="32" height="32" viewBox="0 0 40 40">
-        <rect width="40" height="40" rx="10" fill="#E30613"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
-          fontSize="12" fontWeight="900" fill="white" fontFamily="Arial">FM</text>
-      </svg>
+      <img src="/logo-free-money.png" alt="Free Money" width={32} height={32} style={{ borderRadius: 8, objectFit: 'cover', display: 'block' }} />
     ),
   },
   {
@@ -94,7 +82,11 @@ export default function PaymentFlow({ product, onClose, onSuccess, bypassPayment
   const [method, setMethod] = useState('abawi-pay')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const paydunyaReady = isPaydunyaConfigured()
+  const [paydunyaReady, setPaydunyaReady] = useState(false)
+
+  useEffect(() => {
+    isPaydunyaConfigured().then(setPaydunyaReady)
+  }, [])
 
   if (!product) return null
 
@@ -124,7 +116,7 @@ export default function PaymentFlow({ product, onClose, onSuccess, bypassPayment
         productId: product.id,
         productType,
         billingType: product.billing_type || null,
-        returnUrl: `${window.location.origin}/merci?product=${product.id}&type=${productType}`,
+        returnUrl: `${window.location.origin}/merci?product=${product.id}&type=${productType}${product.pack_type ? '&pack_type='+product.pack_type : ''}${product.pack_name ? '&pack_name='+encodeURIComponent(product.pack_name) : ''}${product.product_ids ? '&product_ids='+encodeURIComponent(JSON.stringify(product.product_ids)) : ''}`,
         cancelUrl: window.location.href,
       })
       if (result?.url) {
@@ -185,6 +177,24 @@ export default function PaymentFlow({ product, onClose, onSuccess, bypassPayment
 
         {/* Titre */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+            <div style={{ position: 'relative', width: 56, height: 56 }}>
+              <style>{`@keyframes abawiBadgeSpin { to { transform: rotate(360deg); } }`}</style>
+              <div style={{
+                position: 'absolute', inset: -2, borderRadius: '50%',
+                background: 'conic-gradient(from 0deg,#18A84A 0deg,#F0B429 120deg,#6366F1 240deg,#18A84A 360deg)',
+                animation: 'abawiBadgeSpin 5s linear infinite',
+                filter: 'blur(0.8px)',
+              }} />
+              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden' }}>
+                <img src="/favicon-abawi-64.webp" alt="ABAWI" style={{
+                  width: '100%', height: '100%',
+                  objectFit: 'cover', objectPosition: 'center',
+                  transform: 'scale(1.30)',
+                }} />
+              </div>
+            </div>
+          </div>
           <div style={{
             fontSize: '0.72rem', fontWeight: 700, color: '#F0B429',
             letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px',

@@ -7,17 +7,16 @@ import { ThemeContext } from '../context/ThemeContext'
  */
 export function useThemeColors() {
   const themeContext = useContext(ThemeContext)
-  
-  if (!themeContext) {
-    // Fallback si le contexte n'est pas disponible
-    return getDefaultColors()
-  }
-  
-  const { theme, darkMode } = themeContext
-  
+  const theme = themeContext?.theme
+  const darkMode = themeContext?.darkMode
+
   return useMemo(() => {
+    if (!themeContext) {
+      // Fallback si le contexte n'est pas disponible
+      return getDefaultColors()
+    }
     return darkMode ? getDarkColors(theme) : getLightColors(theme)
-  }, [theme, darkMode])
+  }, [themeContext, theme, darkMode])
 }
 
 /**

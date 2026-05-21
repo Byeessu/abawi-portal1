@@ -42,7 +42,7 @@ serve(async (req) => {
         name: "SenTicket by ABAWI",
         tagline: "Billetterie événementielle",
         phone: "+221775185050",
-        logo_url: "https://abawi-portal.netlify.app/logo.png",
+        logo_url: "https://abawi.app/logo.png",
       },
       custom_data: {
         order_id: orderId,

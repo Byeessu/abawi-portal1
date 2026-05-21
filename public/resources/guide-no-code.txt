@@ -1,0 +1,212 @@
+═══════════════════════════════════════════════════════════════════
+  GUIDE NO-CODE POUR ENTREPRENEURS AFRICAINS
+  Version 1.0
+  Par Ibrahima K. — Communauté ABAWI
+═══════════════════════════════════════════════════════════════════
+
+SOMMAIRE
+--------
+1. Introduction : Pourquoi le no-code en Afrique ?
+2. Comparatif des outils (2026)
+3. Intégration des paiements mobiles
+4. Francisation & UX locale
+5. Performance offline & connexion lente
+6. Cas pratique : Créer une app de livraison en 48h
+7. Ressources & communautés
+8. Checklist de lancement
+
+═══════════════════════════════════════════════════════════════════
+1. INTRODUCTION
+═══════════════════════════════════════════════════════════════════
+Le no-code permet de créer des applications web et mobiles sans
+écrire de code. Pour les entrepreneurs africains, c'est un levier
+puissant :
+
+  • Réduire les coûts de développement de 70 à 90%
+  • Tester des idées en quelques jours, pas en mois
+  • Itérer rapidement selon le feedback des utilisateurs
+  • Ne plus dépendre d'un développeur unique
+
+Contraintes spécifiques à prendre en compte :
+  ✓ Connexion internet intermittente (2G/3G)
+  ✓ Paiement mobile dominant (Wave, Orange Money)
+  ✓ Francisation complète (accents, formats de date)
+  ✓ Coût des données mobiles pour les utilisateurs
+
+═══════════════════════════════════════════════════════════════════
+2. COMPARATIF DES OUTILS (2025)
+═══════════════════════════════════════════════════════════════════
+
+BUBBLE — Applications web complexes
+  Forces : Logique métier avancée, base de données intégrée,
+           plugins riches, communauté très active
+  Limites : Courbe d'apprentissage steep, perf mobile limitée
+  Prix : Gratuit (dev) → 29$/mois (live) → 129$/mois (growth)
+  Idéal pour : Marketplaces, SaaS B2B, dashboards analytics
+  Intégration paiement : Plugin PayDunya, Stripe
+
+FLUTTERFLOW — Applications mobiles natives (iOS + Android)
+  Forces : Export code Flutter natif, UI premium, offline mode,
+           push notifications
+  Limites : Prix élevé pour le export code, courbe d'apprentissage
+  Prix : Gratuit (dev) → 30$/mois → 70$/mois (export code)
+  Idéal pour : Apps mobile-first, livraison, fintech mobile
+  Intégration paiement : API REST Orange Money / Wave
+
+WEBFLOW — Sites vitrines & landing pages premium
+  Forces : Design pixel-perfect, CMS puissant, SEO intégré,
+           animations avancées
+  Limites : Pas d'app complexe, pas de base de données relationnelle
+  Prix : Gratuit (2 projets) → 18$/mois → 49$/mois
+  Idéal pour : Landing pages, blogs, sites corporate, portfolios
+
+NOTION + SUPER — Sites légers à partir de Notion
+  Forces : Gratuit, très rapide à mettre en place, CMS visuel
+  Limites : Pas d'interactivité complexe, pas de base de données
+  Prix : 16$/mois (Super.so)
+  Idéal pour : MVP ultra-rapide, documentation, directories
+
+CARRD — One-page sites en 1h
+  Forces : Ultra-simple, 19$/an, templates modernes
+  Limites : Une seule page, pas de base de données
+  Idéal pour : Landing pages événement, waitlists, portfolios
+
+───────────────────────────────────────────────────────────────────
+TABLEAU RÉCAPITULATIF
+───────────────────────────────────────────────────────────────────
+Critère            | Bubble | FlutterFlow | Webflow | Notion | Carrd
+-------------------|--------|-------------|---------|--------|-------
+Complexité app     | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐   | ⭐⭐    | ⭐     | ⭐
+Mobile native      | ❌     | ✅          | ❌      | ❌     | ❌
+Paiement mobile    | ⚠️     | ✅          | ⚠️      | ❌     | ❌
+Offline            | ❌     | ✅          | ❌      | ❌     | ❌
+Coût démarrage     | 29$/m  | 30$/m       | 18$/m   | 16$/m  | 19$/an
+Temps MVP          | 2-4sem | 3-6sem      | 1-2sem  | 1-3j   | 1-2j
+
+═══════════════════════════════════════════════════════════════════
+3. INTÉGRATION DES PAIEMENTS MOBILES
+═══════════════════════════════════════════════════════════════════
+
+WAVE CI / SN / BF / ML
+  API : REST (api.wave.com)
+  Docs : developer.wave.com
+  Méthodes : Paiement push (client initie), Paiement pull (merchant)
+  Webhook : Oui — configurer endpoint Bubble/FlutterFlow
+  Délais : Instantané ( Wave ), 2-5min ( Wave Cash )
+  Commission : 1,5% par transaction
+
+ORANGE MONEY (API Orange Money API)
+  API : SOAP/REST (api.orange.com)
+  Docs : developer.orange.com
+  Méthodes : Payment, Disbursement, Remittance
+  Webhook : Oui (via callback URL)
+  Délais : Instantané
+  Commission : 1% à 3% selon le pays
+
+PAYDUNYA (Sénégal, Côte d'Ivoire)
+  API : REST (paydunya.com)
+  Docs : paydunya.com/developers
+  Avantages : Multi-opérateur (Orange, Free, Wave, Expresso)
+  Webhook : Oui
+  Commission : 2,5% + 50 FCFA
+
+ÉTAPES D'INTÉGRATION (Bubble example)
+  1. Créer un compte développeur sur PayDunya
+  2. Obtenir les clés API (master_key, private_key, token)
+  3. Installer le plugin PayDunya sur Bubble
+  4. Configurer les webhooks dans PayDunya dashboard
+  5. Tester avec montant 100 FCFA en sandbox
+  6. Passer en production après validation
+
+═══════════════════════════════════════════════════════════════════
+4. FRANCISATION & UX LOCALE
+═══════════════════════════════════════════════════════════════════
+
+Polices recommandées (support complet des accents africains) :
+  • Inter / Roboto (Google Fonts) — support étendu
+  • Noto Sans — couvre 800+ langues
+  • Sora / Space Grotesk — design moderne
+
+Formats à adapter :
+  Dates      : JJ/MM/AAAA (pas MM/DD/AAAA)
+  Heures     : 24h (14:30 pas 2:30 PM)
+  Numéros    : +221 77 XXX XX XX (pas (221) XXX-XXXX)
+  Monnaies   : FCFA 15 000 (pas $15,000 ou €15 000)
+  Mesures    : Métrique (km, kg, °C)
+
+Copywriting local :
+  ✓ Utiliser le tutoiement pour les apps jeunes
+  ✓ Intégrer des expressions locales
+  ✓ Adapter les CTA : « Payer avec Wave » pas juste « Checkout »
+  ✓ SMS/WhatsApp comme canal de notification principal
+
+═══════════════════════════════════════════════════════════════════
+5. PERFORMANCE OFFLINE & CONNEXION LENTE
+═══════════════════════════════════════════════════════════════════
+
+Optimisations techniques :
+  1. Images : compresser avec TinyPNG, WebP, lazy loading
+  2. Poids page : < 500 Ko total (HTML + CSS + JS + images)
+  3. Cache : service worker pour FlutterFlow / PWA
+  4. API calls : batcher les requêtes, pas 1 call par élément
+  5. Fallback : mode hors-ligne avec données en cache local
+  6. Progressive loading : afficher le squelette d'abord
+
+Test de performance (simuler 2G) :
+  Chrome DevTools → Network → Throttling → Fast 3G / Slow 3G
+  Objectif : First Contentful Paint < 2s sur 3G
+
+═══════════════════════════════════════════════════════════════════
+6. CAS PRATIQUE — APP DE LIVRAISON EN 48H
+═══════════════════════════════════════════════════════════════════
+
+Stack recommandée : FlutterFlow + Firebase + PayDunya
+
+Jour 1 (8h) :
+  □ Créer le projet FlutterFlow, choisir template "Delivery"
+  □ Configurer Firebase Auth (login téléphone)
+  □ Créer les collections : Users, Restaurants, Orders, Drivers
+  □ Designer 3 écrans : Accueil, Restaurant, Panier
+
+Jour 2 (8h) :
+  □ Connecter PayDunya API pour paiement
+  □ Configurer Google Maps API pour géolocalisation
+  □ Ajouter push notifications (OneSignal)
+  □ Tester sur device physique Android
+  □ Déployer sur Play Console (internal testing)
+
+Budget total outils : ~70$/mois (FlutterFlow + Firebase + PayDunya)
+
+═══════════════════════════════════════════════════════════════════
+7. RESSOURCES & COMMUNAUTÉS
+═══════════════════════════════════════════════════════════════════
+
+Communautés francophones no-code :
+  • ABAWI AbZone (abawi.africa) — entrepreneurs africains
+  • No-Code France (nocodefrance.io)
+  • Bubble Forum FR (forum.bubble.io)
+  • FlutterFlow Community (community.flutterflow.io)
+
+Tutoriels gratuits recommandés :
+  • Bubble Academy (academy.bubble.io) — 20h de cours
+  • FlutterFlow University (docs.flutterflow.io)
+  • Webflow University (university.webflow.com)
+
+═══════════════════════════════════════════════════════════════════
+8. CHECKLIST DE LANCEMENT
+═══════════════════════════════════════════════════════════════════
+
+□ Choisir l'outil adapté au MVP (voir comparatif §2)
+□ Configurer le domaine personnalisé (.africa ou .sn recommandé)
+□ Intégrer au moins 1 moyen de paiement mobile
+□ Tester sur 3 devices différents (Android bas/milieu/haut de gamme)
+□ Mesurer le temps de chargement en 3G
+□ Préparer les textes en français + langue locale si pertinent
+□ Configurer Google Analytics / Mixpanel
+□ Créer un compte support WhatsApp Business
+□ Planifier la première campagne de acquisition
+
+═══════════════════════════════════════════════════════════════════
+© ABAWI 2026 — Guide no-code pour entrepreneurs africains
+    Rejoignez la communauté sur abawi.africa/abzone 🌍
+═══════════════════════════════════════════════════════════════════

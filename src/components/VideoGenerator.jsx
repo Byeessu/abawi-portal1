@@ -35,7 +35,7 @@ export function VideoGenerator({ titre, categorie, productId, fileUrl, onClose }
           pdfContent = await getContentForAI(productId || titre, fileUrl, titre, categorie)
         }
       // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-      } catch {}
+      } catch { /* ignore */ }
       setProgress(30)
       const parsed = await generateVideoSlides(titre, categorie, pdfContent)
       setSlides(Array.isArray(parsed) ? parsed : parsed.slides || parsed)

@@ -140,22 +140,22 @@ export default function SocialVault({ showToast }) {
 
   // ───────── Rendu ─────────
   const style = {
-    card: { background: '#0D1117', border: '1px solid #1A2332', borderRadius: 12, padding: 20 },
-    input: { width: '100%', padding: '10px 12px', background: '#070B0F', border: '1px solid #1A2332', borderRadius: 8, color: '#F0F2F5', fontSize: '0.85rem', fontFamily: 'inherit', boxSizing: 'border-box' },
-    label: { display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#8B95A5', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
+    card: { background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 },
+    input: { width: '100%', padding: '10px 12px', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-primary)', fontSize: '0.85rem', fontFamily: 'inherit', boxSizing: 'border-box' },
+    label: { display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
     btn: { padding: '10px 18px', borderRadius: 10, border: 'none', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit' },
     btnPri: { background: 'linear-gradient(135deg, #F0B429, #F59E0B)', color: '#0a0a0a', boxShadow: '0 4px 14px rgba(240,180,41,0.3)' },
-    btnSec: { background: 'rgba(255,255,255,0.06)', color: '#F0F2F5', border: '1px solid rgba(255,255,255,0.1)' },
+    btnSec: { background: 'rgba(128,128,128,0.08)', color: 'var(--text-primary)', border: '1px solid var(--border)' },
     btnDanger: { background: 'rgba(239,68,68,0.12)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.3)' },
   }
 
   return (
     <section style={style.card}>
       <header style={{ marginBottom: 14 }}>
-        <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#F0F2F5' }}>
+        <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)' }}>
           🔐 Coffre-fort — Comptes sociaux
         </h2>
-        <p style={{ margin: '6px 0 0', color: '#8B95A5', fontSize: '0.82rem', lineHeight: 1.5 }}>
+        <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.82rem', lineHeight: 1.5 }}>
           Les identifiants sont chiffrés localement (AES-GCM + PBKDF2) avec un mot de passe maître.
           Rien n'est envoyé sur le serveur ni stocké en clair. En cas de perte du mot de passe
           maître, le coffre est irrécupérable.
@@ -164,7 +164,7 @@ export default function SocialVault({ showToast }) {
 
       {!blob && !unlocked && (
         <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ padding: 12, background: 'rgba(240,180,41,0.08)', border: '1px solid rgba(240,180,41,0.2)', borderRadius: 8, color: '#F0B429', fontSize: '0.82rem' }}>
+          <div style={{ padding: 12, background: 'rgba(240,180,41,0.08)', border: '1px solid rgba(240,180,41,0.2)', borderRadius: 8, color: 'var(--gold)', fontSize: '0.82rem' }}>
             💡 Aucun coffre existant — créez-en un pour stocker vos identifiants en toute sécurité.
           </div>
           <div>
@@ -201,7 +201,7 @@ export default function SocialVault({ showToast }) {
               🗑️ Réinitialiser
             </button>
           </div>
-          <p style={{ color: '#64748B', fontSize: '0.78rem', margin: 0 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', margin: 0 }}>
             Coffre créé le {new Date(blob.updatedAt).toLocaleString('fr-FR')}
           </p>
         </div>
@@ -210,12 +210,12 @@ export default function SocialVault({ showToast }) {
       {unlocked && (
         <div style={{ display: 'grid', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ padding: '4px 10px', background: 'rgba(34,197,94,0.12)', color: '#22C55E', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700 }}>
+            <span style={{ padding: '4px 10px', background: 'rgba(34,197,94,0.12)', color: 'var(--green)', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700 }}>
               🔓 Déverrouillé
             </span>
-            <label style={{ color: '#8B95A5', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <label style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 6 }}>
               Auto-verrouillage
-              <select value={autoLockMin} onChange={(e) => setAutoLockMin(Number(e.target.value))} style={{ padding: '4px 8px', borderRadius: 6, background: '#070B0F', color: '#F0F2F5', border: '1px solid #1A2332', fontSize: '0.78rem' }}>
+              <select value={autoLockMin} onChange={(e) => setAutoLockMin(Number(e.target.value))} style={{ padding: '4px 8px', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border)', fontSize: '0.78rem' }}>
                 <option value={5}>5 min</option>
                 <option value={10}>10 min</option>
                 <option value={30}>30 min</option>
@@ -234,10 +234,10 @@ export default function SocialVault({ showToast }) {
 
           <div style={{ display: 'grid', gap: 12 }}>
             {accounts.map((a) => (
-              <div key={a.id} style={{ background: '#070B0F', border: '1px solid #1A2332', borderRadius: 10, padding: 14 }}>
+              <div key={a.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                   <span style={{ fontSize: '1.3rem' }}>{a.icon}</span>
-                  <strong style={{ color: '#F0F2F5' }}>{a.label}</strong>
+                  <strong style={{ color: 'var(--text-primary)' }}>{a.label}</strong>
                   {a.url && (
                     <a href={a.url} target="_blank" rel="noopener noreferrer" style={{ color: '#3B82F6', fontSize: '0.78rem', marginLeft: 'auto' }}>
                       Ouvrir ↗
@@ -299,7 +299,7 @@ export default function SocialVault({ showToast }) {
             ))}
           </div>
 
-          <div style={{ padding: 12, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: '0.78rem', color: '#8B95A5', lineHeight: 1.5 }}>
+          <div style={{ padding: 12, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             ℹ️ Pour publier : cliquez sur <strong>Ouvrir ↗</strong>, utilisez le bouton 📋 pour copier
             l'identifiant et le mot de passe, puis collez dans le formulaire de connexion.
             L'auto-verrouillage déclenche après {autoLockMin} min d'inactivité.

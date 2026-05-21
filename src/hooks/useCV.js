@@ -4,7 +4,7 @@ const CV_SAVE_KEY = 'abawi-cv-save-30j';
 const CV_SAVE_DURATION = 30 * 24 * 60 * 60 * 1000;
 
 function saveCV30Days(data) {
-  try { localStorage.setItem(CV_SAVE_KEY, JSON.stringify({ data, savedAt: Date.now() })); } catch {}
+  try { localStorage.setItem(CV_SAVE_KEY, JSON.stringify({ data, savedAt: Date.now() })); } catch { /* ignore */ }
 }
 
 function loadCV30Days() {
@@ -30,15 +30,15 @@ export function useCV() {
   useEffect(() => {
     const saved30 = loadCV30Days();
     if (saved30) {
-      setSavedBanner({ from: '30j', at: saved30.savedAt });
+      Promise.resolve().then(() => setSavedBanner({ from: '30j', at: saved30.savedAt }));
       const d = saved30;
-      if (d.info) setInfo(d.info);
-      if (d.photo) setPhoto(d.photo);
-      if (d.exps) setExps(d.exps);
-      if (d.formations) setFormations(d.formations);
-      if (d.skills) setSkills(d.skills);
-      if (d.langues) setLangues(d.langues);
-      if (d.theme) setTheme(d.theme);
+      if (d.info) Promise.resolve().then(() => setInfo(d.info));
+      if (d.photo) Promise.resolve().then(() => setPhoto(d.photo));
+      if (d.exps) Promise.resolve().then(() => setExps(d.exps));
+      if (d.formations) Promise.resolve().then(() => setFormations(d.formations));
+      if (d.skills) Promise.resolve().then(() => setSkills(d.skills));
+      if (d.langues) Promise.resolve().then(() => setLangues(d.langues));
+      if (d.theme) Promise.resolve().then(() => setTheme(d.theme));
     }
   }, []);
 

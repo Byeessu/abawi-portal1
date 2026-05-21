@@ -485,7 +485,7 @@ export default function QuillEditorPro({
         setSaveStatus('✓ Auto-sauvé')
         setTimeout(() => setSaveStatus(''), 1800)
       // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-      } catch {}
+      } catch { /* ignore */ }
     }, 2000)
   }
 

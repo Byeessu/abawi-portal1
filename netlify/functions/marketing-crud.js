@@ -36,8 +36,13 @@ function ok(payload) { return { statusCode: 200, body: JSON.stringify({ ok: true
 function bad(error) { return { statusCode: 400, body: JSON.stringify({ ok: false, error }) } }
 
 function sbEnv() {
-  const url = process.env.SUPABASE_URL || ''
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  const url = process.env.SUPABASE_URL
+    || process.env.VITE_SUPABASE_URL
+    || ''
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    || process.env.SUPABASE_ANON_KEY
+    || process.env.VITE_SUPABASE_ANON_KEY
+    || ''
   if (!url || !key) throw new Error('Supabase server env missing')
   return { url: url.replace(/\/$/, ''), key }
 }

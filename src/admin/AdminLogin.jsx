@@ -20,33 +20,33 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="login-page" style={{ 
-      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', 
-      background: '#070B0F', color: '#fff', fontFamily: 'sans-serif' 
+    <div className="login-page" style={{
+      height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'sans-serif'
     }}>
-      <form onSubmit={handleLogin} style={{ 
-        background: '#000', padding: '50px', borderRadius: '30px', 
-        border: '1px solid #1A1A1A', width: '100%', maxWidth: '400px', textAlign: 'center' 
+      <form onSubmit={handleLogin} style={{
+        background: 'var(--bg-card)', padding: '50px', borderRadius: '30px',
+        border: '1px solid var(--border)', width: '100%', maxWidth: '400px', textAlign: 'center'
       }}>
-        <h1 style={{ color: '#F0B429', marginBottom: '10px' }}>ABAWI 360</h1>
+        <h1 style={{ color: 'var(--gold)', marginBottom: '10px' }}>ABAWI 360</h1>
         <p style={{ opacity: 0.6, marginBottom: '30px' }}>Administration Privée</p>
-        
-        {error && <p style={{ color: '#ef4444', marginBottom: '20px', fontSize: '0.9rem' }}>{error}</p>}
-        
-        <input 
-          type="email" placeholder="Email Admin" required 
+
+        {error && <p style={{ color: 'var(--red)', marginBottom: '20px', fontSize: '0.9rem' }}>{error}</p>}
+
+        <input
+          type="email" placeholder="Email Admin" required
           onChange={(e) => setEmail(e.target.value)}
-          style={{ width: '100%', padding: '15px', marginBottom: '15px', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }}
+          style={{ width: '100%', padding: '15px', marginBottom: '15px', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text-primary)' }}
         />
-        <input 
-          type="password" placeholder="Mot de passe" required 
+        <input
+          type="password" placeholder="Mot de passe" required
           onChange={(e) => setPassword(e.target.value)}
-          style={{ width: '100%', padding: '15px', marginBottom: '30px', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }}
+          style={{ width: '100%', padding: '15px', marginBottom: '30px', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text-primary)' }}
         />
-        
-        <button type="submit" style={{ 
-          width: '100%', padding: '15px', background: '#F0B429', color: '#000', 
-          border: 'none', borderRadius: '50px', fontWeight: '900', cursor: 'pointer' 
+
+        <button type="submit" style={{
+          width: '100%', padding: '15px', background: 'var(--gold)', color: '#000',
+          border: 'none', borderRadius: '50px', fontWeight: '900', cursor: 'pointer'
         }}>
           S'AUTHENTIFIER
         </button>

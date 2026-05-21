@@ -54,10 +54,10 @@ export default function WorkspacePanel({
     setOpen(true)
   }
 
-  const bg = '#0D1117'
-  const border = '#1A2332'
-  const text = '#F0F2F5'
-  const muted = '#8B95A5'
+  const bg = 'var(--color-bg-secondary)'
+  const border = 'var(--color-border)'
+  const text = 'var(--color-text-primary)'
+  const muted = 'var(--color-text-secondary)'
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -66,7 +66,7 @@ export default function WorkspacePanel({
         <button
           onClick={handleSave}
           disabled={!currentContent || saving}
-          style={{ padding: '7px 14px', borderRadius: 8, background: saving ? '#1A2332' : accent, border: 'none', color: '#0a0a0a', fontWeight: 800, fontSize: '0.78rem', cursor: currentContent ? 'pointer' : 'not-allowed', opacity: !currentContent ? 0.5 : 1 }}
+          style={{ padding: '7px 14px', borderRadius: 8, background: saving ? 'var(--color-border)' : accent, border: 'none', color: '#0a0a0a', fontWeight: 800, fontSize: '0.78rem', cursor: currentContent ? 'pointer' : 'not-allowed', opacity: !currentContent ? 0.5 : 1 }}
         >
           {saving ? '⏳ Sauvegarde...' : '💾 Sauvegarder'}
         </button>

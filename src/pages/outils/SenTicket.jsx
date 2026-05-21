@@ -1,3 +1,4 @@
+import './SenTicket.css';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -13,13 +14,14 @@ import {
 } from '../../lib/senticketDb';
 import { createInvoice, isPaydunyaConfigured } from '../../config/paydunya';
 import { useToolAccess } from '../../hooks/useToolAccess';
+import TicketDesigner from '../../components/senticket/TicketDesigner';
 
 // =====================================================================
 // SenTicket — Plateforme de billetterie événementielle ABAWI
 // =====================================================================
 
-const CATEGORIES = ['Tous', 'Concert', 'Festival', 'Conférence', 'Sport', 'Théâtre', 'Gala', 'Workshop', 'Culture', 'Business'];
-const VILLES = ['Toutes', 'Dakar', 'Thiès', 'Saint-Louis', 'Kaolack', 'Ziguinchor', 'Touba', 'Mbour'];
+const CATEGORIES = ['Tous', 'Concert', 'Festival', 'Conférence', 'Sport', 'Théâtre', 'Gala', 'Workshop', 'Culture', 'Business', 'Impact', 'Entrepreneuriat', 'Economie'];
+const VILLES = ['Toutes', 'Dakar', 'Thiès', 'Saint-Louis', 'Kaolack', 'Ziguinchor', 'Touba', 'Mbour', 'Popenguine'];
 
 const STORAGE_KEY = 'senticket_cart';
 const ORDERS_KEY = 'senticket_orders';
@@ -146,6 +148,22 @@ function saveLocalEvents(events) {
 
 function defaultEvents() {
   return [
+    {
+      id: 'evt-0',
+      titre: 'Pèlerinage Marial de Popenguine 2026',
+      description: 'Le plus grand rassemblement catholique d\'Afrique de l\'Ouest, organisé chaque année à la Pentecôte au Sanctuaire Notre-Dame de la Délivrande de Popenguine. Des milliers de pèlerins convergent depuis Dakar, Thiès, Mbour et tout le Sénégal.\n\nProgramme :\n• Samedi 20 juin — Départ des marches nocturnes depuis Dakar (Cathédrale), Thiès, Mbour et paroisses locales\n• Dimanche 21 juin (Pentecôte) — Messe solennelle pontificale à 9h, procession, témoignages, veillée\n• Confessions, adoration et activités spirituelles tout au long du week-end\n\nL\'entrée au sanctuaire est libre et gratuite. Pour les transports et marches encadrées, veuillez vous rapprocher de votre paroisse locale.',
+      date: '2026-06-21',
+      heure: '09:00',
+      ville: 'Popenguine',
+      lieu: 'Sanctuaire Notre-Dame de la Délivrande',
+      categorie: 'Culture',
+      image: '⛪',
+      cover_url: '',
+      billets: [],
+      featured: true,
+      statut: 'actif',
+      createur: 'ABAWI',
+    },
     {
       id: 'evt-1',
       titre: 'Concert Wally Seck & Dip Doundou Guiss',
@@ -304,6 +322,54 @@ function defaultEvents() {
       statut: 'actif',
       createur: 'ABAWI',
     },
+    {
+      id: 'evt-9',
+      titre: 'Fête du Sacré-Cœur 2026',
+      description: `Célébration de la Fête du Sacré-Cœur de Jésus dans les paroisses de Dakar et du Sénégal. Messes solennelles, adoration eucharistique, bénédiction du Saint-Sacrement et procession.\n\nProgramme indicatif — se rapprocher de votre paroisse locale :\n• 18h00 — Messe solennelle et adoration\n• 20h00 — Procession aux flambeaux\n• 21h00 — Bénédiction pontificale du Saint-Sacrement\n\nEntrée libre dans toutes les églises.`,
+      date: '2026-06-12',
+      heure: '18:00',
+      ville: 'Dakar',
+      lieu: 'Cathédrale Notre-Dame des Victoires',
+      categorie: 'Culture',
+      image: '⛪',
+      cover_url: '',
+      billets: [],
+      featured: false,
+      statut: 'actif',
+      createur: 'ABAWI',
+    },
+    {
+      id: 'evt-10',
+      titre: 'Assomption — Notre Dame de l\'Unité Africaine',
+      description: `Grand pèlerinage national à Notre Dame de l'Unité Africaine au Monument de la Renaissance Africaine. Rassemblement de plusieurs milliers de fidèles pour la messe pontificale de l'Assomption, suivie de procession, témoignages et veillée spirituelle.\n\nProgramme :\n• 07h00 — Départ des pèlerinages paroissiaux\n• 09h00 — Messe solennelle présidée par le Cardinal\n• 11h30 — Procession autour du monument\n• 15h00 — Témoignages et louange\n\nEntrée libre. Les transports organisés par les paroisses sont gratuits ou à prix symbolique — contacter votre paroisse.`,
+      date: '2026-08-15',
+      heure: '09:00',
+      ville: 'Dakar',
+      lieu: 'Monument de la Renaissance Africaine',
+      categorie: 'Culture',
+      image: '⛪',
+      cover_url: '',
+      billets: [],
+      featured: true,
+      statut: 'actif',
+      createur: 'ABAWI',
+    },
+    {
+      id: 'evt-11',
+      titre: 'Messe de Minuit de Noël 2026',
+      description: `Messe de Minuit célébrant la Nativité du Seigneur dans la cathédrale de Dakar et les principales églises du Sénégal. Chants traditionnels, crèche vivante, communion et partage fraternel.\n\nProgramme :\n• 22h00 — Veillée de prière et chants\n• 00h00 — Messe de Minuit\n• 01h30 — Bénédiction et partage de la joie de Noël\n\nEntrée libre dans toutes les paroisses.`,
+      date: '2026-12-24',
+      heure: '22:00',
+      ville: 'Dakar',
+      lieu: 'Cathédrale Notre-Dame des Victoires',
+      categorie: 'Culture',
+      image: '⛪',
+      cover_url: '',
+      billets: [],
+      featured: false,
+      statut: 'actif',
+      createur: 'ABAWI',
+    },
   ];
 }
 
@@ -352,7 +418,7 @@ function newId(prefix = 'st') {
 // =====================================================================
 
 export default function SenTicket() {
-  const { membre } = useAuth();
+  const { membre, isAdmin } = useAuth();
   const userId = membre?.id || null;
   const isLoggedIn = !!userId;
   const tool = useToolAccess('senticket', 'senticket_create');
@@ -368,22 +434,35 @@ export default function SenTicket() {
   const [sortBy, setSortBy] = useState('date');
   const [notification, setNotification] = useState(null);
   const [organizerTab, setOrganizerTab] = useState('creer'); // creer | stats
+  const [showTicketDesigner, setShowTicketDesigner] = useState(false);
+  const [ticketDesignEvent, setTicketDesignEvent] = useState(null);
   const [withdrawals, setWithdrawals] = useState(() => loadWithdrawals());
   const [favorites, setFavorites] = useState(() => loadFavorites());
   const [views, setViews] = useState(() => loadViews());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [reviews, setReviews] = useState(() => loadReviews());
   const [dbReady, setDbReady] = useState(false);
+  const [showBotPanel, setShowBotPanel] = useState(false);
+  const [botLoading, setBotLoading] = useState(false);
+  const [botResult, setBotResult] = useState(null);
+  const [botCats, setBotCats] = useState(['Religion', 'Conférence', 'Impact', 'Entrepreneuriat', 'Business', 'Economie']);
   const nav = useNavigate();
 
   // Chargement initial depuis Supabase (prioritaire) ou localStorage (fallback)
+  // Les événements "pinned" (définis localement) sont toujours fusionnés en tête
   useEffect(() => {
     let cancelled = false;
     async function loadFromDb() {
       const dbEvents = await fetchEvents();
       if (!cancelled) {
         if (dbEvents && dbEvents.length > 0) {
-          setEvents(dbEvents);
+          // Pinned events (evt-0 = Pèlerinage Popenguine) toujours présents en tête
+          const pinned = defaultEvents().filter(e => e.id === 'evt-0');
+          const merged = [
+            ...pinned.filter(p => !dbEvents.some(d => d.id === p.id)),
+            ...dbEvents,
+          ];
+          setEvents(merged);
         }
         setDbReady(true);
       }
@@ -622,6 +701,32 @@ export default function SenTicket() {
     setNotification({ type: 'success', msg: `Demande de reversement de ${formatPrix(montant)} envoyée !` });
   }
 
+  async function runBot() {
+    setBotLoading(true);
+    setBotResult(null);
+    try {
+      const res = await fetch('/.netlify/functions/event-bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categories: botCats, count: 2 }),
+      });
+      const data = await res.json();
+      setBotResult(data);
+      if (data.ok && data.created > 0) {
+        const fresh = await fetchEvents();
+        if (fresh) setEvents(fresh);
+        setNotification({ type: 'success', msg: `${data.created} événement(s) généré(s) par le bot` });
+      } else {
+        setNotification({ type: 'info', msg: data.failed > 0 ? 'Certains événements ont échoué' : 'Aucun nouvel événement généré' });
+      }
+    } catch (e) {
+      console.error('[runBot]', e);
+      setNotification({ type: 'error', msg: 'Erreur du bot événements' });
+    } finally {
+      setBotLoading(false);
+    }
+  }
+
   // ── Rendu ───────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
@@ -666,49 +771,134 @@ export default function SenTicket() {
         .st-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 3px; }
       `}</style>
 
-      {/* ── Header ── */}
-      <div style={{
-        background: 'linear-gradient(135deg, var(--bg-primary) 0%, color-mix(in srgb, var(--bg-primary) 80%, #8B5CF6 20%) 100%)',
-        borderBottom: '1px solid var(--border)', padding: '32px 24px 24px', textAlign: 'center',
-      }}>
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 16px',
-          borderRadius: 100, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', marginBottom: 12,
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#8B5CF6', display: 'inline-block' }} />
-          <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#8B5CF6', letterSpacing: 2, textTransform: 'uppercase' }}>ABAWI · ÉVÉNEMENTS</span>
-        </div>
-        <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8, lineHeight: 1.1 }}>
-          Sen<span style={{ color: '#8B5CF6' }}>Ticket</span>
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', maxWidth: 520, margin: '0 auto', fontSize: '0.92rem', lineHeight: 1.5 }}>
-          La billetterie événementielle la plus complète d'Afrique de l'Ouest. Concerts, festivals, conférences, sport — réservez en 2 clics.
-        </p>
-
-        {/* Navigation onglets */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 20 }}>
-          {[
-            { id: 'explorer', label: '🔍 Explorer', active: view === 'explorer' || view === 'detail' },
-            { id: 'panier', label: `🛒 Panier (${cart.length})`, active: view === 'panier' || view === 'checkout' },
-            { id: 'historique', label: '🎫 Mes billets', active: view === 'historique' },
-            { id: 'organiser', label: '➕ Organiser', active: view === 'organiser' || view === 'mes-events' },
-            { id: 'scanner', label: '📷 Scanner', active: view === 'scanner' },
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setView(tab.id)} style={{
-              padding: '8px 16px', borderRadius: 100,
-              border: `2px solid ${tab.active ? '#8B5CF6' : 'var(--border)'}`,
-              background: tab.active ? 'rgba(139,92,246,0.1)' : 'transparent',
-              color: tab.active ? '#8B5CF6' : 'var(--text-secondary)',
-              cursor: 'pointer', fontWeight: tab.active ? 700 : 500,
-              fontSize: '0.82rem', transition: 'all 0.2s', whiteSpace: 'nowrap',
-            }}>
-              {tab.label}
-            </button>
+      {/* ── Bannière Hero Premium ── */}
+      <div className="stk-banner">
+        {/* Couches de fond */}
+        <div className="stk-banner__bg" />
+        <div className="stk-banner__noise" />
+        <div className="stk-banner__dots" />
+        {/* Orbes lumineux animés */}
+        <div className="stk-banner__orb stk-banner__orb--1" />
+        <div className="stk-banner__orb stk-banner__orb--2" />
+        <div className="stk-banner__orb stk-banner__orb--3" />
+        {/* Ruban défilant */}
+        <div className="stk-banner__ribbon">
+          {['🎫 Concerts', '⚽ Sport', '🎭 Théâtre', '💼 Business', '🎵 Festivals', '🎤 Gala', '🌍 Culture', '🎟 Workshop', '🎫 Concerts', '⚽ Sport', '🎭 Théâtre', '💼 Business', '🎵 Festivals', '🎤 Gala', '🌍 Culture', '🎟 Workshop'].map((t, i) => (
+            <span key={i} className="stk-banner__ribbon-item">{t}</span>
           ))}
+        </div>
+
+        {/* ── Éléments flottants ── */}
+        <div className="stk-float stk-float--ticket">
+          <div className="stk-float__ticket-header">
+            <span className="stk-float__ticket-dot" />
+            <span className="stk-float__ticket-label">E-BILLET</span>
+            <span className="stk-float__ticket-check">✓</span>
+          </div>
+          <div className="stk-float__ticket-title">Pèlerinage Popenguine</div>
+          <div className="stk-float__ticket-meta">Dim 21 Juin · Sanctuaire NDL</div>
+          <div className="stk-float__ticket-barcode">
+            {[22, 14, 28, 10, 18, 24, 12, 20, 16, 26, 10, 22, 18, 14, 24].map((h, i) => (
+              <span key={i} className="stk-float__bar" style={{ height: h }} />
+            ))}
+          </div>
+        </div>
+        <div className="stk-float stk-float--notif">
+          <div className="stk-float__notif-icon">🎫</div>
+          <div className="stk-float__notif-text">
+            <div className="stk-float__notif-title">Réservation confirmée</div>
+            <div className="stk-float__notif-sub">Sommet Tech · 2 billets VIP</div>
+          </div>
+          <span className="stk-float__notif-badge">NOUVEAU</span>
+        </div>
+        <div className="stk-float stk-float--live">
+          <span className="stk-float__live-dot" />
+          LIVE · 2 847 spectateurs
+        </div>
+        <div className="stk-float stk-float--stats">
+          <div className="stk-float__stats-row">
+            <span className="stk-float__stats-val">8.4k</span>
+            <span className="stk-float__stats-trend">+24%</span>
+          </div>
+          <div className="stk-float__stats-label">Billets vendus ce mois</div>
+          <div className="stk-float__stats-bar">
+            <div className="stk-float__stats-fill" />
+          </div>
+        </div>
+        <div className="stk-float stk-float--price">
+          <span className="stk-float__price-label">À partir de</span>
+          <span className="stk-float__price-val">2 000 FCFA</span>
+        </div>
+        <div className="stk-float stk-float--qr">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+            <rect x="2" y="2" width="20" height="20" rx="2" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2"/>
+            <rect x="8" y="8" width="8" height="8" fill="rgba(167,139,250,0.7)"/>
+            <rect x="30" y="2" width="20" height="20" rx="2" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2"/>
+            <rect x="36" y="8" width="8" height="8" fill="rgba(167,139,250,0.7)"/>
+            <rect x="2" y="30" width="20" height="20" rx="2" fill="none" stroke="rgba(167,139,250,0.7)" strokeWidth="2"/>
+            <rect x="8" y="36" width="8" height="8" fill="rgba(167,139,250,0.7)"/>
+            <rect x="30" y="30" width="6" height="6" fill="rgba(167,139,250,0.7)"/>
+            <rect x="38" y="30" width="6" height="6" fill="rgba(167,139,250,0.7)"/>
+            <rect x="30" y="38" width="6" height="6" fill="rgba(167,139,250,0.7)"/>
+            <rect x="38" y="38" width="6" height="6" fill="rgba(167,139,250,0.7)"/>
+          </svg>
+          <span className="stk-float__qr-label">Scan QR</span>
+        </div>
+
+        {/* Contenu central */}
+        <div className="stk-banner__content">
+          <div className="stk-banner__brand">
+            <div className="stk-banner__logo-ring">
+              <span style={{ fontSize: '1.6rem' }}>🎫</span>
+            </div>
+            <div className="stk-banner__brand-text">
+              <div className="stk-banner__brand-name">Sen<span>Ticket</span></div>
+              <div className="stk-banner__brand-tag">Billetterie · Afrique de l'Ouest</div>
+            </div>
+          </div>
+          <h1 className="stk-banner__title">
+            La billetterie événementielle<br />
+            <span className="stk-banner__title-accent">de l'Afrique</span>
+          </h1>
+          <p className="stk-banner__sub">
+            Concerts, festivals, conférences, sport — réservez en 2 clics.<br />
+            Organisez vos événements. Encaissez en direct.
+          </p>
+          <div className="stk-banner__stats">
+            {[
+              { val: '50k+', label: 'Billets vendus' },
+              { val: '120+', label: 'Événements' },
+              { val: '8 villes', label: 'Au Sénégal' },
+              { val: '7%', label: 'Commission seul.' },
+            ].map(s => (
+              <div key={s.label} className="stk-banner__stat">
+                <span className="stk-banner__stat-val">{s.val}</span>
+                <span className="stk-banner__stat-label">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Tabs ancrés en bas de la bannière */}
+        <div className="stk-banner__tabs-wrap">
+          <div className="stk-tabs">
+            {[
+              { id: 'explorer',   label: '🔍 Explorer',    active: view === 'explorer' || view === 'detail' },
+              { id: 'panier',     label: '🛒 Panier',       count: cart.length, active: view === 'panier' || view === 'checkout' },
+              { id: 'historique', label: '🎫 Mes billets',  active: view === 'historique' },
+              { id: 'organiser',  label: '➕ Organiser',   active: view === 'organiser' || view === 'mes-events' },
+              { id: 'scanner',    label: '📷 Scanner',     active: view === 'scanner' },
+            ].map(tab => (
+              <button key={tab.id} className={`stk-tab${tab.active ? ' is-active' : ''}`} onClick={() => setView(tab.id)}>
+                {tab.label}
+                {tab.count ? <span className="stk-tab-count">{tab.count}</span> : null}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 'min(1200px, 96vw)', margin: '0 auto', padding: '24px 16px 80px' }}>
+      <div style={{ maxWidth: 'min(1400px, 96vw)', margin: '0 auto', padding: '24px 16px 80px' }}>
 
         {/* Notification */}
         {notification && (
@@ -757,6 +947,12 @@ export default function SenTicket() {
                     cursor: 'pointer', fontWeight: showFavoritesOnly ? 700 : 500,
                     fontSize: '0.82rem', transition: 'all 0.2s', whiteSpace: 'nowrap',
                   }}>{showFavoritesOnly ? '❤️ Mes favoris' : '🤍 Mes favoris'}</button>
+                  <button onClick={() => setShowBotPanel(true)} style={{
+                    padding: '8px 14px', borderRadius: 100, border: '2px solid #8B5CF6',
+                    background: 'rgba(139,92,246,0.08)', color: '#8B5CF6',
+                    cursor: 'pointer', fontWeight: 600, fontSize: '0.82rem',
+                    transition: 'all 0.2s', whiteSpace: 'nowrap',
+                  }}>🤖 Bot événements</button>
                 </div>
 
                 {/* En vedette */}
@@ -796,11 +992,13 @@ export default function SenTicket() {
                 events={events}
                 isFavorite={favorites.has(selectedEvent.id)}
                 viewCount={views[selectedEvent.id] || 0}
+                isAdmin={isAdmin}
                 onBack={() => setView('explorer')}
                 onAddToCart={(billet, qty) => addToCart(selectedEvent, billet, qty)}
                 onGoPanier={() => setView('panier')}
                 onToggleFavorite={() => handleToggleFavorite(selectedEvent.id)}
                 onSelectEvent={evt => { setSelectedEvent(evt); bumpView(evt.id); }}
+                onAdminDelete={() => deleteEvent(selectedEvent.id)}
               />
             )}
           </>
@@ -841,13 +1039,15 @@ export default function SenTicket() {
             )}
             {view === 'mes-events' && (
               <MesEventsView
-                events={events.filter(e => e.createur === 'Moi' || e.organizer_id === userId)}
+                events={isAdmin ? events : events.filter(e => e.createur === 'Moi' || e.organizer_id === userId)}
+                isAdmin={isAdmin}
                 orders={orders}
                 withdrawals={withdrawals}
                 onBack={() => setView('organiser')}
                 onDelete={deleteEvent}
                 onViewDetail={evt => { setSelectedEvent(evt); setView('detail'); }}
                 onRequestWithdrawal={handleRequestWithdrawal}
+                onDesignTickets={evt => { setTicketDesignEvent(evt); setShowTicketDesigner(true); }}
               />
             )}
           </>
@@ -858,6 +1058,25 @@ export default function SenTicket() {
           <ScannerView onBack={() => setView('explorer')} />
         )}
       </div>
+      {showTicketDesigner && (
+        <TicketDesigner
+          event={ticketDesignEvent}
+          orders={orders}
+          onClose={() => { setShowTicketDesigner(false); setTicketDesignEvent(null); }}
+        />
+      )}
+
+      {/* ── BOT PANEL ── */}
+      {showBotPanel && (
+        <BotPanel
+          categories={botCats}
+          setCategories={setBotCats}
+          loading={botLoading}
+          result={botResult}
+          onRun={runBot}
+          onClose={() => setShowBotPanel(false)}
+        />
+      )}
     </div>
   );
 }
@@ -918,7 +1137,7 @@ function EventCard({ event, isFavorite, onClick, onToggleFavorite }) {
   );
 }
 
-function EventDetail({ event, events, isFavorite, viewCount, onBack, onAddToCart, onGoPanier, onToggleFavorite, onSelectEvent }) {
+function EventDetail({ event, events, isFavorite, viewCount, isAdmin, onBack, onAddToCart, onGoPanier, onToggleFavorite, onSelectEvent, onAdminDelete }) {
   const [selectedBillet, setSelectedBillet] = useState(null);
   const [qty, setQty] = useState(1);
 
@@ -949,6 +1168,13 @@ function EventDetail({ event, events, isFavorite, viewCount, onBack, onAddToCart
               background: isFavorite ? 'rgba(239,68,68,0.1)' : 'transparent', color: isFavorite ? '#EF4444' : 'var(--text-muted)',
               cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
             }}>{isFavorite ? '❤️ Favori' : '🤍 Ajouter aux favoris'}</button>
+            {isAdmin && onAdminDelete && (
+              <button onClick={onAdminDelete} style={{
+                padding: '4px 10px', borderRadius: 100, border: '1px solid #EF4444',
+                background: 'rgba(239,68,68,0.1)', color: '#EF4444',
+                cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
+              }}>🗑️ Supprimer (admin)</button>
+            )}
           </div>
 
           <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 10 }}>{event.titre}</h2>
@@ -976,37 +1202,42 @@ function EventDetail({ event, events, isFavorite, viewCount, onBack, onAddToCart
             <InfoBox icon="🏙️" label="Ville" value={event.ville} />
           </div>
 
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>🎫 Catégories de billets</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {event.billets.map(b => {
-              const dispo = b.places - b.vendus;
-              const isSelected = selectedBillet?.id === b.id;
-              return (
-                <div
-                  key={b.id}
-                  onClick={() => { setSelectedBillet(b); setQty(1); }}
-                  style={{
-                    padding: '14px 18px', borderRadius: 14,
-                    border: `2px solid ${isSelected ? '#8B5CF6' : 'var(--border)'}`,
-                    background: isSelected ? 'rgba(139,92,246,0.08)' : 'var(--bg-card)',
-                    cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{b.nom}</div>
-                    <div style={{ fontSize: '0.78rem', color: dispo < 20 ? '#EF4444' : 'var(--text-muted)', marginTop: 4 }}>
-                      {dispo > 0 ? `${dispo} places disponibles` : 'Complet'}
+          {event.billets?.length > 0 && (
+            <>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>🎫 Catégories de billets</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {event.billets.map(b => {
+                  const dispo = b.places - b.vendus;
+                  const isSelected = selectedBillet?.id === b.id;
+                  return (
+                    <div
+                      key={b.id}
+                      onClick={() => { setSelectedBillet(b); setQty(1); }}
+                      style={{
+                        padding: '14px 18px', borderRadius: 14,
+                        border: `2px solid ${isSelected ? '#8B5CF6' : 'var(--border)'}`,
+
+                        background: isSelected ? 'rgba(139,92,246,0.08)' : 'var(--bg-card)',
+                        cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{b.nom}</div>
+                        <div style={{ fontSize: '0.78rem', color: dispo < 20 ? '#EF4444' : 'var(--text-muted)', marginTop: 4 }}>
+                          {dispo > 0 ? `${dispo} places disponibles` : 'Complet'}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 800, color: '#3B82F6', fontSize: '1.05rem' }}>{formatPrix(b.prix)}</div>
+                        {isSelected && <div style={{ fontSize: '0.72rem', color: '#8B5CF6', marginTop: 2 }}>Sélectionné</div>}
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, color: '#3B82F6', fontSize: '1.05rem' }}>{formatPrix(b.prix)}</div>
-                    {isSelected && <div style={{ fontSize: '0.72rem', color: '#8B5CF6', marginTop: 2 }}>Sélectionné</div>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           {selectedBillet && (
             <div className="st-anim" style={{ marginTop: 18, padding: '18px', borderRadius: 14, background: 'var(--bg-primary)', border: '1px solid var(--border)' }}>
@@ -1191,7 +1422,7 @@ function CheckoutView({ cart, total, onConfirm, onBack }) {
 
   async function handlePay() {
     if (!canSubmit) return;
-    if (!isPaydunyaConfigured()) {
+    if (!await isPaydunyaConfigured()) {
       setPayError('PayDunya n\'est pas configuré. Veuillez contacter l\'administrateur.');
       setStep('error');
       return;
@@ -1646,13 +1877,13 @@ function OrganizerView({ onCreate, onViewEvents }) {
   );
 }
 
-function MesEventsView({ events, orders, withdrawals, onBack, onDelete, onViewDetail, onRequestWithdrawal }) {
+function MesEventsView({ events, orders, withdrawals, isAdmin, onBack, onDelete, onViewDetail, onRequestWithdrawal, onDesignTickets }) {
   if (events.length === 0) {
     return (
       <div className="st-anim" style={{ textAlign: 'center', padding: 60 }}>
         <div style={{ fontSize: '3rem', marginBottom: 12 }}>📋</div>
-        <p style={{ color: 'var(--text-muted)' }}>Vous n'avez pas encore créé d'événement.</p>
-        <button className="st-btn-primary" onClick={onBack} style={{ marginTop: 16 }}>Créer mon premier événement</button>
+        <p style={{ color: 'var(--text-muted)' }}>{isAdmin ? 'Aucun événement dans la base.' : 'Vous n\'avez pas encore créé d\'événement.'}</p>
+        <button className="st-btn-primary" onClick={onBack} style={{ marginTop: 16 }}>{isAdmin ? 'Retour' : 'Créer mon premier événement'}</button>
       </div>
     );
   }
@@ -1713,6 +1944,7 @@ function MesEventsView({ events, orders, withdrawals, onBack, onDelete, onViewDe
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   <button onClick={() => onViewDetail(evt)} className="st-btn-primary" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Voir</button>
+                  <button onClick={() => onDesignTickets(evt)} style={{ padding: '6px 12px', borderRadius: 10, border: 'none', background: 'rgba(139,92,246,0.1)', color: '#8B5CF6', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>🎨 Tickets</button>
                   <button onClick={() => onDelete(evt.id)} style={{ padding: '6px 12px', borderRadius: 10, border: 'none', background: 'rgba(239,68,68,0.1)', color: '#EF4444', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>🗑️</button>
                 </div>
               </div>
@@ -1889,6 +2121,86 @@ function ScannerView({ onBack }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function BotPanel({ categories, setCategories, loading, result, onRun, onClose }) {
+  const ALL_CATS = [
+    { key: 'Religion', label: '⛪ Religion — Église catholique' },
+    { key: 'Conférence', label: '🎤 Conférence' },
+    { key: 'Impact', label: '🌍 Impact social' },
+    { key: 'Entrepreneuriat', label: '🚀 Entrepreneuriat' },
+    { key: 'Business', label: '💼 Business' },
+    { key: 'Economie', label: '📈 Économie' },
+  ];
+
+  function toggleCat(key) {
+    setCategories(prev => prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key]);
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 2000,
+      background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)',
+        maxWidth: 520, width: '100%', maxHeight: '90vh', overflow: 'auto', padding: '24px 28px',
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>🤖 Bot événements</h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--text-secondary)' }}>×</button>
+        </div>
+
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+          Sélectionnez les catégories à générer. Le bot utilise l'IA (Groq) pour créer des événements réalistes au Sénégal.
+          <strong style={{ color: '#8B5CF6' }}> Pour la religion, seule l'Église catholique est incluse.</strong>
+        </p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+          {ALL_CATS.map(c => {
+            const active = categories.includes(c.key);
+            return (
+              <button key={c.key} onClick={() => toggleCat(c.key)} style={{
+                padding: '8px 14px', borderRadius: 100, border: `2px solid ${active ? '#8B5CF6' : 'var(--border)'}`,
+                background: active ? 'rgba(139,92,246,0.12)' : 'transparent',
+                color: active ? '#8B5CF6' : 'var(--text-secondary)',
+                cursor: 'pointer', fontWeight: active ? 700 : 500, fontSize: '0.82rem', whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+              }}>{c.label}</button>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={onRun}
+          disabled={loading || categories.length === 0}
+          style={{
+            width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+            background: loading || categories.length === 0 ? '#c4b5fd' : 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+            color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: loading || categories.length === 0 ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s', marginBottom: 16,
+          }}
+        >
+          {loading ? '⏳ Génération en cours…' : '✨ Générer les événements'}
+        </button>
+
+        {result && (
+          <div style={{
+            padding: 14, borderRadius: 12, background: result.ok && result.created > 0 ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+            border: `1px solid ${result.ok && result.created > 0 ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
+          }}>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: result.ok && result.created > 0 ? '#10B981' : '#EF4444', marginBottom: 6 }}>
+              {result.ok && result.created > 0 ? `✅ ${result.created} événement(s) créé(s)` : result.ok ? 'ℹ️ Aucun nouvel événement' : '❌ Erreur'}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              {result.failed > 0 && <div>Échecs : {result.failed}</div>}
+              <div>Catégories : {result.categories?.join(', ')}</div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

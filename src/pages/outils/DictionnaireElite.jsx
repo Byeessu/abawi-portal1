@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
+import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolHero from '../../components/ToolHero'
+import ToolIcon from '../../components/ToolIcon'
 import { groqChatCompletion } from '../../lib/groqClient'
+import { DICTIONARY_CORPUS } from '../../data/dictionaryCorpus'
+import { useAuth } from '../../context/AuthContext'
+import { useToolGuard } from '../../hooks/useToolGuard'
+import ToolUpsellModal, { ToolGuardBadge } from '../../components/ToolUpsellModal'
 
 const LANGS = [
   { id: 'fr', label: 'Français' },
@@ -15,18 +23,11 @@ const LANGS = [
   { id: 'ln', label: 'Lingala' },
 ]
 
-const DICTIONARY = [
-  { id: 1, category: 'Business', fr: 'entreprise', en: 'company', wo: 'entrepriz', zh: '公司', es: 'empresa', it: 'impresa', la: 'societas', ar: 'شركة', el: 'εταιρεία', ln: 'entrepriza' },
-  { id: 2, category: 'Business', fr: 'client', en: 'client', wo: 'kilifa', zh: '客户', es: 'cliente', it: 'cliente', la: 'cliens', ar: 'عميل', el: 'πελάτης', ln: 'client' },
-  { id: 3, category: 'Business', fr: 'contrat', en: 'contract', wo: 'kòntar', zh: '合同', es: 'contrato', it: 'contratto', la: 'contractus', ar: 'عقد', el: 'σύμβαση', ln: 'contrat' },
-  { id: 4, category: 'Finance', fr: 'budget', en: 'budget', wo: 'biije', zh: '预算', es: 'presupuesto', it: 'bilancio', la: 'ratio', ar: 'ميزانية', el: 'προϋπολογισμός', ln: 'budget' },
-  { id: 5, category: 'Finance', fr: 'bénéfice', en: 'profit', wo: 'njariñ', zh: '利润', es: 'beneficio', it: 'profitto', la: 'lucrum', ar: 'ربح', el: 'κέρδος', ln: 'benefice' },
-  { id: 6, category: 'RH', fr: 'salaire', en: 'salary', wo: 'pey', zh: '工资', es: 'salario', it: 'stipendio', la: 'salarium', ar: 'راتب', el: 'μισθός', ln: 'lifuti' },
-  { id: 7, category: 'Digital', fr: 'données', en: 'data', wo: 'done', zh: '数据', es: 'datos', it: 'dati', la: 'data', ar: 'بيانات', el: 'δεδομένα', ln: 'data' },
-  { id: 8, category: 'Communication', fr: 'bonjour', en: 'hello', wo: 'salaam malekum', zh: '你好', es: 'hola', it: 'ciao', la: 'salve', ar: 'مرحبا', el: 'γεια σας', ln: 'mbote' },
-  { id: 9, category: 'Communication', fr: 'merci', en: 'thank you', wo: 'jërëjëf', zh: '谢谢', es: 'gracias', it: 'grazie', la: 'gratias tibi', ar: 'شكرا', el: 'ευχαριστώ', ln: 'matondi' },
-  { id: 10, category: 'Administration', fr: 'document', en: 'document', wo: 'dokimaa', zh: '文件', es: 'documento', it: 'documento', la: 'documentum', ar: 'وثيقة', el: 'έγγραφο', ln: 'document' },
-]
+const DICTIONARY = DICTIONARY_CORPUS.map((item, idx) => ({
+  id: idx + 1,
+  category: item.cat,
+  fr: item.fr, en: item.en, wo: item.wo, zh: item.zh, es: item.es, it: item.it, la: item.la, ar: item.ar, el: item.el, ln: item.ln
+}))
 
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 const STORAGE_KEY = 'abawi_dictionary_elite_entries'
@@ -36,19 +37,19 @@ function parseEntriesFromModelOutput(out) {
     const parsed = JSON.parse(out)
     if (Array.isArray(parsed?.entries)) return parsed.entries
   // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-  } catch {}
+  } catch { /* ignore */ }
   try {
     const wrapped = JSON.parse(out.match(/\{[\s\S]*\}/)?.[0] || '{}')
     if (Array.isArray(wrapped?.entries)) return wrapped.entries
   // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-  } catch {}
+  } catch { /* ignore */ }
   const objectMatches = out.match(/\{[^{}]*"fr"\s*:\s*"[^"]+"[^{}]*\}/g) || []
   const recovered = []
   for (const rawObj of objectMatches) {
     try {
       recovered.push(JSON.parse(rawObj))
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
   }
   return recovered
 }
@@ -111,6 +112,9 @@ function mergeEntries(baseEntries, newEntries) {
 }
 
 export default function DictionnaireElite() {
+  const { membre } = useAuth()
+  const guard = useToolGuard('dictionnaire_elite', 'dictionnaire_elite')
+
   const [customEntries, setCustomEntries] = useState(() => loadCustomEntries())
   const [fromLang, setFromLang] = useState('fr')
   const [toLang, setToLang] = useState('en')
@@ -122,6 +126,9 @@ export default function DictionnaireElite() {
   const [targetTotal, setTargetTotal] = useState(5000)
   const [generating, setGenerating] = useState(false)
   const [status, setStatus] = useState('')
+  const [selectedWord, setSelectedWord] = useState(null)
+
+  const CATEGORY_TABS = ['all', 'Business', 'Finance', 'RH', 'Digital', 'Communication', 'Administration', 'Juridique', 'Marketing', 'Vente', 'Immobilier']
 
   const allEntries = useMemo(() => [...DICTIONARY, ...customEntries], [customEntries])
 
@@ -141,7 +148,16 @@ export default function DictionnaireElite() {
     })
   }, [allEntries, query, category, fromLang, toLang])
 
+  async function checkAccessThen(action) {
+    const debitResult = await guard.checkAndDebit()
+    if (!debitResult.ok) return false
+    await guard.recordUsage({ action })
+    return true
+  }
+
   async function handleGenerate() {
+    const ok = await checkAccessThen()
+    if (!ok) return
     setGenerating(true)
     setStatus('Génération IA en cours...')
     try {
@@ -172,6 +188,8 @@ export default function DictionnaireElite() {
   }
 
   async function handleAutoRun() {
+    const ok = await checkAccessThen()
+    if (!ok) return
     setGenerating(true)
     setStatus(`Auto-run lancé: ${autoRuns} lots x ${batchSize}...`)
     try {
@@ -209,6 +227,8 @@ export default function DictionnaireElite() {
   }
 
   async function handleFillToTarget() {
+    const ok = await checkAccessThen()
+    if (!ok) return
     setGenerating(true)
     setStatus(`Remplissage massif lancé vers ${targetTotal} entrées...`)
     try {
@@ -245,10 +265,31 @@ export default function DictionnaireElite() {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px) 80px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px) 80px' }}>
+      <SEO title="Abawi Language Pro — Dictionnaire multilingue IA" description="Dictionnaire massif multilingue avec auto-run IA. Français, Anglais, Wolof, Chinois, Espagnol, Arabe." image="/og-tools/dictionnaire-elite.jpg" />
+      <style>{`
+        @media (max-width: 600px) {
+          .dict-lang-grid { grid-template-columns: 1fr !important; }
+          .dict-result-grid { grid-template-columns: 1fr 1fr !important; }
+          .dict-result-grid .dict-cat-col { display: none; }
+        }
+      `}</style>
+      <ToolHero
+        icon={<ToolIcon name="dictionnaire" size={48} />}
+        badge="LANG PRO"
+        title="ABAWI"
+        titleAccent="Language Pro"
+        subtitle="Dictionnaire massif multilingue + auto-génération IA. 10 langues, corpus professionnel, exportable."
+        gradient="linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 50%, #2563eb 100%)"
+        glowColor="rgba(37,99,235,0.4)"
+        accentColor="#93C5FD"
+      />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
-        toolName="ABAWI Language Pro"
-        icon="🌐"
+        toolName="Abawi Language Pro"
+        icon={<ToolIcon name="dictionnaire" size={28} />}
         description="Dictionnaire multilingue massif (10 langues) avec auto-génération IA"
         benefits={[
           'Recherche instantanée dans 10 langues : FR, EN, Wolof, 中文, ES, IT, Latin, AR, Grec, Lingala',
@@ -271,9 +312,12 @@ export default function DictionnaireElite() {
           'Le Latin est utile pour les expressions juridiques (ad hoc, nemo auditur...)',
         ]}
       />
+      <div style={{ marginTop: 8 }}>
+        <ToolGuardBadge guard={guard} />
+      </div>
       <div style={{ border: '1px solid var(--border)', background: 'var(--bg-card)', borderRadius: 20, padding: 24, marginBottom: 24 }}>
-        <div style={{ display: 'inline-flex', padding: '4px 12px', borderRadius: 999, background: 'var(--gold-glow)', color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 800, marginBottom: 12 }}>
-          🌐 ABAWI LANGUAGE PRO
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 999, background: 'var(--gold-glow)', color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 800, marginBottom: 12 }}>
+          <ToolIcon name="dictionnaire" size={16} /> ABAWI LANGUAGE PRO
         </div>
         <h1 style={{ margin: 0, color: 'var(--text-primary)', fontSize: 'clamp(1.6rem, 3vw, 2.4rem)' }}>
           Dictionnaire multilingue avancé
@@ -327,25 +371,22 @@ export default function DictionnaireElite() {
             onClick={() => {
               setCustomEntries([])
               localStorage.removeItem(STORAGE_KEY)
-              setStatus('Corpus IA réinitialisé.')
+              setStatus('Réinitialisé.')
             }}
             style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', fontWeight: 700, cursor: 'pointer' }}
           >
-            Réinitialiser IA
+            Réinitialiser
           </button>
         </div>
         {!!status && <div style={{ marginTop: 8, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{status}</div>}
       </div>
 
-      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr 1fr 2fr', marginBottom: 16 }}>
+      <div className="dict-lang-grid" style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr 2fr', marginBottom: 16 }}>
         <select value={fromLang} onChange={(e) => setFromLang(e.target.value)} style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
           {LANGS.map((l) => <option key={l.id} value={l.id}>Depuis: {l.label}</option>)}
         </select>
         <select value={toLang} onChange={(e) => setToLang(e.target.value)} style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
           {LANGS.map((l) => <option key={l.id} value={l.id}>Vers: {l.label}</option>)}
-        </select>
-        <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
-          {categories.map((c) => <option key={c} value={c}>{c === 'all' ? 'Toutes catégories' : c}</option>)}
         </select>
         <input
           value={query}
@@ -355,17 +396,54 @@ export default function DictionnaireElite() {
         />
       </div>
 
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+        {CATEGORY_TABS.map((c) => (
+          <button
+            key={c}
+            onClick={() => setCategory(c)}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 999,
+              border: '1px solid var(--border)',
+              background: category === c ? 'var(--accent)' : 'var(--bg-card)',
+              color: category === c ? '#fff' : 'var(--text-primary)',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              transition: 'background 0.2s, color 0.2s',
+            }}
+          >
+            {c === 'all' ? 'Toutes' : c}
+          </button>
+        ))}
+      </div>
+
       <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 0.8fr', background: 'var(--bg-card)', padding: '10px 14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+        <div className="dict-result-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 0.8fr', background: 'var(--bg-card)', padding: '10px 14px', fontWeight: 700, color: 'var(--text-primary)' }}>
           <span>{LANGS.find((l) => l.id === fromLang)?.label}</span>
           <span>{LANGS.find((l) => l.id === toLang)?.label}</span>
-          <span>Catégorie</span>
+          <span className="dict-cat-col">Catégorie</span>
         </div>
         {results.map((item) => (
-          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 0.8fr', padding: '10px 14px', borderTop: '1px solid var(--border)', background: 'var(--bg-primary)' }}>
+          <div
+            key={item.id}
+            onClick={() => setSelectedWord(item)}
+            className="dict-result-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1.2fr 1.2fr 0.8fr',
+              padding: '10px 14px',
+              borderTop: '1px solid var(--border)',
+              background: 'var(--bg-primary)',
+              cursor: 'pointer',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-card)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-primary)' }}
+          >
             <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{item[fromLang]}</span>
             <span style={{ color: 'var(--text-secondary)' }}>{item[toLang] || '—'}</span>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{item.category}</span>
+            <span className="dict-cat-col" style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{item.category}</span>
           </div>
         ))}
         {!results.length && (
@@ -374,6 +452,78 @@ export default function DictionnaireElite() {
           </div>
         )}
       </div>
+
+      {/* ── Modal détail mot ── */}
+      <ToolUpsellModal
+        isOpen={guard.upsellOpen}
+        config={guard.upsellConfig}
+        onClose={guard.closeUpsell}
+        onUseCredit={async () => {
+          const r = await guard.checkAndDebit()
+          if (r.ok) guard.closeUpsell()
+        }}
+      />
+
+      {selectedWord && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+          }}
+          onClick={() => setSelectedWord(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 18,
+              maxWidth: 560,
+              width: '100%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              padding: 28,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.3rem' }}>{selectedWord.fr}</h3>
+              <button onClick={() => setSelectedWord(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 22, cursor: 'pointer' }}>×</button>
+            </div>
+
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Traductions</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {LANGS.map((l) => (
+                  <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 600 }}>{l.label}</span>
+                    <span style={{ color: 'var(--text-primary)', fontWeight: 600, textAlign: 'right', direction: l.id === 'ar' ? 'rtl' : 'ltr' }}>{selectedWord[l.id] || '—'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Catégorie</div>
+              <div style={{ display: 'inline-block', padding: '4px 10px', borderRadius: 999, background: 'var(--gold-glow)', color: 'var(--gold)', fontWeight: 700, fontSize: '0.82rem' }}>
+                {selectedWord.category}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Exemples</div>
+              {selectedWord.examples && selectedWord.examples.length > 0 ? (
+                <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  {selectedWord.examples.map((ex, i) => (
+                    <li key={i} style={{ marginBottom: 6 }}>{ex}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>Aucun exemple disponible pour cette entrée.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

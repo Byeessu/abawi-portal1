@@ -355,7 +355,7 @@ function renderLines(lines, colors) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   minWidth: 56,
-                  background: accentCol,
+                  background: h1Col,
                   color: '#fff',
                   fontSize: '18pt',
                   fontWeight: 700,

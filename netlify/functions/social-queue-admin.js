@@ -2,6 +2,14 @@ exports.handler = async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) }
   }
+
+  // Vérification secret interne (appelé uniquement par auto-publish-marketing ou admin)
+  const secret = process.env.SOCIAL_OPS_SECRET
+  const provided = event.headers?.['x-internal-secret'] || ''
+  if (secret && provided !== secret) {
+    return { statusCode: 401, body: JSON.stringify({ ok: false, error: 'Unauthorized' }) }
+  }
+
   try {
     const body = JSON.parse(event.body || '{}')
     const action = String(body.action || '')

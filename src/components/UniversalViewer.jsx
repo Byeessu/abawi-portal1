@@ -39,7 +39,7 @@ export function ImageViewer({ url, alt, onClose }) {
           </div>
         </div>
         <div className="uv-img-wrap">
-          <img src={url} alt={alt || ''} style={{ transform: `scale(${zoom}) rotate(${rot}deg)`, transition: 'transform 0.3s' }} />
+          <img src={url} alt={alt || ''} loading="lazy" decoding="async" style={{ transform: `scale(${zoom}) rotate(${rot}deg)`, transition: 'transform 0.3s' }} />
         </div>
       </div>
     </div>

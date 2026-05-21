@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { callGroq, DOMAINES } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
+import { useAuth } from '../../context/AuthContext'
+import { useFreeToolQuota } from '../../hooks/useFreeToolQuota'
 
 const QUIZ_KEY = 'abawi_quiz_history'
 
-export default function QuizMode() {
+export default function QuizMode({ language = 'fr' } = {}) {
+  const { membre } = useAuth()
+  const quota = useFreeToolQuota('abawi_ia', {
+    anonymousLimit: 5, memberLimit: 10, membre, creditType: 'abawi_ia',
+  })
+  const [showPaywall, setShowPaywall] = useState(false)
+
   const [domaine, setDomaine] = useState('');
   const [customDomaine, setCustomDomaine] = useState('');
   const [difficulte, setDifficulte] = useState('moyen');
@@ -18,7 +26,7 @@ export default function QuizMode() {
 
   // Persist quiz answer history
   useEffect(() => {
-    try { localStorage.setItem(QUIZ_KEY, JSON.stringify(history.slice(-50))) } catch {}
+    try { localStorage.setItem(QUIZ_KEY, JSON.stringify(history.slice(-50))) } catch { /* ignore */ }
   }, [history]);
   const [loading, setLoading] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -26,7 +34,22 @@ export default function QuizMode() {
   const [finished, setFinished] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  async function checkAccessThen() {
+    if (quota.quotaAvailable) {
+      quota.recordUse()
+      return true
+    }
+    if (quota.canUseCredits) {
+      const result = await quota.debitCredits()
+      if (result.ok) return true
+    }
+    setShowPaywall(true)
+    return false
+  }
+
   async function generateQuiz() {
+    const ok = await checkAccessThen()
+    if (!ok) return
     setLoading(true);
     setErrorMsg('');
     const d = customDomaine || domaine;

@@ -13,7 +13,7 @@ export default function IncomingCall({ callerName, callerInitials, type = 'audio
       <div className="abv-incoming-call-backdrop" />
       <div className="abv-incoming-call-content">
         <div className="abv-incoming-call-avatar">
-          <img src="/logo-icon.svg" alt="Abavie" width="64" height="64" style={{ display: 'block' }} />
+          <img src="/logo-icon.svg" alt="AbTalk" width="64" height="64" style={{ display: 'block', filter: 'drop-shadow(0 0 8px rgba(76,175,80,0.4))' }} />
         </div>
         <h3 className="abv-incoming-call-name">{callerName || 'Appel entrant'}</h3>
         <p className="abv-incoming-call-type">

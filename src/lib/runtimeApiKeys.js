@@ -30,8 +30,12 @@ export function getStoredProviderKeys(providerId) {
   }
 }
 
+/**
+ * @param {{ envKeys?: string[], providerId?: string, includeAlias?: boolean }} [opts]
+ * @returns {string}
+ */
 export function resolveRuntimeApiKey({
-  envKeys = [],
+  envKeys = /** @type {string[]} */ ([]),
   providerId = '',
   includeAlias = true,
 } = {}) {

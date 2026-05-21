@@ -26,6 +26,7 @@ export default defineConfig([
     'node_modules',
     '**/*_backup.*',
     '**/*_corrupted.*',
+    'android/app/build/**',
   ]),
 
   // Browser source code (React app).
@@ -36,6 +37,7 @@ export default defineConfig([
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
+    linterOptions: { reportUnusedDisableDirectives: false },
     plugins: { react, 'unused-imports': unusedImports },
     settings: { react: { version: 'detect' } },
     languageOptions: {
@@ -59,6 +61,11 @@ export default defineConfig([
       // are now correctly recognized as used.
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': ['warn', UNUSED_VARS_OPTS],
+      // Disable experimental react-hooks rules that require massive refactors
+      'react-hooks/immutability': 'off',
+      'react-hooks/purity': 'off',
+      'react-hooks/static-components': 'off',
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 

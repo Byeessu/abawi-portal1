@@ -16,11 +16,16 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 }
 
+const ALLOWED_ORIGIN = 'https://abawi.app'
+
 export const handler = async (event) => {
+  const origin = event.headers?.origin || ''
+  const corsOrigin = origin === ALLOWED_ORIGIN ? ALLOWED_ORIGIN : ALLOWED_ORIGIN
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': corsOrigin,
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
   }
 
   if (event.httpMethod === 'OPTIONS') {
@@ -29,6 +34,18 @@ export const handler = async (event) => {
 
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) }
+  }
+
+  // Vérification JWT Supabase
+  const authHeader = event.headers?.authorization || event.headers?.Authorization || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+  if (!token) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Authentication required' }) }
+  }
+  const sbCheck = createClient(supabaseUrl, supabaseKey)
+  const { data: { user: caller }, error: authErr } = await sbCheck.auth.getUser(token)
+  if (authErr || !caller) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid token' }) }
   }
 
   if (!VAPID_PUBLIC || !VAPID_PRIVATE) {

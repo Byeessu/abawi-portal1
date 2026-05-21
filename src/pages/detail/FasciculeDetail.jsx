@@ -3,23 +3,34 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { allFascicules, slugify, formatPrix, waLink } from '../../data/products'
 import { usePrefetchAudio } from '../../hooks/usePrefetchAudio'
+import { canDownload } from '../../lib/freeContentQuota'
 import './DetailPage.css'
 import { Link } from 'react-router-dom'
 import PaymentFlow from '../../components/PaymentFlow'
 import ContentViewer from '../../components/ContentViewer'
 import PDFAudioReader from '../../components/PDFAudioReader'
 import { CoverImage } from '../../components/CoverImage'
+import { useProductAccess } from '../../hooks/useProductAccess'
+import AccessBadge from '../../components/AccessBadge'
+import ExpiryReminder from '../../components/ExpiryReminder'
 import ShareButtons from '../../components/ShareButtons'
+import SEO from '../../components/SEO'
 
 function FasciculeDetail() {
   const { slug } = useParams()
-  const { isMember } = useAuth()
+  const { isMember, membre, isAdmin } = useAuth()
   const [payflow, setPayflow] = useState(false)
   const [viewer, setViewer] = useState(null)
   const [audioReader, setAudioReader] = useState(false)
+  const allowDownload = canDownload(membre, isAdmin)
+
+  function handleRead() {
+    setViewer({ type: 'pdf', src: pdfSrc, titre: fasc.titre })
+  }
 
   const fasc = allFascicules.find((f) => slugify(f.titre) === slug)
   const audioAvailable = usePrefetchAudio(slug, 'fascicule')
+  const access = useProductAccess(fasc || {}, 'fascicule')
 
   if (!fasc) return (
     <main className="detail" style={{ textAlign: 'center', padding: '80px 24px' }}>
@@ -32,10 +43,38 @@ function FasciculeDetail() {
   const similar = allFascicules.filter((f) => f.matiere === fasc.matiere && f.id !== fasc.id).slice(0, 4)
   const pdfSrc = fasc.file_url || fasc.drive_url || null
 
+  const fascDesc = `Fascicule ${fasc.matiere || ''} Bac ${fasc.serie || ''} — ${fasc.titre}. Chapitre ${fasc.chapitre || ''}. Cours, méthodes et exercices corrigés premium — ABAWI Academy Sénégal.`
+  const fascSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: fasc.titre,
+    description: fascDesc,
+    url: `https://abawi.app/academy/${slugify(fasc.titre)}`,
+    author: { '@type': 'Organization', name: 'ABAWI Academy' },
+    publisher: { '@type': 'Organization', name: 'ABAWI SN' },
+    inLanguage: 'fr',
+    educationalLevel: fasc.serie || 'Baccalauréat',
+    genre: fasc.matiere || 'Sciences',
+    offers: {
+      '@type': 'Offer',
+      price: fasc.prix,
+      priceCurrency: 'XOF',
+      availability: 'https://schema.org/InStock',
+    },
+  }
+
   return (
     <main className="detail">
+      <SEO
+        title={`${fasc.titre} — Fascicule BAC ${fasc.serie || ''} ABAWI`}
+        description={fascDesc}
+        keywords={`fascicule bac ${fasc.serie || ''}, ${fasc.matiere || ''}, cours bac Sénégal, ${fasc.titre}, académie ABAWI, révision bac`}
+        image={`/og-content/fascicules/${fasc.id}.jpg`}
+        type="article"
+        structuredData={fascSchema}
+      />
       {payflow && <PaymentFlow product={fasc} onClose={() => setPayflow(false)} />}
-      {viewer && <ContentViewer type={viewer.type} src={viewer.src} titre={viewer.titre} onClose={() => setViewer(null)} />}
+      {viewer && <ContentViewer type={viewer.type} src={viewer.src} titre={viewer.titre} onClose={() => setViewer(null)} product={fasc} onBuy={() => setPayflow(true)} access={access} />}
       {audioReader && (
         <PDFAudioReader
           type="fascicule"
@@ -76,10 +115,18 @@ function FasciculeDetail() {
 
           <h1 className="detail-hero-title">{fasc.titre}</h1>
 
-          {!fasc.gratuit && (
+          {access.reminder && (
+            <ExpiryReminder reminder={access.reminder} onDismiss={access.dismissReminder} context="product" />
+          )}
+          {!fasc.gratuit && access.type === 'none' && (
             <div className="detail-hero-pricing">
               <span className="detail-hero-prix detail-hero-prix--green">{formatPrix(fasc.prix)}</span>
               {fasc.prix_barre && <span className="detail-hero-barre">{formatPrix(fasc.prix_barre)}</span>}
+            </div>
+          )}
+          {access.canUnlock && access.type !== 'none' && access.type !== 'public' && (
+            <div style={{ marginBottom: 12 }}>
+              <AccessBadge accessType={access.type} daysLeft={access.daysLeft} plan={access.plan} />
             </div>
           )}
 
@@ -95,33 +142,21 @@ function FasciculeDetail() {
           </p>
 
           <div className="detail-hero-btns">
-            {fasc.gratuit ? (
+            {fasc.gratuit || access.canUnlock ? (
               <>
                 {pdfSrc && (
                   <button
                     className="detail-btn detail-btn--green"
-                    onClick={() => setViewer({ type: 'pdf', src: pdfSrc, titre: fasc.titre })}
+                    onClick={handleRead}
                   >
-                    📖 Lire gratuitement
+                    📖 {fasc.gratuit ? 'Lire gratuitement' : 'Lire le fascicule complet'}
                   </button>
                 )}
-                {pdfSrc && (
+                {pdfSrc && allowDownload && (
                   <a href={pdfSrc} download className="detail-btn detail-btn--outline">
                     ⬇️ Télécharger PDF
                   </a>
                 )}
-              </>
-            ) : isMember && pdfSrc ? (
-              <>
-                <button
-                  className="detail-btn detail-btn--green"
-                  onClick={() => setViewer({ type: 'pdf', src: pdfSrc, titre: fasc.titre })}
-                >
-                  📖 Lire le fascicule complet
-                </button>
-                <a href={pdfSrc} download className="detail-btn detail-btn--outline">
-                  ⬇️ Télécharger PDF
-                </a>
               </>
             ) : (
               <>
@@ -136,6 +171,15 @@ function FasciculeDetail() {
                 >
                   Commander WhatsApp
                 </a>
+                {access.creditCost > 0 && (
+                  <button
+                    className="detail-btn detail-btn--outline"
+                    style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}
+                    onClick={() => {/* TODO: credit unlock */}}
+                  >
+                    🔓 Débloquer avec {access.creditCost} crédit{access.creditCost > 1 ? 's' : ''}
+                  </button>
+                )}
               </>
             )}
 
@@ -204,15 +248,15 @@ function FasciculeDetail() {
           <div className="detail-sticky-info">
             <span className="detail-sticky-title">{fasc.titre}</span>
             <span className="detail-sticky-prix" style={{ color: fasc.gratuit ? 'var(--green)' : 'var(--green)' }}>
-              {fasc.gratuit ? 'Gratuit' : formatPrix(fasc.prix)}
+              {fasc.gratuit ? 'Gratuit' : access.canUnlock ? '✓ Accès' : formatPrix(fasc.prix)}
             </span>
           </div>
           <div className="detail-sticky-btns">
-            {fasc.gratuit || (isMember && pdfSrc) ? (
+            {fasc.gratuit || access.canUnlock ? (
               pdfSrc && (
                 <button
                   className="detail-btn detail-btn--green"
-                  onClick={() => setViewer({ type: 'pdf', src: pdfSrc, titre: fasc.titre })}
+                  onClick={handleRead}
                 >
                   📖 Lire
                 </button>

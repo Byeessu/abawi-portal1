@@ -1,25 +1,35 @@
 import { useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { guides, slugify, formatPrix, waLink } from '../../data/products'
+import { guides, slugify, formatPrix, waLink, findSummaryForContent } from '../../data/products'
 import { usePrefetchAudio } from '../../hooks/usePrefetchAudio'
+import { canDownload } from '../../lib/freeContentQuota'
 import './DetailPage.css'
 import { Link } from 'react-router-dom'
 import PaymentFlow from '../../components/PaymentFlow'
 import ContentViewer from '../../components/ContentViewer'
 import PDFAudioReader from '../../components/PDFAudioReader'
 import { CoverImage } from '../../components/CoverImage'
-import MemberGate from '../../components/MemberGate'
+import { useProductAccess } from '../../hooks/useProductAccess'
+import AccessBadge from '../../components/AccessBadge'
+import ExpiryReminder from '../../components/ExpiryReminder'
 import ShareButtons from '../../components/ShareButtons'
+import SEO from '../../components/SEO'
 
 function GuideDetail() {
   const { slug } = useParams()
-  const { isMember } = useAuth()
+  const { isMember, membre, isAdmin } = useAuth()
   const [payflow, setPayflow] = useState(false)
   const [viewer, setViewer] = useState(null)   // { type, src, titre }
   const [audioReader, setAudioReader] = useState(false)
+  const allowDownload = canDownload(membre, isAdmin)
+
+  function handleRead() {
+    setViewer({ type: 'pdf', src: pdfSrc, titre: guide.titre })
+  }
 
   const guide = guides.find((g) => slugify(g.titre) === slug)
+  const access = useProductAccess(guide, 'guide')
   const audioAvailable = usePrefetchAudio(slug, 'guide')
 
   if (!guide) return (
@@ -34,10 +44,37 @@ function GuideDetail() {
   const eco = guide.prix_barre ? Math.round((1 - guide.prix / guide.prix_barre) * 100) : 0
   const pdfSrc = guide.file_url || guide.drive_url || null
 
+  const guideDesc = guide.description || `Guide premium ${guide.categorie} pour entrepreneurs africains. Document professionnel PDF — ${guide.titre}. Téléchargement immédiat.`
+  const guideSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: guide.titre,
+    description: guideDesc,
+    url: `https://abawi.app/digital/${slugify(guide.titre)}`,
+    brand: { '@type': 'Brand', name: 'ABAWI' },
+    category: guide.categorie,
+    offers: {
+      '@type': 'Offer',
+      price: guide.prix,
+      priceCurrency: 'XOF',
+      availability: 'https://schema.org/InStock',
+      seller: { '@type': 'Organization', name: 'ABAWI SN' },
+    },
+    ...(guide.cover ? { image: `https://abawi.app${guide.cover}` } : {}),
+  }
+
   return (
     <main className="detail">
+      <SEO
+        title={`${guide.titre} — Guide ABAWI`}
+        description={guideDesc}
+        keywords={`${guide.categorie}, guide ${guide.categorie}, business Afrique, ${guide.titre}, ABAWI, guide PDF`}
+        image={guide.cover || `/og-content/guides/${guide.id}.jpg`}
+        type="article"
+        structuredData={guideSchema}
+      />
       {payflow && <PaymentFlow product={guide} onClose={() => setPayflow(false)} />}
-      {viewer && <ContentViewer type={viewer.type} src={viewer.src} titre={viewer.titre} onClose={() => setViewer(null)} />}
+      {viewer && <ContentViewer type={viewer.type} src={viewer.src} titre={viewer.titre} onClose={() => setViewer(null)} product={guide} onBuy={() => setPayflow(true)} access={access} />}
       {audioReader && (
         <PDFAudioReader
           titre={guide.titre}
@@ -74,11 +111,19 @@ function GuideDetail() {
           </div>
           <h1 className="detail-hero-title">{guide.titre}</h1>
 
-          {!guide.gratuit && (
+          {access.reminder && (
+            <ExpiryReminder reminder={access.reminder} onDismiss={access.dismissReminder} context="product" />
+          )}
+          {!guide.gratuit && access.type === 'none' && (
             <div className="detail-hero-pricing">
               <span className="detail-hero-prix detail-hero-prix--gold">{formatPrix(guide.prix)}</span>
               {guide.prix_barre && <span className="detail-hero-barre">{formatPrix(guide.prix_barre)}</span>}
               {eco > 0 && <span className="detail-hero-eco">-{eco}%</span>}
+            </div>
+          )}
+          {access.canUnlock && access.type !== 'none' && access.type !== 'public' && (
+            <div style={{ marginBottom: 12 }}>
+              <AccessBadge accessType={access.type} daysLeft={access.daysLeft} plan={access.plan} />
             </div>
           )}
 
@@ -93,60 +138,63 @@ function GuideDetail() {
             Stratégies concrètes, méthodes testées et adaptées au contexte sénégalais et ouest-africain.
           </p>
 
+          {/* Résumé audio statique s'il existe */}
+          {(() => {
+            const summary = findSummaryForContent(guide.titre)
+            if (!summary) return null
+            return (
+              <div style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 16 }}>
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#A78BFA', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  🎙️ Résumé audio — {summary.titre.replace(/-/g, ' ')}
+                </div>
+                <audio controls style={{ width: '100%', height: 36 }} src={summary.audio_url} />
+              </div>
+            )
+          })()}
+
           <div className="detail-hero-btns">
-            {guide.gratuit ? (
+            {guide.gratuit || access.canUnlock ? (
               <>
                 {pdfSrc && (
                   <button
                     className="detail-btn detail-btn--gold"
-                    onClick={() => setViewer({ type: 'pdf', src: pdfSrc, titre: guide.titre })}
+                    onClick={handleRead}
                   >
-                    📖 Lire gratuitement
+                    📖 {guide.gratuit ? 'Lire gratuitement' : 'Lire le guide complet'}
                   </button>
                 )}
-                {pdfSrc && (
+                {pdfSrc && allowDownload && (
                   <a href={pdfSrc} download className="detail-btn detail-btn--outline">
                     ⬇️ Télécharger PDF
                   </a>
                 )}
               </>
             ) : (
-              <MemberGate
-                fallback={
-                  <>
-                    <button className="detail-btn detail-btn--gold" onClick={() => setPayflow(true)}>
-                      Acheter ce guide — {formatPrix(guide.prix)}
-                    </button>
-                    <a
-                      href={waLink(guide.titre, guide.prix)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="detail-btn detail-btn--outline"
-                    >
-                      Commander WhatsApp
-                    </a>
-                    <a href="/plans" className="detail-btn detail-btn--outline" style={{ borderColor: '#F0B429', color: '#F0B429' }}>
-                      💎 ABAWI+ — Accès illimité
-                    </a>
-                  </>
-                }
-              >
-                <>
-                  {pdfSrc && (
-                    <button
-                      className="detail-btn detail-btn--gold"
-                      onClick={() => setViewer({ type: 'pdf', src: pdfSrc, titre: guide.titre })}
-                    >
-                      📖 Lire le guide complet
-                    </button>
-                  )}
-                  {pdfSrc && (
-                    <a href={pdfSrc} download className="detail-btn detail-btn--outline">
-                      ⬇️ Télécharger PDF
-                    </a>
-                  )}
-                </>
-              </MemberGate>
+              <>
+                <button className="detail-btn detail-btn--gold" onClick={() => setPayflow(true)}>
+                  Acheter ce guide — {formatPrix(guide.prix)}
+                </button>
+                <a
+                  href={waLink(guide.titre, guide.prix)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="detail-btn detail-btn--outline"
+                >
+                  Commander WhatsApp
+                </a>
+                {access.creditCost > 0 && (
+                  <button
+                    className="detail-btn detail-btn--outline"
+                    style={{ borderColor: '#8B5CF6', color: '#8B5CF6' }}
+                    onClick={() => {/* TODO: credit unlock */}}
+                  >
+                    Débloquer avec {access.creditCost} crédit{access.creditCost > 1 ? 's' : ''}
+                  </button>
+                )}
+                <a href="/plans" className="detail-btn detail-btn--outline" style={{ borderColor: '#F0B429', color: '#F0B429' }}>
+                  💎 ABAWI+ — Accès illimité
+                </a>
+              </>
             )}
 
             {(audioAvailable || audioAvailable === false) && (
@@ -155,7 +203,7 @@ function GuideDetail() {
                 style={{ borderColor: 'var(--green)', color: 'var(--green)' }}
                 onClick={() => setAudioReader(true)}
               >
-                🎧 Écouter le résumé intelligent
+                🎧 Écouter le résumé intelligent (IA)
               </button>
             )}
             {audioAvailable === null && (
@@ -233,15 +281,15 @@ function GuideDetail() {
           <div className="detail-sticky-info">
             <span className="detail-sticky-title">{guide.titre}</span>
             <span className="detail-sticky-prix" style={{ color: guide.gratuit ? 'var(--green)' : 'var(--gold)' }}>
-              {guide.gratuit ? 'Gratuit' : formatPrix(guide.prix)}
+              {guide.gratuit ? 'Gratuit' : access.canUnlock ? '✓ Accès' : formatPrix(guide.prix)}
             </span>
           </div>
           <div className="detail-sticky-btns">
-            {guide.gratuit || (isMember && pdfSrc) ? (
+            {guide.gratuit || access.canUnlock ? (
               pdfSrc && (
                 <button
                   className="detail-btn detail-btn--gold"
-                  onClick={() => setViewer({ type: 'pdf', src: pdfSrc, titre: guide.titre })}
+                  onClick={handleRead}
                 >
                   📖 Lire
                 </button>

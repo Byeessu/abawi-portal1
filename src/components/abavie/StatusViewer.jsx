@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { AbavieLogoSVG } from './AbavieLogoSVG';
+import { AbTalkLogoSVG } from '../clair/AbTalkLogoSVG';
 
 const DEMO_STATUSES = [
-  { id: 'demo-1', user_id: 'demo', user_name: 'Abavie Officiel', user_initials: 'AO', color: '#18a84a', type: 'text', content: '🎉 Abavie Pro est disponible ! Découvrez les nouvelles fonctionnalités.', created_at: new Date(Date.now() - 3600000).toISOString(), duration: 5000, seen: false },
-  { id: 'demo-2', user_id: 'demo', user_name: 'Abavie Officiel', user_initials: 'AO', color: '#1e40af', type: 'text', content: '💬 Appels vidéo HD, chiffrement E2E, bots intégrés.', created_at: new Date(Date.now() - 7200000).toISOString(), duration: 5000, seen: false },
+  { id: 'demo-1', user_id: 'demo', user_name: 'AbTalk Officiel', user_initials: 'AO', color: '#18a84a', type: 'text', content: '🎉 AbTalk est disponible ! Découvrez les nouvelles fonctionnalités.', created_at: new Date(Date.now() - 3600000).toISOString(), duration: 5000, seen: false },
+  { id: 'demo-2', user_id: 'demo', user_name: 'AbTalk Officiel', user_initials: 'AO', color: '#1e40af', type: 'text', content: '💬 Appels vidéo HD, chiffrement E2E, bots intégrés.', created_at: new Date(Date.now() - 7200000).toISOString(), duration: 5000, seen: false },
   { id: 'demo-3', user_id: 'demo2', user_name: 'Équipe Tech', user_initials: 'ET', color: '#dc2626', type: 'text', content: '🔧 Maintenance terminée. Tous les systèmes sont opérationnels.', created_at: new Date(Date.now() - 10800000).toISOString(), duration: 5000, seen: true },
 ]
 
@@ -44,6 +44,7 @@ export default function StatusViewer({ onClose, initialUserId = null }) {
         history.back();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUserId]);
 
   async function loadStatuses() {
@@ -55,7 +56,7 @@ export default function StatusViewer({ onClose, initialUserId = null }) {
       .gt('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false });
 
-    const local = JSON.parse(localStorage.getItem('abavie_statuses') || '[]')
+    const local = JSON.parse(localStorage.getItem('abtalk_statuses') || '[]')
       .filter(s => new Date(s.expires_at) > new Date());
 
     // Merge: prefer Supabase entries, keep local ones not in Supabase
@@ -211,7 +212,7 @@ export default function StatusViewer({ onClose, initialUserId = null }) {
         {currentUser && (
           <div className="abv-status-user">
             <div className="abv-status-avatar" style={{ background: '#18A84A', overflow: 'hidden' }}>
-              <AbavieLogoSVG size={36} />
+              <AbTalkLogoSVG size={36} />
             </div>
             <div className="abv-status-info">
               <span className="abv-status-name">{currentUser.user_name}</span>

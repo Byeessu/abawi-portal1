@@ -247,7 +247,7 @@ async function logDispatch(ownerEmail, campaignName, mode, payload) {
         payload,
       }),
     })
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 async function enqueueTargets(ownerEmail, campaignName, mode, message, targets) {

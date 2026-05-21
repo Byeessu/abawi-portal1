@@ -120,7 +120,7 @@
 
 @media (min-width: 1024px) {
   .dissecteur-layout--with-results {
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: 340px 1fr;
   }
 }
 
@@ -131,8 +131,15 @@
   border-radius: 16px;
   padding: 20px;
   transition: all 0.2s;
-  position: sticky;
-  top: 20px;
+}
+
+@media (min-width: 1024px) {
+  .dissecteur-input-panel {
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
 }
 
 .dissecteur-input-panel--dragging {

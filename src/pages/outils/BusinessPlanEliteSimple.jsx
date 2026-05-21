@@ -1,38 +1,52 @@
 import { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { canAccess } from '../../lib/permissions';
 import { exportToPDF } from '../../lib/generatePDF';
 import { extractFilesText } from '../../lib/fileExtract';
 import { useBackgroundJob } from '../../hooks/useBackgroundJob';
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave';
-import { useTheme, useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles } from '../../context/ThemeContext';
+import { useToolAccess } from '../../hooks/useToolAccess'
 
 import { callGroq as groqCall } from '../../lib/groqClient'
-import React from 'react'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolAccessHeader from '../../components/ToolAccessHeader'
 
 const ACCENT = 'var(--accent)'
 const GOLD = 'var(--accent)'
 const GREEN = 'var(--accent2)'
 const RED = 'var(--red)'
 
-// Appel via le client qui passe par le proxy Netlify (sécurité) avec fallback direct
-async function groqJSON(prompt, maxTokens = 8000) {
-  return await groqCall(
-    [
-      { role: 'system', content: "Tu es Associé Senior (Partner) dans un cabinet de conseil stratégique tier-1 (McKinsey / BCG / Bain niveau Afrique). Tu élabores des business plans EXHAUSTIFS, CHIFFRÉS, ULTRA-DÉTAILLÉS, niveau dossier d'investissement Series A/B. Standards : profondeur analytique maximale, hypothèses explicites, benchmarks sectoriels, projections justifiées, narration convaincante. Tu rédiges en français, écrits riches et professionnels. CRITIQUE : chaque champ texte doit être DÉVELOPPÉ (jamais une phrase courte sauf labels), chaque liste doit contenir AU MOINS 5 éléments substantiels, chaque tableau doit avoir AU MOINS 4-6 lignes. Tu réponds UNIQUEMENT avec du JSON valide, sans markdown, sans préambule, sans explication externe." },
-      { role: 'user', content: prompt },
-    ],
-    { maxTokens, temperature: 0.2, jsonMode: true }
-  )
+const BP_SYSTEM = "Tu es Associé Senior (Partner) dans un cabinet de conseil stratégique tier-1 (McKinsey / BCG / Bain niveau Afrique). Tu élabores des business plans EXHAUSTIFS, CHIFFRÉS, ULTRA-DÉTAILLÉS, niveau dossier d'investissement Series A/B. Standards : profondeur analytique maximale, hypothèses explicites, benchmarks sectoriels, projections justifiées, narration convaincante. Tu rédiges en français, écrits riches et professionnels. CRITIQUE : chaque champ texte doit être DÉVELOPPÉ (jamais une phrase courte sauf labels), chaque liste doit contenir AU MOINS 5 éléments substantiels. Tu réponds TOUJOURS et UNIQUEMENT avec du json pur valide, sans markdown, sans bloc ```json, sans préambule, sans explication. Commence directement par { ou [ et termine par } ou ]."
+
+async function groqJSON(prompt, maxTokens = 3000) {
+  const msgs = [
+    { role: 'system', content: BP_SYSTEM },
+    { role: 'user', content: prompt + '\n\nReponds exclusivement avec du json valide. Commence par { ou [ et termine par } ou ].' }
+  ]
+  return await groqCall(msgs, { maxTokens, temperature: 0.15 })
 }
 
 function safeJSON(text, fallback) {
   try {
-    const m = String(text || '').match(/(\[[\s\S]*\]|\{[\s\S]*\})/s)
-    return m ? JSON.parse(m[0]) : JSON.parse(text)
+    let s = String(text || '').trim()
+    // Supprime les blocs markdown ```json ... ```
+    s = s.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').replace(/```/g, '')
+    // Extrait le premier objet ou tableau JSON
+    const m = s.match(/(\[[\s\S]*\]|\{[\s\S]*\})/s)
+    const candidate = m ? m[0] : s
+    return JSON.parse(candidate)
   } catch { return fallback }
+}
+
+function BarChart({ series, accent }) {
+  return <div style={{ padding: 12, background: 'var(--bg-card)', borderRadius: 8 }}>📊 BarChart ({series?.length || 0} séries)</div>
+}
+function RiskMatrix({ risks, accent }) {
+  return <div style={{ padding: 12, background: 'var(--bg-card)', borderRadius: 8 }}>⚠️ RiskMatrix ({risks?.length || 0} risques)</div>
+}
+function PremiumSlide({ sections, accent }) {
+  return <div style={{ padding: 12, background: 'var(--bg-card)', borderRadius: 8 }}>📑 PremiumSlide ({sections?.length || 0} sections)</div>
 }
 
 // Élite Sections Definitions
@@ -68,7 +82,7 @@ function ctx(form, src) {
 - Horizon: ${form.horizon || '3 ans'}
 
 DOCUMENTS SOURCES FOURNIS:
-${src ? src.slice(0, 12000) : '(Aucun document fourni — générer avec hypothèses stratégiques réalistes et les marquer explicitement)'}
+${src ? src.slice(0, 15000) : '(Aucun document fourni — générer avec hypothèses stratégiques réalistes et les marquer explicitement)'}
 
 INSTRUCTION CRITIQUE: Si des données manquent, les estimer avec des hypothèses explicites basées sur des benchmarks sectoriels. Suggérer les améliorations possibles dans le champ "ameliorations" de chaque section.`
 }
@@ -184,23 +198,19 @@ Genere une ANALYSE DE MARCHE EXHAUSTIVE de niveau cabinet stratego tier-1 avec P
 function promptValue(form, src) {
   return `${ctx(form, src)}
 
-Genere la PROPOSITION DE VALEUR niveau Value Proposition Canvas + Lean Canvas + Jobs-To-Be-Done. JSON strict (paragraphes 4-7 phrases, listes 5-8 elements):
+Genere la PROPOSITION DE VALEUR. JSON strict, champs developpes:
 {
-  "probleme": "probleme cible avec chiffres : taille du probleme en FCFA, frequence, severite, status quo douloureux (5-8 phrases)",
-  "douleurs_clients": ["douleur 1 detaillee","douleur 2","douleur 3","douleur 4","douleur 5"],
-  "gains_clients": ["gain attendu 1","gain 2","gain 3","gain 4","gain 5"],
-  "solution": "solution innovante : description complete du produit/service, pourquoi elle resout le probleme, technologie sous-jacente (6-10 phrases)",
-  "value_proposition_statement": "phrase canonique : Pour [cible] qui [besoin], notre [produit] est [categorie] qui [benefice cle], contrairement a [alternative], nous [differenciation]",
-  "avantages": [{"avantage":"nom","description":"explication detaillee 3-5 phrases","preuve":"preuve tangible","quantification":"X% / X FCFA"}],
-  "proposition_unique": "Unique Selling Proposition en 5-8 phrases : ce que nous sommes les SEULS a offrir et pourquoi cela compte",
-  "differentiation_axes": [{"axe":"prix|qualite|service|innovation|distribution","positionnement":"explication"}],
-  "moat": "douve concurrentielle : effets reseau, switching costs, marque, IP, donnees, scale (5-8 phrases)",
-  "validation_marche": "preuves validation marche : tests, MVP, lettres d intention, pilotes, NPS, taux de conversion observes (5-8 phrases ou liste)",
-  "early_adopters": "profil precis des early adopters et pourquoi ils achetent en premier (3-5 phrases)",
-  "scalabilite": "potentiel scalabilite : leverage technologique, multiplication geographique, modele plateforme, marges scaling (5-8 phrases)",
-  "use_cases": [{"cas":"cas d usage","description":"description 3-5 phrases","impact_client":"benefice mesure"}],
-  "preuve_concept": "MVP/POC realise ou roadmap pour le faire, kpi de validation cibles",
-  "ameliorations": ["suggestion 1","suggestion 2","suggestion 3","suggestion 4","suggestion 5"]
+  "probleme": "probleme cible chiffre en FCFA (5-8 phrases)",
+  "douleurs_clients": ["d1","d2","d3","d4","d5"],
+  "gains_clients": ["g1","g2","g3","g4","g5"],
+  "solution": "description complete produit/service (6-10 phrases)",
+  "value_proposition_statement": "Pour [cible] qui [besoin], notre [produit] est [categorie] qui [benefice]",
+  "avantages": [{"avantage":"nom","description":"3-5 phrases","quantification":"X%"}],
+  "proposition_unique": "USP en 5-8 phrases",
+  "moat": "douve concurrentielle (5-8 phrases)",
+  "validation_marche": "preuves validation (5-8 phrases)",
+  "scalabilite": "potentiel scalabilite (5-8 phrases)",
+  "ameliorations": ["s1","s2","s3","s4","s5"]
 }`
 }
 
@@ -247,45 +257,20 @@ Genere le MODELE ECONOMIQUE complet (Business Model Canvas + Unit Economics + Pr
 function promptGTM(form, src) {
   return `${ctx(form, src)}
 
-Genere le PLAN COMMERCIAL & GO-TO-MARKET complet (acquisition, activation, retention, ventes, marketing, branding). JSON strict (listes 5-8 elements, paragraphes 3-6 phrases):
+Genere le PLAN COMMERCIAL & GO-TO-MARKET. JSON strict, champs developpes:
 {
-  "phase_lancement": {
-    "geographie":"zone pilote precise",
-    "duree":"X mois",
-    "objectif_clients":"X clients",
-    "budget":"FCFA",
-    "kpi_succes":"criteres de validation pour passer a la phase suivante (4-6 phrases)"
-  },
-  "strategie_acquisition": "strategie globale d acquisition multi-canaux en 6-10 phrases",
-  "canaux": [{"canal":"nom precis (Meta Ads, Google Ads, sales direct, partenariats banques, agents terrain, influenceurs, SEO, etc.)","priorite":"haute|moyenne|basse","investissement":"FCFA/mois","cac_attendu":"FCFA","volume_cible":"clients/mois","roi_estime":"X","horizon":"M1-M6","tactique":"tactique detaillee 3-5 phrases"}],
-  "funnel_conversion": [{"etape":"Awareness|Acquisition|Activation|Retention|Revenue|Referral","kpi":"metric","cible":"%","tactique":"levier"}],
-  "strategie_prix": {
-    "positionnement":"premium|mid-market|low-cost|valeur",
-    "structure":"detail des paliers tarifaires",
-    "psychologique":"ancrages, prix charme, decoy effect (3-5 phrases)",
-    "remises":"politique de remises et conditions",
-    "test_pricing":"approche de test A/B prix"
-  },
-  "cycle_vente": {
-    "duree":"duree moyenne",
-    "etapes":["Prospection","Qualification","Decouverte","Demo","Proposition","Negociation","Closing"],
-    "taux_conversion_par_etape":[{"etape":"Demo","taux":"40%"}],
-    "outils_sales":["CRM","sequencer","prospecting"]
-  },
-  "equipe_commerciale": [{"role":"SDR/AE/CSM/etc","effectif_an1":1,"effectif_an2":3,"effectif_an3":6,"cibles":"quota mensuel FCFA","remuneration":"fixe + variable %"}],
-  "marketing_mix_4P": {
-    "produit":"strategie produit 3-5 phrases",
-    "prix":"strategie prix 3-5 phrases",
-    "place_distribution":"canaux distribution 3-5 phrases",
-    "promotion":"strategie promotion/comm 3-5 phrases"
-  },
-  "branding_communication": "strategie de marque, ton de voix, identite visuelle, RP, contenu (5-8 phrases)",
-  "calendrier_marketing": [{"mois":"M+1","action":"campagne","budget":"FCFA","kpi":"objectif"}],
-  "partenariats_strategiques": [{"partenaire":"type","valeur":"apport","conditions":"deal","timing":"M+X"}],
-  "objectifs": [{"annee":"Annee 1","ca":"FCFA","clients":"X","panier_moyen":"FCFA","croissance_pct":"%","commentaire":"contexte"}],
-  "kpis_commerciaux": [{"kpi":"nom","cible_an1":"X","cible_an3":"Y","frequence":"hebdo"}],
-  "fidelisation_strategie": "programme de retention, NPS cible, upsell/cross-sell, referral (5-8 phrases)",
-  "ameliorations":["suggestion 1","suggestion 2","suggestion 3","suggestion 4","suggestion 5"]
+  "phase_lancement": {"geographie":"zone pilote","duree":"X mois","objectif_clients":"X","budget":"FCFA","kpi_succes":"4-6 phrases"},
+  "strategie_acquisition": "strategie multi-canaux (6-10 phrases)",
+  "canaux": [{"canal":"nom precis","priorite":"haute|moyenne|basse","investissement":"FCFA/mois","cac_attendu":"FCFA","tactique":"3-5 phrases"}],
+  "funnel_conversion": [{"etape":"nom","kpi":"metric","cible":"%","tactique":"levier"}],
+  "strategie_prix": {"positionnement":"premium|mid|low","structure":"paliers tarifaires","psychologique":"3-5 phrases"},
+  "cycle_vente": {"duree":"moyenne","etapes":["Prospection","Qualification","Demo","Proposition","Closing"],"taux_conversion_par_etape":[{"etape":"Demo","taux":"40%"}]},
+  "equipe_commerciale": [{"role":"SDR/AE/CSM","effectif_an1":1,"effectif_an3":6,"cibles":"quota FCFA"}],
+  "marketing_mix_4P": {"produit":"3-5 phrases","prix":"3-5 phrases","place_distribution":"3-5 phrases","promotion":"3-5 phrases"},
+  "branding_communication": "strategie marque et contenu (5-8 phrases)",
+  "objectifs": [{"annee":"An1","ca":"FCFA","clients":"X","croissance_pct":"%"}],
+  "fidelisation_strategie": "retention et referral (5-8 phrases)",
+  "ameliorations":["s1","s2","s3","s4","s5"]
 }`
 }
 
@@ -334,94 +319,73 @@ Genere le PLAN OPERATIONS detaille (chaine de valeur, supply chain, IT, qualite,
 function promptFinancial(form, src) {
   return `${ctx(form, src)}
 
-Genere le PLAN FINANCIER ULTRA-DETAILLE niveau dossier banque/investisseur (3 ans, mensuel pour An1 si possible, scenarios, valorisation). JSON strict, montants en FCFA. Listes 5-8 elements:
+Genere le PLAN FINANCIER 3 ans. JSON strict, montants en FCFA:
 {
-  "hypotheses_macro":{
-    "inflation":"% an","change_eur_xof":"valeur","taux_emprunt":"%","tcam_secteur":"%","note":"sources et contexte 3-5 phrases"
-  },
-  "hypothese": {
-    "croissance_ca":"% YoY An1->An3 avec courbe (J/S)","marge_brute":"%","marge_nette":"%","delai_paiement_clients":"jours","delai_paiement_fournisseurs":"jours","stock_jours":"jours","capex_pct_ca":"%","note":"justification 3-5 phrases"
-  },
+  "hypotheses_macro": {"inflation":"%","taux_emprunt":"%","tcam_secteur":"%","note":"3-5 phrases"},
+  "hypothese": {"croissance_ca":"%","marge_brute":"%","marge_nette":"%","note":"3-5 phrases"},
   "projections": {
-    "annee1":{"ca":"FCFA","ca_repartition":[{"source":"S1","montant":"FCFA","pct":40}],"cogs":"FCFA","marge_brute":"FCFA et %","opex":"FCFA","opex_detail":[{"poste":"personnel","montant":"FCFA"}],"ebitda":"FCFA et %","amortissements":"FCFA","ebit":"FCFA","resultat_financier":"FCFA","impots":"FCFA","resultat_net":"FCFA et %"},
-    "annee2":{"ca":"FCFA","cogs":"FCFA","marge_brute":"FCFA et %","opex":"FCFA","ebitda":"FCFA et %","ebit":"FCFA","resultat_net":"FCFA et %"},
-    "annee3":{"ca":"FCFA","cogs":"FCFA","marge_brute":"FCFA et %","opex":"FCFA","ebitda":"FCFA et %","ebit":"FCFA","resultat_net":"FCFA et %"}
+    "annee1":{"ca":"FCFA","cogs":"FCFA","marge_brute":"FCFA","opex":"FCFA","ebitda":"FCFA","resultat_net":"FCFA"},
+    "annee2":{"ca":"FCFA","cogs":"FCFA","marge_brute":"FCFA","opex":"FCFA","ebitda":"FCFA","resultat_net":"FCFA"},
+    "annee3":{"ca":"FCFA","cogs":"FCFA","marge_brute":"FCFA","opex":"FCFA","ebitda":"FCFA","resultat_net":"FCFA"}
   },
-  "projections_mensuelles_an1":[{"mois":"M1","ca":"FCFA","clients":"X","cash_in":"FCFA","cash_out":"FCFA","cash_position":"FCFA"}],
-  "bilan_previsionnel":{
-    "annee1":{"actif_immobilise":"FCFA","actif_circulant":"FCFA","tresorerie":"FCFA","capitaux_propres":"FCFA","dettes_long_terme":"FCFA","dettes_court_terme":"FCFA","total":"FCFA"},
-    "annee2":{"actif_immobilise":"FCFA","actif_circulant":"FCFA","tresorerie":"FCFA","capitaux_propres":"FCFA","dettes":"FCFA"},
-    "annee3":{"actif_immobilise":"FCFA","actif_circulant":"FCFA","tresorerie":"FCFA","capitaux_propres":"FCFA","dettes":"FCFA"}
-  },
-  "besoin_financement": {
-    "montant":"FCFA et EUR equivalent",
-    "usage":"description detaillee 5-8 phrases",
-    "repartition_usage":[{"poste":"R&D","pct":35,"montant":"FCFA","detail":"justification"}],
-    "structure":"equity/dette/grant/mezzanine",
-    "valorisation_pre_money":"FCFA",
-    "dilution":"%",
-    "calendrier_versement":[{"tranche":"Tranche 1","montant":"FCFA","conditions":"milestones"}]
-  },
-  "flux_tresorerie": {"annee1":"FCFA (operationnel + investissement + financement)","annee2":"FCFA","annee3":"FCFA","point_mort_mois":"M+X","cash_burn_mensuel":"FCFA","runway_mois":"X"},
-  "scenarios":[
-    {"nom":"Pessimiste","ca_an3":"FCFA","ebitda_an3":"FCFA","commentaire":"hypothese 3-5 phrases"},
-    {"nom":"Realiste","ca_an3":"FCFA","ebitda_an3":"FCFA","commentaire":"hypothese 3-5 phrases"},
-    {"nom":"Optimiste","ca_an3":"FCFA","ebitda_an3":"FCFA","commentaire":"hypothese 3-5 phrases"}
+  "projections_mensuelles_an1":[{"mois":"M1","ca":"FCFA","cash_in":"FCFA","cash_out":"FCFA","cash_position":"FCFA"}],
+  "besoin_financement": {"montant":"FCFA","usage":"5-8 phrases","repartition_usage":[{"poste":"R&D","pct":35,"montant":"FCFA"}],"structure":"equity/dette"},
+  "flux_tresorerie": {"annee1":"FCFA","annee2":"FCFA","annee3":"FCFA","point_mort_mois":"M+X","cash_burn":"FCFA/mois"},
+  "scenarios": [
+    {"nom":"Pessimiste","ca_an3":"FCFA","ebitda_an3":"FCFA","commentaire":"3-5 phrases"},
+    {"nom":"Realiste","ca_an3":"FCFA","ebitda_an3":"FCFA","commentaire":"3-5 phrases"},
+    {"nom":"Optimiste","ca_an3":"FCFA","ebitda_an3":"FCFA","commentaire":"3-5 phrases"}
   ],
-  "valorisation":{"methode":"DCF + multiples comparables","multiples_secteur":"X CA / Y EBITDA","valorisation_post_money_an3":"FCFA","tri_attendu":"%","multiple_de_sortie":"X"},
-  "sortie_strategie":"strategie de sortie pour investisseurs : IPO, M&A, secondary (4-6 phrases)",
-  "ratios": [{"ratio":"Marge brute|Marge EBITDA|ROE|ROA|Ratio dette/EBITDA|Current ratio|Quick ratio","valeur":"% ou valeur","benchmark":"benchmark sectoriel","commentaire":"interpretation 2-3 phrases"}],
-  "indicateurs_investisseur":{"tri_5ans":"%","cash_on_cash":"X","payback_periode":"X annees"},
-  "sensibilite":[{"variable":"prix moyen","variation":"-10%","impact_ebitda":"-X%"}],
-  "ameliorations":["suggestion 1","suggestion 2","suggestion 3","suggestion 4","suggestion 5"]
+  "valorisation": {"methode":"DCF","valorisation_post_money_an3":"FCFA","tri_attendu":"%"},
+  "ameliorations": ["s1","s2","s3","s4","s5"]
 }`
 }
 
 function promptRisks(form, src) {
   return `${ctx(form, src)}
 
-Genere l ANALYSE DES RISQUES exhaustive (matrice probabilite x impact, mitigation, BCP). Identifie au moins 5 risques par categorie. JSON strict:
+Genere l ANALYSE DES RISQUES. JSON strict, 4-6 risques par categorie:
 {
-  "risques_marche": [{"risque":"risque precis","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"explication 3-5 phrases","signaux_avant_coureurs":["signal1","signal2"],"mitigation":"plan d action detaille 3-5 phrases","plan_b":"alternative si materialise","cout_mitigation":"FCFA"}],
-  "risques_operationnels":[{"risque":"risque","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases","plan_b":"alternative","cout_mitigation":"FCFA"}],
-  "risques_financiers":[{"risque":"risque","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases","plan_b":"alternative","cout_mitigation":"FCFA"}],
-  "risques_juridiques":[{"risque":"compliance/litige/IP","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
-  "risques_reputation":[{"risque":"risque image","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
-  "risques_cybersecurite":[{"risque":"intrusion|ransomware|fuite","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","mitigation":"plan technique 3-5 phrases"}],
-  "risques_geopolitiques":[{"risque":"instabilite politique|change devise|sanction","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","mitigation":"3-5 phrases"}],
-  "plan_contingence":["mesure detaillee 1 (3-5 phrases)","mesure 2","mesure 3","mesure 4","mesure 5"],
-  "business_continuity_plan":"plan de continuite : seuils declencheurs, equipes de crise, communication, retour a la normale (5-8 phrases)",
-  "assurance":[{"couverture":"RC pro|cyber|biens|RH","prime_estimee":"FCFA/an","plafond":"FCFA","fournisseur":"compagnie suggeree"}],
-  "comite_risques":"gouvernance risques : frequence, instances, reporting (3-5 phrases)",
-  "early_warning_indicators":[{"indicateur":"DSO clients","seuil":">90j","action":"escalade dirigeant"}],
-  "ameliorations":["suggestion 1","suggestion 2","suggestion 3","suggestion 4","suggestion 5"]
+  "risques_marche": [{"risque":"nom","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
+  "risques_operationnels": [{"risque":"nom","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
+  "risques_financiers": [{"risque":"nom","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
+  "risques_juridiques": [{"risque":"nom","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
+  "risques_reputation": [{"risque":"nom","probabilite":"haute|moyenne|basse","impact":"critique|moyen|faible","description":"3-5 phrases","mitigation":"3-5 phrases"}],
+  "plan_contingence": ["mesure 1","mesure 2","mesure 3","mesure 4","mesure 5"],
+  "business_continuity_plan": "plan continuite (5-8 phrases)",
+  "ameliorations": ["s1","s2","s3","s4","s5"]
 }`
 }
 
 function promptSlides(form, src) {
   return `${ctx(form, src)}
 
-Genere un PITCH DECK INVESTISSEUR de 12 slides (Cover, Probleme, Solution, Marche, Produit, Traction, Business Model, GTM, Competition, Equipe, Financials, Ask). Chaque slide doit avoir un contenu narratif riche (8-15 lignes minimum, donnees chiffrees). JSON strict:
+Genere un PITCH DECK de 12 slides. JSON strict, contenu narratif riche:
 {
   "slides": [
-    {"numero":1,"titre":"Cover : Nom de l entreprise + tagline","accent":"#0EA5E9","contenu":"contenu narratif puissant 6-10 lignes incluant tagline, positionnement court, contexte (ex: Series A 2026, ville)"},
-    {"numero":2,"titre":"Probleme","accent":"#EF4444","contenu":"narration probleme avec chiffres (TAM du probleme, % population concernee, cout social/economique), 8-12 lignes"},
-    {"numero":3,"titre":"Solution","accent":"#22C55E","contenu":"description solution claire avec 3-5 benefices et schema fonctionnel, 8-12 lignes"},
-    {"numero":4,"titre":"Marche & Opportunite","accent":"#F59E0B","contenu":"TAM/SAM/SOM en FCFA, taux croissance, drivers macro Afrique, 8-12 lignes"},
-    {"numero":5,"titre":"Produit / Demo","accent":"#8B5CF6","contenu":"description produit, parcours utilisateur, captures, USP, 8-12 lignes"},
-    {"numero":6,"titre":"Traction","accent":"#06B6D4","contenu":"chiffres : utilisateurs, CA, croissance MoM, NPS, partenaires, 8-12 lignes"},
-    {"numero":7,"titre":"Business Model","accent":"#EC4899","contenu":"sources revenus, prix, unit economics CAC/LTV, marges, 8-12 lignes"},
-    {"numero":8,"titre":"Go-To-Market","accent":"#0EA5E9","contenu":"strategie acquisition, canaux prioritaires, partenariats, scaling geographique, 8-12 lignes"},
-    {"numero":9,"titre":"Concurrence","accent":"#F97316","contenu":"matrice concurrentielle, positionnement differencie, moat (effets reseau, switching cost, IP), 8-12 lignes"},
-    {"numero":10,"titre":"Equipe","accent":"#10B981","contenu":"fondateurs, expertises, references passees, advisors strategiques, recrutements cles a venir, 8-12 lignes"},
-    {"numero":11,"titre":"Financials & Projections","accent":"#3B82F6","contenu":"projections CA An1/2/3 en FCFA, EBITDA, point mort, scenarios, 8-12 lignes"},
-    {"numero":12,"titre":"Ask & Use of Funds","accent":"#F0B429","contenu":"montant leve, valorisation, dilution, repartition usage en %, milestones 18 mois, contact, 8-12 lignes"}
+    {"numero":1,"titre":"Cover","accent":"#0EA5E9","contenu":"6-10 lignes: tagline, positionnement, contexte"},
+    {"numero":2,"titre":"Probleme","accent":"#EF4444","contenu":"8-12 lignes: TAM du probleme, cout social, chiffres"},
+    {"numero":3,"titre":"Solution","accent":"#22C55E","contenu":"8-12 lignes: description, benefices, schema"},
+    {"numero":4,"titre":"Marche","accent":"#F59E0B","contenu":"8-12 lignes: TAM/SAM/SOM FCFA, drivers"},
+    {"numero":5,"titre":"Produit","accent":"#8B5CF6","contenu":"8-12 lignes: parcours utilisateur, USP"},
+    {"numero":6,"titre":"Traction","accent":"#06B6D4","contenu":"8-12 lignes: utilisateurs, CA, NPS"},
+    {"numero":7,"titre":"Business Model","accent":"#EC4899","contenu":"8-12 lignes: revenus, CAC/LTV"},
+    {"numero":8,"titre":"GTM","accent":"#0EA5E9","contenu":"8-12 lignes: acquisition, canaux, scaling"},
+    {"numero":9,"titre":"Competition","accent":"#F97316","contenu":"8-12 lignes: matrice, differenciation, moat"},
+    {"numero":10,"titre":"Equipe","accent":"#10B981","contenu":"8-12 lignes: fondateurs, advisors"},
+    {"numero":11,"titre":"Financials","accent":"#3B82F6","contenu":"8-12 lignes: CA An1/2/3 FCFA, EBITDA"},
+    {"numero":12,"titre":"Ask","accent":"#F0B429","contenu":"8-12 lignes: montant, valorisation, usage"}
   ],
-  "structure":["Cover","Probleme","Solution","Marche","Produit","Traction","Business Model","GTM","Competition","Equipe","Financials","Ask"],
-  "design":{"theme":"premium minimal","couleurs":["#0A0A0A","#F0B429","#FFFFFF","#0EA5E9"],"police":"Inter / SF Pro","style":"datavis dense + visuels percutants"},
-  "appendices_suggerees":["FAQ investisseur","Cap table","Detail financier","Risques detailles","References clients"],
-  "ameliorations":["suggestion 1","suggestion 2","suggestion 3","suggestion 4","suggestion 5"]
+  "ameliorations": ["s1","s2","s3","s4","s5"]
 }`
+}
+
+// Module-level prompt builder map (used by generate + retrySection)
+const PROMPT_BUILDERS = {
+  executive: promptExecutive, company: promptCompany, market: promptMarket,
+  value: promptValue, model: promptModel, gtm: promptGTM,
+  operations: promptOperations, financial: promptFinancial,
+  risks: promptRisks, slides: promptSlides,
 }
 
 // Icon helper for section keys
@@ -758,8 +722,8 @@ function GTMView({ data, accent, themed }) {
       {data.canaux?.length > 0 && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ fontWeight: 800, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.6px', color: accent, marginBottom: 8 }}>📢 Canaux</div>
-          <DataTable accent={accent} headers={['Canal', 'Priorité', 'Invest./mois', 'CAC', 'ROI']}
-            rows={data.canaux.map(c => [c.canal, c.priorite, c.investissement, c.cac_attendu, c.roi_estime])} />
+          <DataTable accent={accent} headers={['Canal', 'Priorité', 'Invest./mois', 'CAC', 'Tactique']}
+            rows={data.canaux.map(c => [c.canal, c.priorite, c.investissement, c.cac_attendu, c.tactique])} />
         </div>
       )}
       {data.funnel_conversion?.length > 0 && (
@@ -844,9 +808,10 @@ function FinancialView({ data, accent, themed }) {
 
   return (
     <div>
-      {(hyp.croissance_ca || hyp.marge_nette || hyp.delai_paiement) && (
+      {(hyp.croissance_ca || hyp.marge_brute || hyp.marge_nette || hyp.delai_paiement) && (
               <div style={themed({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' })}>
           {hyp.croissance_ca && <MetricCard label="Croissance CA" value={hyp.croissance_ca} icon="📈" color="#22C55E" trend="+" themed={themed} />}
+          {hyp.marge_brute && <MetricCard label="Marge brute" value={hyp.marge_brute} icon="📊" color={accent} themed={themed} />}
                     {hyp.marge_nette && <MetricCard label="Marge nette" value={hyp.marge_nette} icon="💰" color={accent} themed={themed} />}
                     {hyp.delai_paiement && <MetricCard label="Délai paiement" value={hyp.delai_paiement} icon="⏱️" color="#8B5CF6" themed={themed} />}
         </div>
@@ -867,9 +832,9 @@ function FinancialView({ data, accent, themed }) {
             headers={['Indicateur', ...years.map((_, i) => `Année ${i + 1}`)]}
             rows={[
               ['Chiffre d\'affaires', ...years.map(y => stripMD(proj[y]?.ca))],
-              ['Marge', ...years.map(y => stripMD(proj[y]?.marge))],
+              ['Marge brute', ...years.map(y => stripMD(proj[y]?.marge_brute))],
               ['EBITDA', ...years.map(y => stripMD(proj[y]?.ebitda))],
-              ['Résultat net', ...years.map(y => stripMD(proj[y]?.resultat))],
+              ['Résultat net', ...years.map(y => stripMD(proj[y]?.resultat_net))],
             ]}
             themed={themed}
           />
@@ -1063,7 +1028,7 @@ function renderAdditionalFields(result, knownKeys = [], accent) {
 }
 
 // Élite Component Functions
-function SectionCard({ section, result, enabled, onToggle, accent, c, themed }) {
+function SectionCard({ section, result, enabled, onToggle, onRetry, accent, c, themed }) {
   if (!result) {
     return (
             <div style={themed({
@@ -1084,20 +1049,31 @@ function SectionCard({ section, result, enabled, onToggle, accent, c, themed }) 
   }
 
   if (result.error) {
+    const isSizeError = result.error === 'REQUEST_TOO_LARGE'
     return (
-            <div style={themed({
+      <div style={themed({
         background: 'rgba(239,68,68,0.08)', border: '2px solid rgba(239,68,68,0.3)', borderRadius: '16px',
         padding: '20px', marginBottom: '20px'
       })}>
-                <div style={themed({ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' })}>
-                    <div style={themed({ fontSize: '1.5rem' })}>⚠️</div>
+        <div style={themed({ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' })}>
+          <div style={themed({ fontSize: '1.5rem' })}>⚠️</div>
           <div style={{ flex: 1 }}>
-                        <div style={themed({ color: 'text-primary', fontWeight: 700, fontSize: '1rem' })}>{section.label}</div>
-                        <div style={themed({ color: '#EF4444', fontSize: '0.85rem' })}>Échec de la génération</div>
+            <div style={themed({ color: 'text-primary', fontWeight: 700, fontSize: '1rem' })}>{section.label}</div>
+            <div style={themed({ color: '#EF4444', fontSize: '0.85rem' })}>
+              {isSizeError ? 'Prompt trop volumineux — réessayez (contexte réduit automatiquement)' : 'Échec de la génération'}
+            </div>
           </div>
+          {onRetry && (
+            <button
+              onClick={() => onRetry(section.id)}
+              style={{ padding: '8px 16px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.5)', borderRadius: '8px', color: '#FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap' }}
+            >
+              ⟳ Réessayer
+            </button>
+          )}
         </div>
-                <div style={themed({ color: '#FCA5A5', fontSize: '0.85rem', marginTop: '8px' })}>
-          {result.error}
+        <div style={themed({ color: '#FCA5A5', fontSize: '0.82rem', marginTop: '8px' })}>
+          {isSizeError ? 'Le contenu source est trop long. La réessai utilisera un contexte raccourci.' : result.error}
         </div>
       </div>
     )
@@ -1168,9 +1144,9 @@ function SectionCard({ section, result, enabled, onToggle, accent, c, themed }) 
 
 // Élite Main Component
 export default function BusinessPlanEliteSimple() {
-    const { membre } = useAuth();
   const { themed } = useThemedStyles();
     const bgJob = useBackgroundJob('business-plan-elite', 'Business Plan Élite')
+    const tool = useToolAccess('outils-essentiels', 'business_plan')
   
   // Élite State Management
   const [form, setForm] = useState({
@@ -1187,6 +1163,7 @@ export default function BusinessPlanEliteSimple() {
   const [slides, setSlides] = useState(defaults.slides || [])
   const [loadingStep, setLoadingStep] = useState('')
   const [progress, setProgress] = useState(0)
+  const [totalSections, setTotalSections] = useState(10)
   const [activeTab, setActiveTab] = useState('executive')
   const [enabled, setEnabled] = useState({ executive: true, company: true, market: true, value: true, model: true, gtm: true, operations: true, financial: true, risks: true, slides: false })
     const [error, setError] = useState('');
@@ -1198,49 +1175,6 @@ export default function BusinessPlanEliteSimple() {
     { onRestore: (d) => { if (d?.form) setForm(d.form); if (d?.enabled) setEnabled(d.enabled) } }
   )
 
-  // Élite Permission Check
-  if (!canAccess(membre, 'outils-essentiels')) {
-    return (
-            <div style={themed({ 
-       minHeight: '60vh', 
-       display: 'flex', 
-       alignItems: 'center', 
-       justifyContent: 'center',
-       background: 'gradient-hero'
-     })}>
-                <div style={themed({ 
-         textAlign: 'center', 
-         padding: '48px', 
-         background: 'bg-card', 
-         borderRadius: '20px', 
-         border: '1px solid border',
-         maxWidth: '500px'
-       })}>
-                    <div style={themed({ fontSize: '4rem', marginBottom: '24px' })}>🔒</div>
-                    <h2 style={themed({ color: 'text-primary', marginBottom: '16px' })}>Accès Élite Restreint</h2>
-                    <p style={themed({ color: 'text-muted', lineHeight: 1.6 })}>
-            L'accès au Business Plan Élite nécessite un abonnement Starter ou supérieur.
-          </p>
-                    <div style={themed({
-           marginTop: '24px',
-           padding: '16px',
-           background: 'bg-card',
-           borderRadius: '12px',
-           border: '1px solid border'
-         })}>
-                        <div style={themed({ color: '#F0B429', fontWeight: 600, marginBottom: '8px' })}>Fonctionnalités Élite :</div>
-                        <div style={themed({ color: 'text-secondary', fontSize: '0.9rem' })}>
-              ✅ 10 sections exhaustives<br/>
-              ✅ Génération IA avancée<br/>
-              ✅ Export PDF professionnel<br/>
-              ✅ Analyse financière 3 ans<br/>
-              ✅ Slides investor-ready
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   // Élite Helper Functions
   function patch(k, v) { setForm(f => ({ ...f, [k]: v })) }
@@ -1257,6 +1191,10 @@ export default function BusinessPlanEliteSimple() {
   }
 
     const generate = async () => {
+    if (!tool.allowed) { setError(tool.errorMessage || 'Accès restreint'); return }
+    const debitRes = await tool.debit()
+    if (!debitRes.ok) { setError('Crédits ou quota insuffisants'); return }
+
     setLoading(true);
     setError('');
     setResults({});
@@ -1273,36 +1211,46 @@ export default function BusinessPlanEliteSimple() {
       return
     }
 
-    const promptBuilders = {
-      executive: promptExecutive, company: promptCompany, market: promptMarket,
-      value: promptValue, model: promptModel, gtm: promptGTM,
-      operations: promptOperations, financial: promptFinancial,
-      risks: promptRisks, slides: promptSlides,
-    }
+    const promptBuilders = PROMPT_BUILDERS
+    setTotalSections(queue.length)
 
     const newResults = {}
     let done = 0
+    const TOKEN_BUDGET = 5000
 
-    for (const section of queue) {
-      setLoadingStep(`Génération: ${section.label}...`)
-      setProgress(Math.round((done / queue.length) * 100))
-
+    // Helper: generate one section with automatic context-trim fallback
+    const runSection = async (section) => {
+      const builder = promptBuilders[section.id]
+      if (!builder) return
+      setLoadingStep(`Génération: ${section.label}…`)
       try {
-        const builder = promptBuilders[section.id]
-        if (!builder) continue
-        // Tokens étendus pour générer un contenu ultra-détaillé (financial/market/slides plus volumineux)
-        const tokenBudget = ['financial', 'market', 'slides', 'company'].includes(section.id) ? 9000 : 7500
-        const raw = await groqJSON(builder(form, src), tokenBudget)
-        newResults[section.id] = safeJSON(raw, { error: 'Parse error', raw })
-        setResults({ ...newResults })
+        let raw
+        try {
+          raw = await groqJSON(builder(form, src), TOKEN_BUDGET)
+        } catch (innerErr) {
+          const msg = String(innerErr?.message || '')
+          if (msg.includes('REQUEST_TOO_LARGE')) {
+            raw = await groqJSON(builder(form, src ? src.slice(0, 1200) : ''), TOKEN_BUDGET)
+          } else if (msg.includes('INVALID_PROMPT') || msg.includes('HTTP_400')) {
+            // Retry with trimmed context and explicit json keyword
+            raw = await groqJSON(builder(form, src ? src.slice(0, 800) : '') + '\n\nIMPORTANT: reponds UNIQUEMENT avec du json valide. Pas de markdown.', TOKEN_BUDGET)
+          } else { throw innerErr }
+        }
+        newResults[section.id] = safeJSON(raw, { error: 'Réponse invalide — réessayez' })
       } catch (err) {
-        console.error(`[BusinessPlan] Erreur section ${section.id}:`, err)
         newResults[section.id] = { error: err.message || 'Erreur réseau', section: section.id }
-        setResults({ ...newResults })
       }
-
       done++
       setProgress(Math.round((done / queue.length) * 100))
+      setLoadingStep(`${done} / ${queue.length} sections…`)
+      setResults(r => ({ ...r, [section.id]: newResults[section.id] }))
+    }
+
+    // Process in batches of 3 — balances speed vs rate-limit pressure
+    const BATCH = 3
+    for (let i = 0; i < queue.length; i += BATCH) {
+      await Promise.allSettled(queue.slice(i, i + BATCH).map(runSection))
+      if (i + BATCH < queue.length) await new Promise(r => setTimeout(r, 1200))
     }
 
     setLoadingStep('')
@@ -1313,7 +1261,37 @@ export default function BusinessPlanEliteSimple() {
     if (failed === queue.length) {
       setError('La génération a échoué sur toutes les sections. Vérifiez votre connexion ou la clé API.')
     } else if (failed > 0) {
-      setError(`${failed} section(s) n'ont pas pu être générées. Vous pouvez relancer.`)
+      setError(`${failed} section(s) ont échoué — cliquez ⟳ sur chaque section pour réessayer.`)
+    }
+  }
+
+  async function retrySection(sectionId) {
+    const section = SECTIONS.find(s => s.id === sectionId)
+    const builder = PROMPT_BUILDERS[sectionId]
+    if (!section || !builder) return
+    setLoadingStep(`Regénération: ${section.label}…`)
+    setLoading(true)
+    setResults(prev => { const n = { ...prev }; delete n[sectionId]; return n })
+    const src = uploadedText
+    try {
+      let raw
+      try {
+        raw = await groqJSON(builder(form, src), 5000)
+      } catch (innerErr) {
+        const msg = String(innerErr?.message || '')
+        if (msg.includes('REQUEST_TOO_LARGE')) {
+          raw = await groqJSON(builder(form, src ? src.slice(0, 1200) : ''), 5000)
+        } else if (msg.includes('INVALID_PROMPT') || msg.includes('HTTP_400')) {
+          raw = await groqJSON(builder(form, src ? src.slice(0, 800) : '') + '\n\nIMPORTANT: reponds UNIQUEMENT avec du json valide. Pas de markdown.', 5000)
+        } else { throw innerErr }
+      }
+      setResults(prev => ({ ...prev, [sectionId]: safeJSON(raw, { error: 'Réponse invalide — réessayez' }) }))
+      setError('')
+    } catch (err) {
+      setResults(prev => ({ ...prev, [sectionId]: { error: err.message || 'Erreur réseau', section: sectionId } }))
+    } finally {
+      setLoading(false)
+      setLoadingStep('')
     }
   }
 
@@ -1367,8 +1345,11 @@ export default function BusinessPlanEliteSimple() {
         description="Générez un business plan exhaustif de niveau cabinet international : 10 sections ultra-détaillées (résumé exécutif, PESTEL, Porter, marché TAM/SAM/SOM, plan financier 3 ans avec scénarios, valorisation DCF, matrice de risques, pitch deck 12 slides). Conforme OHADA, adapté Afrique de l'Ouest."
         keywords="business plan Sénégal, business plan OHADA, business plan IA, executive summary, plan financier 3 ans, PESTEL, Porter, SWOT, pitch investisseur, UEMOA, BCEAO, valorisation DCF, unit economics"
         type="article"
-      />
+       image="/og-tools/business-plan.jpg"/>
       {/* Info Panel */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="Business Plan Élite"
         icon="📊"
@@ -1394,168 +1375,163 @@ export default function BusinessPlanEliteSimple() {
           'Le résumé exécutif est la section la plus importante pour convaincre les investisseurs'
         ]}
       />
+      <ToolAccessHeader toolAccess={tool} toolName="Business Plan Élite" />
 
-      {/* Élite Hero Header */}
-            <div style={themed({ 
-        background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #0ea5e9 100%)', 
-        padding: '40px 32px', 
-        borderRadius: '24px', 
-        marginBottom: '32px',
-        position: 'relative',
-        overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(37, 99, 235, 0.3)'
-      })}>
-        {/* Animated Background Elements */}
-                <div style={themed({ 
-          position: 'absolute',
-          top: '-50px',
-          right: '-50px',
-          width: '300px',
-          height: '300px',
-          background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-          borderRadius: '50%'
-        })} />
-                <div style={themed({ 
-          position: 'absolute',
-          bottom: '-30px',
-          left: '-30px',
-          width: '200px',
-          height: '200px',
-          background: 'radial-gradient(circle, rgba(240,180,41,0.15) 0%, transparent 70%)',
-          borderRadius: '50%'
-        })} />
-        
-        {/* Chart Icons Decoration */}
-                <div style={themed({
-          position: 'absolute',
-          top: '20px',
-          right: '40px',
-          fontSize: '4rem',
-          opacity: 0.2,
-          transform: 'rotate(-15deg)'
-        })}>📈</div>
-                <div style={themed({
-          position: 'absolute',
-          bottom: '20px',
-          left: '40px',
-          fontSize: '3rem',
-          opacity: 0.15,
-          transform: 'rotate(15deg)'
-        })}>💼</div>
-        
-                <div style={themed({ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '32px' })}>
-                    <div style={themed({
-            background: 'rgba(255,255,255,0.15)',
-            borderRadius: '20px',
-            padding: '20px 24px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.2)'
-          })}>
-                        <span style={themed({ fontSize: '3.5rem' })}>📊</span>
+      {/* ── Business Plan Hero ───────────────────────────── */}
+      <style>{`
+        @keyframes bpOrbit1{from{transform:rotate(0deg) translateX(76px) rotate(0deg)}to{transform:rotate(360deg) translateX(76px) rotate(-360deg)}}
+        @keyframes bpOrbit2{from{transform:rotate(0deg) translateX(122px) rotate(0deg)}to{transform:rotate(-360deg) translateX(122px) rotate(360deg)}}
+        @keyframes bpOrbit3{from{transform:rotate(0deg) translateX(168px) rotate(0deg)}to{transform:rotate(360deg) translateX(168px) rotate(-360deg)}}
+        @keyframes bpCenterPulse{0%,100%{box-shadow:0 0 0 8px rgba(29,78,216,0.2),0 0 0 20px rgba(29,78,216,0.08)}50%{box-shadow:0 0 0 14px rgba(29,78,216,0.3),0 0 0 32px rgba(29,78,216,0.06)}}
+        @keyframes bpPing{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.8);opacity:0}}
+        @keyframes bpShimmer{0%{background-position:-250% center}100%{background-position:250% center}}
+        @keyframes bpFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes bpFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes bpRingGlow{0%,100%{opacity:.3}50%{opacity:.7}}
+        .bp-orb1{animation:bpOrbit1 14s linear infinite}
+        .bp-orb1-d1{animation:bpOrbit1 14s -4.67s linear infinite}
+        .bp-orb1-d2{animation:bpOrbit1 14s -9.33s linear infinite}
+        .bp-orb2{animation:bpOrbit2 22s linear infinite}
+        .bp-orb2-d1{animation:bpOrbit2 22s -5.5s linear infinite}
+        .bp-orb2-d2{animation:bpOrbit2 22s -11s linear infinite}
+        .bp-orb2-d3{animation:bpOrbit2 22s -16.5s linear infinite}
+        .bp-orb3{animation:bpOrbit3 32s linear infinite}
+        .bp-orb3-d1{animation:bpOrbit3 32s -10.67s linear infinite}
+        .bp-orb3-d2{animation:bpOrbit3 32s -21.33s linear infinite}
+        .bp-center-icon{animation:bpCenterPulse 3s ease-in-out infinite}
+        .bp-ping{animation:bpPing 2.4s ease-out infinite}
+        .bp-shimmer-text{background:linear-gradient(90deg,#fff 0%,#93c5fd 40%,#f0b429 65%,#fff 100%);background-size:250% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:bpShimmer 5s linear infinite}
+        .bp-fade0{animation:bpFadeUp .55s ease both}
+        .bp-fade1{animation:bpFadeUp .55s .12s ease both}
+        .bp-fade2{animation:bpFadeUp .55s .24s ease both}
+        .bp-fade3{animation:bpFadeUp .55s .36s ease both}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .bp-float{animation:bpFloat 4.5s ease-in-out infinite}
+        .bp-ring-glow{animation:bpRingGlow 3s ease-in-out infinite}
+      `}</style>
+
+      <div style={{ background:'linear-gradient(135deg,#030712 0%,#0b1838 40%,#1e3a8a 72%,#1d4ed8 100%)', borderRadius:24, marginBottom:28, position:'relative', overflow:'hidden', minHeight:280, boxShadow:'0 24px 80px rgba(29,78,216,0.35),inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+
+        {/* Grid texture */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(59,130,246,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.06) 1px,transparent 1px)', backgroundSize:'44px 44px', WebkitMaskImage:'radial-gradient(ellipse 85% 85% at 50% 50%,black 20%,transparent 100%)', maskImage:'radial-gradient(ellipse 85% 85% at 50% 50%,black 20%,transparent 100%)' }} />
+
+        {/* Glow blobs */}
+        <div style={{ position:'absolute', top:-80, left:'25%', width:420, height:420, background:'radial-gradient(circle,rgba(29,78,216,0.38) 0%,transparent 65%)', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', bottom:-50, right:'8%', width:300, height:300, background:'radial-gradient(circle,rgba(240,180,41,0.1) 0%,transparent 65%)', pointerEvents:'none' }} />
+
+        {/* ── Left content */}
+        <div style={{ position:'relative', zIndex:2, padding:'clamp(26px,4vw,46px) clamp(22px,4vw,50px)', maxWidth:500, paddingBottom:'clamp(60px,7vw,78px)' }}>
+          <div className="bp-fade0" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'5px 14px', background:'rgba(240,180,41,0.15)', border:'1px solid rgba(240,180,41,0.4)', borderRadius:20, marginBottom:16 }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'#f0b429', boxShadow:'0 0 8px #f0b429', display:'inline-block' }} />
+            <span style={{ fontSize:'0.68rem', fontWeight:800, color:'#f0b429', letterSpacing:'1.6px', textTransform:'uppercase' }}>Outil Premium IA</span>
           </div>
-          
-                    <div style={{ flex: 1 }}>
-                        <div style={themed({
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '6px 14px',
-              background: 'rgba(240,180,41,0.9)',
-              borderRadius: '20px',
-              marginBottom: '12px'
-            })}>
-                            <span style={themed({ fontSize: '0.75rem', fontWeight: 800, color: '#0a0a0a', textTransform: 'uppercase', letterSpacing: '1px' })}>
-                ⚡ Outil Premium
-              </span>
-            </div>
-            
-                        <h1 style={themed({ 
-              color: 'white', 
-              margin: 0, 
-              fontSize: '2.2rem', 
-              fontWeight: 900,
-              letterSpacing: '-0.5px'
-            })}>
-              Business Plan Élite
-            </h1>
-                        <p style={themed({ 
-              color: 'rgba(255,255,255,0.85)', 
-              margin: '12px 0 0 0', 
-              fontSize: '1.05rem',
-              lineHeight: 1.6,
-              maxWidth: '500px'
-            })}>
-              Générez un business plan professionnel de niveau cabinet international
-            </p>
-            
-            {/* Feature Tags */}
-                        <div style={themed({ display: 'flex', gap: '12px', marginTop: '20px', flexWrap: 'wrap' })}>
-              {['10 Sections', 'Analyse OHADA', 'Export PDF', 'Slides Pro'].map((tag, i) => (
-                                <span key={i} style={themed({
-                  padding: '6px 14px',
-                  background: 'rgba(255,255,255,0.15)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: '20px',
-                  fontSize: '0.8rem',
-                  color: 'white',
-                  fontWeight: 600
-                })}>{tag}</span>
-              ))}
-            </div>
+
+          <h1 className="bp-shimmer-text bp-fade1" style={{ margin:'0 0 14px', fontSize:'clamp(1.7rem,3vw,2.7rem)', fontWeight:900, lineHeight:1.12, letterSpacing:'-0.5px' }}>
+            Business Plan Élite
+          </h1>
+
+          <p className="bp-fade2" style={{ color:'rgba(255,255,255,0.68)', fontSize:'clamp(0.82rem,1.1vw,0.97rem)', lineHeight:1.7, margin:'0 0 22px', maxWidth:420 }}>
+            10 sections stratégiques · Niveau cabinet international · Analyses PESTEL, Porter, valorisation DCF, conformité OHADA
+          </p>
+
+          <div className="bp-fade3" style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {[{t:'10 Sections',c:'#3b82f6'},{t:'PESTEL · Porter',c:'#10b981'},{t:'DCF 3 ans',c:'#f0b429'},{t:'Pitch Deck',c:'#a78bfa'},{t:'Export PDF',c:'#38bdf8'}].map(({t,c})=>(
+              <span key={t} style={{ padding:'5px 12px', borderRadius:20, fontSize:'0.72rem', fontWeight:700, color:c, background:`${c}18`, border:`1px solid ${c}38`, whiteSpace:'nowrap' }}>{t}</span>
+            ))}
           </div>
+        </div>
+
+        {/* ── Orbital diagram */}
+        <div style={{ position:'absolute', right:'clamp(-20px,3vw,60px)', top:'50%', transform:'translateY(-52%)', width:260, height:260, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>
+          {/* Rings */}
+          <div className="bp-ring-glow" style={{ position:'absolute', width:152, height:152, borderRadius:'50%', border:'1px dashed rgba(99,179,237,0.4)' }} />
+          <div className="bp-ring-glow" style={{ position:'absolute', width:244, height:244, borderRadius:'50%', border:'1px dashed rgba(59,130,246,0.25)', animationDelay:'-1s' }} />
+          <div className="bp-ring-glow" style={{ position:'absolute', width:336, height:336, borderRadius:'50%', border:'1px dashed rgba(59,130,246,0.14)', animationDelay:'-2s' }} />
+
+          {/* Center */}
+          <div className="bp-center-icon" style={{ width:62, height:62, borderRadius:'50%', background:'linear-gradient(135deg,#1d4ed8,#0ea5e9)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.75rem', position:'relative', zIndex:4 }}>
+            <div className="bp-ping" style={{ position:'absolute', inset:-4, borderRadius:'50%', border:'2px solid rgba(59,130,246,0.55)' }} />
+            📊
+          </div>
+
+          {/* Orbit 1 — 3 icons */}
+          {[{cls:'bp-orb1',i:'💰'},{cls:'bp-orb1-d1',i:'📈'},{cls:'bp-orb1-d2',i:'🏦'}].map(({cls,i})=>(
+            <div key={cls} className={cls} style={{ position:'absolute', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(10,18,40,0.9)', border:'1px solid rgba(99,179,237,0.55)', boxShadow:'0 2px 14px rgba(29,78,216,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.9rem' }}>{i}</div>
+            </div>
+          ))}
+
+          {/* Orbit 2 — 4 label badges */}
+          {[{cls:'bp-orb2',t:'PESTEL',c:'#10b981'},{cls:'bp-orb2-d1',t:'Porter',c:'#3b82f6'},{cls:'bp-orb2-d2',t:'SWOT',c:'#f0b429'},{cls:'bp-orb2-d3',t:'DCF',c:'#a78bfa'}].map(({cls,t,c})=>(
+            <div key={cls} className={cls} style={{ position:'absolute', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ padding:'3px 9px', borderRadius:20, background:`${c}22`, border:`1px solid ${c}55`, fontSize:'0.62rem', fontWeight:800, color:c, whiteSpace:'nowrap' }}>{t}</div>
+            </div>
+          ))}
+
+          {/* Orbit 3 — 3 mini metric cards */}
+          {[{cls:'bp-orb3',a:'TAM/SAM',b:'Marché'},{cls:'bp-orb3-d1',a:'Unit Eco',b:'CAC/LTV'},{cls:'bp-orb3-d2',a:'Series A',b:'VC-grade'}].map(({cls,a,b})=>(
+            <div key={cls} className={cls} style={{ position:'absolute', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ padding:'4px 9px', borderRadius:8, background:'rgba(10,18,40,0.88)', border:'1px solid rgba(59,130,246,0.28)', backdropFilter:'blur(6px)', fontSize:'0.58rem', lineHeight:1.45, whiteSpace:'nowrap', textAlign:'center' }}>
+                <div style={{ fontWeight:700, color:'#93c5fd' }}>{a}</div>
+                <div style={{ color:'rgba(255,255,255,0.42)' }}>{b}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Bottom stat bar */}
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:2, display:'flex', borderTop:'1px solid rgba(255,255,255,0.07)', background:'rgba(5,12,30,0.6)', backdropFilter:'blur(8px)' }}>
+          {[{n:'10',l:'Sections stratégiques'},{n:'3',l:'Scénarios financiers'},{n:'12',l:'Slides Pitch Deck'},{n:'100%',l:'Conforme OHADA'}].map(({n,l},i)=>(
+            <div key={i} style={{ flex:1, padding:'11px 8px', borderRight:i<3?'1px solid rgba(255,255,255,0.07)':'none', textAlign:'center' }}>
+              <div style={{ fontSize:'1.1rem', fontWeight:900, color:'#93c5fd', lineHeight:1 }}>{n}</div>
+              <div style={{ fontSize:'0.6rem', color:'rgba(255,255,255,0.4)', marginTop:3, fontWeight:500 }}>{l}</div>
+            </div>
+          ))}
         </div>
       </div>
 
+      {/* ── Loading bar sticky en haut (visible même après scroll) */}
+      {loading && (
+        <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:9998, pointerEvents:'none' }}>
+          <div style={{ height:3, background:'linear-gradient(90deg,#3b82f6,#f0b429,#10b981)', backgroundSize:'200% 100%', width:`${Math.max(progress,5)}%`, transition:'width 0.4s ease', animation: progress < 100 ? 'bpShimmer 2s linear infinite' : 'none' }} />
+        </div>
+      )}
+
       {/* Élite Progress */}
-            {loading && (
-        <div style={themed({
-          background: 'bg-card',
-          border: '1px solid border',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '20px',
-          textAlign: 'center'
-        })}>
-                    <div style={themed({ 
-            width: '50px', 
-            height: '50px', 
-            border: '4px solid border', 
-            borderTopColor: 'gold', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          })} />
-                    <h3 style={themed({ color: 'text-primary', marginBottom: '8px', fontSize: '1.1rem' })}>Génération Élite en cours...</h3>
-                    <p style={themed({ color: 'text-secondary', marginBottom: '12px' })}>{loadingStep}</p>
-                    <div style={themed({ 
-            height: '6px', 
-            background: 'bg-secondary', 
-            borderRadius: '4px', 
-            overflow: 'hidden',
-            marginBottom: '8px'
-          })}>
-                        <div style={themed({ 
-              height: '100%', 
-              background: 'linear-gradient(90deg, var(--gold), var(--accent))', 
-              width: `${progress}%`,
-              transition: 'width 0.3s ease'
-            })} />
+      {loading && (
+        <div style={{ background:'rgba(15,23,42,0.96)', border:'1px solid rgba(59,130,246,0.3)', borderRadius:16, padding:'20px 24px', marginBottom:20, display:'flex', alignItems:'center', gap:18, backdropFilter:'blur(12px)', boxShadow:'0 8px 32px rgba(0,0,0,0.3)' }}>
+          <div style={{ width:44, height:44, border:'3px solid rgba(59,130,246,0.25)', borderTopColor:'#3b82f6', borderRadius:'50%', animation:'spin 0.8s linear infinite', flexShrink:0 }} />
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ color:'#e2e8f0', fontWeight:700, fontSize:'0.95rem', marginBottom:6 }}>
+              Génération en cours… <span style={{ color:'#3b82f6' }}>{progress}%</span>
+            </div>
+            <div style={{ color:'rgba(148,163,184,0.85)', fontSize:'0.8rem', marginBottom:8, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{loadingStep || 'Initialisation...'}</div>
+            <div style={{ height:4, background:'rgba(59,130,246,0.12)', borderRadius:4, overflow:'hidden' }}>
+              <div style={{ height:'100%', background:'linear-gradient(90deg,#3b82f6,#f0b429)', width:`${Math.max(progress,2)}%`, transition:'width 0.4s ease', borderRadius:4 }} />
+            </div>
           </div>
-                    <div style={themed({ color: 'text-muted', fontSize: '0.85rem' })}>{progress}% complété</div>
+          <div style={{ flexShrink:0, textAlign:'center' }}>
+            <div style={{ fontSize:'1.3rem', fontWeight:900, color:'#93c5fd' }}>{Math.round(progress / (100 / totalSections)) || 0}<span style={{ color:'rgba(148,163,184,0.5)', fontSize:'0.8rem', fontWeight:400 }}>/{totalSections}</span></div>
+            <div style={{ fontSize:'0.6rem', color:'rgba(148,163,184,0.5)', marginTop:2 }}>sections</div>
+          </div>
         </div>
       )}
 
       {/* Élite Error */}
-            {error && (
+      {error && (
         <div style={themed({
           background: 'rgba(239, 68, 68, 0.08)',
           border: '1px solid rgba(239, 68, 68, 0.3)',
           borderRadius: '12px',
-          padding: '16px',
+          padding: '14px 18px',
           marginBottom: '20px',
-          color: '#EF4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
         })}>
-          <strong>Erreur:</strong> {error}
+          <span style={{ fontSize: '1.3rem' }}>⚠️</span>
+          <span style={{ color: '#EF4444', flex: 1, fontSize: '0.9rem' }}>{error}</span>
+          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: '#FCA5A5', cursor: 'pointer', fontSize: '1.1rem', padding: '0 4px' }}>✕</button>
         </div>
       )}
 
@@ -1579,206 +1555,106 @@ export default function BusinessPlanEliteSimple() {
           )}
         </div>
         
-        {/* Élite Form */}
-                <div style={themed({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' })}>
-          <div>
-                        <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>Nom de l'entreprise *</label>
-            <input
-              type="text"
-              value={form.nom}
-              onChange={(e) => patch('nom', e.target.value)}
-                            style={themed({
-                width: '100%',
-                padding: '12px',
-                background: 'bg-secondary',
-                border: '1px solid border',
-                borderRadius: '8px',
-                color: 'text-primary',
-                fontSize: '1rem'
-              })}
-              placeholder="Ex: ABAWI Tech"
-            />
+        {/* Élite Form — Grouped sections */}
+        <div style={themed({ marginBottom: '28px' })}>
+          {/* Group 1 — Identity */}
+          <div style={themed({ fontSize: '0.72rem', color: ACCENT, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: 8 })}>
+            <span style={{ width: 3, height: 14, background: ACCENT, borderRadius: 2, display: 'inline-block' }} />
+            Identité
           </div>
-          
-          <div>
-                        <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>Secteur *</label>
-            <input
-              type="text"
-              value={form.secteur}
-              onChange={(e) => patch('secteur', e.target.value)}
-                            style={themed({
-                width: '100%',
-                padding: '12px',
-                background: 'bg-secondary',
-                border: '1px solid border',
-                borderRadius: '8px',
-                color: 'text-primary',
-                fontSize: '1rem'
-              })}
-              placeholder="Ex: Fintech / EdTech / HealthTech"
-            />
+          <div style={themed({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '20px' })}>
+            {[
+              { key: 'nom', label: 'Nom de l\'entreprise *', placeholder: 'Ex: ABAWI Tech' },
+              { key: 'secteur', label: 'Secteur *', placeholder: 'Fintech / EdTech / HealthTech' },
+              { key: 'pays', label: 'Pays / Région', placeholder: "Sénégal / Afrique de l'Ouest" },
+              { key: 'stade', label: 'Stade', placeholder: 'Startup / Croissance / Scale-up' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '6px', fontWeight: 600, fontSize: '0.82rem' })}>{f.label}</label>
+                <input type="text" value={form[f.key]} onChange={e => patch(f.key, e.target.value)}
+                  style={themed({ width: '100%', padding: '10px 12px', background: 'bg-secondary', border: `1px solid ${form[f.key] ? ACCENT + '50' : 'var(--border)'}`, borderRadius: '9px', color: 'text-primary', fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box' })}
+                  placeholder={f.placeholder} />
+              </div>
+            ))}
           </div>
-          
-          <div>
-                        <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>Pays/Région</label>
-            <input
-              type="text"
-              value={form.pays}
-              onChange={(e) => patch('pays', e.target.value)}
-                            style={themed({
-                width: '100%',
-                padding: '12px',
-                background: 'bg-secondary',
-                border: '1px solid border',
-                borderRadius: '8px',
-                color: 'text-primary',
-                fontSize: '1rem'
-              })}
-              placeholder="Ex: Sénégal / Afrique de l'Ouest"
-            />
+          {/* Group 2 — Product */}
+          <div style={themed({ fontSize: '0.72rem', color: GREEN, fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: 8 })}>
+            <span style={{ width: 3, height: 14, background: GREEN, borderRadius: 2, display: 'inline-block' }} />
+            Offre & Marché
           </div>
-          
-          <div>
-                        <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>Mission</label>
-            <input
-              type="text"
-              value={form.mission}
-              onChange={(e) => patch('mission', e.target.value)}
-                            style={themed({
-                width: '100%',
-                padding: '12px',
-                background: 'bg-secondary',
-                border: '1px solid border',
-                borderRadius: '8px',
-                color: 'text-primary',
-                fontSize: '1rem'
-              })}
-              placeholder="Mission de l'entreprise"
-            />
-          </div>
-          
-          <div>
-                        <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>Produit/Service</label>
-            <input
-              type="text"
-              value={form.produit}
-              onChange={(e) => patch('produit', e.target.value)}
-                            style={themed({
-                width: '100%',
-                padding: '12px',
-                background: 'bg-secondary',
-                border: '1px solid border',
-                borderRadius: '8px',
-                color: 'text-primary',
-                fontSize: '1rem'
-              })}
-              placeholder="Description du produit/service"
-            />
-          </div>
-          
-          <div>
-                        <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>Cible Client</label>
-            <input
-              type="text"
-              value={form.cible}
-              onChange={(e) => patch('cible', e.target.value)}
-                            style={themed({
-                width: '100%',
-                padding: '12px',
-                background: 'bg-secondary',
-                border: '1px solid border',
-                borderRadius: '8px',
-                color: 'text-primary',
-                fontSize: '1rem'
-              })}
-              placeholder="Client cible"
-            />
+          <div style={themed({ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '20px' })}>
+            {[
+              { key: 'produit', label: 'Produit / Service', placeholder: 'Description de l\'offre principale' },
+              { key: 'cible', label: 'Cible Client', placeholder: 'PME, particuliers, B2B, B2C...' },
+              { key: 'mission', label: 'Mission', placeholder: 'Raison d\'être de l\'entreprise' },
+              { key: 'investissement', label: 'Besoin Investissement', placeholder: 'Ex: 50 000 000 FCFA' },
+            ].map(f => (
+              <div key={f.key}>
+                <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '6px', fontWeight: 600, fontSize: '0.82rem' })}>{f.label}</label>
+                <input type="text" value={form[f.key]} onChange={e => patch(f.key, e.target.value)}
+                  style={themed({ width: '100%', padding: '10px 12px', background: 'bg-secondary', border: `1px solid ${form[f.key] ? GREEN + '50' : 'var(--border)'}`, borderRadius: '9px', color: 'text-primary', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' })}
+                  placeholder={f.placeholder} />
+              </div>
+            ))}
           </div>
         </div>
 
         {/* Élite File Upload */}
-                <div style={themed({ marginBottom: '24px' })}>
-          <label style={themed({ display: 'block', color: 'text-secondary', marginBottom: '8px', fontWeight: 600 })}>
-            Documents de référence (optionnel)
-          </label>
-                    <div style={themed({
-            border: '2px dashed border',
-            borderRadius: '12px',
-            padding: '32px',
-            textAlign: 'center',
-            background: 'bg-secondary',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease'
-          })}>
-            <input
-              type="file"
-              multiple
-              onChange={(e) => importFiles(e.target.files)}
-              style={{ display: 'none' }}
-              id="file-upload"
-            />
-            <label htmlFor="file-upload" style={{ cursor: 'pointer' }}>
-                            <div style={themed({ fontSize: '3rem', marginBottom: '16px' })}>📤</div>
-                            <div style={themed({ color: 'text-primary', fontWeight: 600, marginBottom: '8px' })}>
-                {uploadLoading ? 'Traitement...' : 'Glissez les fichiers ou cliquez pour uploader'}
-              </div>
-                            <div style={themed({ color: 'text-muted', fontSize: '0.9rem' })}>
-                PDF, DOC, XLS acceptés — Maximum 10 MB
-              </div>
-            </label>
+        <div style={themed({ marginBottom: '24px' })}>
+          <div style={themed({ fontSize: '0.72rem', color: 'var(--accent3)', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: 8 })}>
+            <span style={{ width: 3, height: 14, background: 'var(--accent3)', borderRadius: 2, display: 'inline-block' }} />
+            Documents de référence <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optionnel)</span>
           </div>
-                    {uploadedFiles.length > 0 && (
-            <div style={themed({ marginTop: '16px' })}>
-                            <div style={themed({ color: 'text-secondary', fontSize: '0.9rem', marginBottom: '8px' })}>
-                Fichiers uploadés: {uploadedFiles.length}
+          <label htmlFor="file-upload" style={themed({
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+            border: `2px dashed ${uploadedFiles.length ? 'var(--accent3)' : 'var(--border)'}`,
+            borderRadius: '12px', padding: '24px 16px', textAlign: 'center',
+            background: uploadedFiles.length ? 'rgba(var(--accent3-rgb,139,92,246),0.05)' : 'bg-secondary',
+            cursor: 'pointer', transition: 'all 0.2s'
+          })}>
+            <input type="file" multiple onChange={(e) => importFiles(e.target.files)} style={{ display: 'none' }} id="file-upload" />
+            <span style={{ fontSize: '1.8rem' }}>{uploadLoading ? '⏳' : uploadedFiles.length ? '✅' : '📂'}</span>
+            <span style={themed({ color: uploadedFiles.length ? 'var(--accent3)' : 'text-secondary', fontWeight: 600, fontSize: '0.88rem' })}>
+              {uploadLoading ? 'Extraction en cours...' : uploadedFiles.length ? `${uploadedFiles.length} fichier(s) chargé(s)` : 'Glissez ou cliquez — PDF, DOCX, XLS'}
+            </span>
+            {uploadedFiles.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', marginTop: 4 }}>
+                {uploadedFiles.map((f, i) => (
+                  <span key={i} style={themed({ padding: '2px 8px', background: 'var(--bg-primary)', borderRadius: 999, fontSize: '0.72rem', color: 'text-secondary', border: '1px solid var(--border)' })}>📎 {f.name.slice(0, 20)}{f.name.length > 20 ? '…' : ''}</span>
+                ))}
               </div>
-              {uploadedFiles.map((file, i) => (
-                                <div key={i} style={themed({ 
-                  padding: '8px 12px', 
-                  background: 'bg-secondary', 
-                  borderRadius: '6px', 
-                  marginBottom: '4px',
-                  color: 'text-secondary',
-                  fontSize: '0.85rem'
-                })}>
-                  📎 {file.name}
-                </div>
-              ))}
-            </div>
-          )}
+            )}
+          </label>
+          <div style={themed({ fontSize: '0.72rem', color: 'text-muted', marginTop: 6 })}>
+            ℹ️ Les 8 000 premiers caractères seront utilisés comme contexte. Résumés, études de marché, CV équipe conseillés.
+          </div>
         </div>
 
         {/* Élite Sections Selection */}
-                <div style={themed({ marginBottom: '24px' })}>
-          <h3 style={themed({ color: 'text-primary', marginBottom: '16px' })}>Sections à générer</h3>
-          <div style={themed({ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '12px' 
-          })}>
+        <div style={themed({ marginBottom: '24px' })}>
+          <div style={themed({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' })}>
+            <div style={themed({ fontSize: '0.72rem', color: 'text-secondary', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase' })}>
+              Sections à générer ({SECTIONS.filter(s => enabled[s.id]).length}/{SECTIONS.length})
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => setEnabled(Object.fromEntries(SECTIONS.map(s => [s.id, true])))} style={themed({ padding: '3px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: ACCENT, cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 })}>Tout</button>
+              <button onClick={() => setEnabled(Object.fromEntries(SECTIONS.map(s => [s.id, false])))} style={themed({ padding: '3px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'text-secondary', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700 })}>Aucun</button>
+            </div>
+          </div>
+          <div style={themed({ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(185px, 1fr))', gap: '8px' })}>
             {SECTIONS.map(section => (
-                            <label key={section.id} style={themed({ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px', 
-                padding: '16px',
-                background: 'bg-secondary',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                border: enabled[section.id] ? `2px solid ${section.color}` : '2px solid transparent',
-                transition: 'all 0.3s ease'
+              <label key={section.id} style={themed({
+                display: 'flex', alignItems: 'center', gap: '10px', padding: '11px 14px',
+                background: enabled[section.id] ? section.color + '12' : 'bg-secondary',
+                borderRadius: '10px', cursor: 'pointer',
+                border: `1.5px solid ${enabled[section.id] ? section.color + '60' : 'var(--border)'}`,
+                transition: 'all 0.18s'
               })}>
-                <input
-                  type="checkbox"
-                  checked={enabled[section.id]}
+                <input type="checkbox" checked={enabled[section.id]}
                   onChange={() => setEnabled(prev => ({ ...prev, [section.id]: !prev[section.id] }))}
-                  style={{ accentColor: section.color }}
-                />
-                <div>
-                                    <div style={themed({ color: 'text-primary', fontWeight: 600 })}>{section.icon} {section.label}</div>
-                                    <div style={themed({ color: 'text-muted', fontSize: '0.8rem' })}>
-                    {section.id === 'slides' ? 'Slides investor' : 'Section complète'}
-                  </div>
+                  style={{ accentColor: section.color, width: 15, height: 15 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={themed({ color: enabled[section.id] ? section.color : 'text-primary', fontWeight: 700, fontSize: '0.82rem' })}>{section.icon} {section.label}</div>
                 </div>
               </label>
             ))}
@@ -1786,22 +1662,23 @@ export default function BusinessPlanEliteSimple() {
         </div>
 
         {/* Élite Actions */}
-                <div style={themed({ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' })}>
+        <div style={themed({ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' })}>
           <button
             onClick={generate}
             disabled={loading}
             title={!form.nom || !form.secteur ? 'Astuce : remplir Nom et Secteur produit des résultats plus précis' : ''}
-                        style={themed({
-              padding: '16px 32px',
-              background: loading ? 'text-muted' : 'linear-gradient(135deg, #F0B429, #F59E0B)',
+            style={themed({
+              padding: '14px 28px',
+              background: loading ? 'var(--text-muted)' : 'linear-gradient(135deg, #F0B429, #F59E0B)',
               color: '#0A0A0A',
               border: 'none',
               borderRadius: '12px',
-              fontSize: '1.05rem',
+              fontSize: '0.95rem',
               fontWeight: 800,
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s ease',
-              boxShadow: '0 4px 20px rgba(240, 180, 41, 0.3)'
+              boxShadow: loading ? 'none' : '0 4px 20px rgba(240, 180, 41, 0.35)',
+              opacity: loading ? 0.7 : 1
             })}
           >
             {loading ? `⏳ Génération... ${progress}%` : '🚀 Générer Business Plan Élite'}
@@ -1845,35 +1722,55 @@ export default function BusinessPlanEliteSimple() {
             padding: '32px',
             marginBottom: '32px'
           })}>
-                        <h2 style={themed({ color: 'text-primary', marginBottom: '24px' })}>Résultats Élite</h2>
-            
+          <div style={themed({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: 10 })}>
+            <h2 style={themed({ color: 'text-primary', margin: 0, fontSize: '1.2rem', fontWeight: 800 })}>
+              📋 Résultats — {SECTIONS.filter(s => results[s.id] && !results[s.id].error).length}/{SECTIONS.filter(s => results[s.id]).length} sections
+            </h2>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {SECTIONS.some(s => results[s.id]?.error) && (
+                <button
+                  onClick={async () => {
+                    const failedIds = SECTIONS.filter(s => results[s.id]?.error).map(s => s.id)
+                    for (const id of failedIds) {
+                      await retrySection(id)
+                      if (failedIds.indexOf(id) < failedIds.length - 1) {
+                        await new Promise(r => setTimeout(r, 2000))
+                      }
+                    }
+                  }}
+                  style={themed({ padding: '8px 16px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', color: '#FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' })}
+                >
+                  ⟳ Réessayer les {SECTIONS.filter(s => results[s.id]?.error).length} section(s) échouée(s)
+                </button>
+              )}
+            </div>
+          </div>
+
             {/* Élite Tabs */}
-                        <div style={themed({ 
-              display: 'flex', 
-              gap: '8px', 
-              marginBottom: '24px',
-              borderBottom: '2px solid border',
-              paddingBottom: '0px'
-            })}>
-              {SECTIONS.filter(s => results[s.id]).map(section => (
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap', borderBottom: '2px solid var(--border)', paddingBottom: 0 }}>
+              {SECTIONS.filter(s => results[s.id]).map(section => {
+                const hasError = results[section.id]?.error
+                return (
                 <button
                   key={section.id}
                   onClick={() => setActiveTab(section.id)}
-                                    style={themed({
-                    padding: '12px 20px',
+                  style={themed({
+                    padding: '10px 18px',
                     background: activeTab === section.id ? section.color + '20' : 'transparent',
-                    color: activeTab === section.id ? section.color : 'text-muted',
+                    color: hasError ? '#EF4444' : activeTab === section.id ? section.color : 'text-muted',
                     border: 'none',
                     borderRadius: '8px 8px 0 0',
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    borderBottom: activeTab === section.id ? `2px solid ${section.color}` : '2px solid transparent'
+                    transition: 'all 0.2s',
+                    borderBottom: activeTab === section.id ? `2px solid ${hasError ? '#EF4444' : section.color}` : '2px solid transparent'
                   })}
                 >
-                  {section.icon} {section.label}
+                  {hasError ? '⚠️' : section.icon} {section.label}
                 </button>
-              ))}
+                )
+              })}
             </div>
 
             {/* Élite Tab Content */}
@@ -1885,6 +1782,7 @@ export default function BusinessPlanEliteSimple() {
                   result={results[section.id]}
                   enabled={enabled[section.id]}
                   onToggle={(id) => setEnabled(prev => ({ ...prev, [id]: !prev[id] }))}
+                  onRetry={retrySection}
                   accent={section.color}
                   c={section.color}
                   themed={themed}

@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useThemedStyles } from '../../hooks/useThemedStyles';
+import ToolInfoPanel from '../../components/ToolInfoPanel'
+import ToolHero from '../../components/ToolHero';
 import './FinanceEliteSimple.css'
 import { exportToPDF } from '../../lib/generatePDF'
 import { exportExcel as exportToExcel } from '../../lib/generatePDF'
@@ -9,6 +11,8 @@ import { useWorkspace } from '../../hooks/useWorkspace'
 import { useBackgroundJob } from '../../hooks/useBackgroundJob'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
 import { useToolAccess } from '../../hooks/useToolAccess'
+import ToolAccessHeader from '../../components/ToolAccessHeader'
+import TokenCounter from '../../components/TokenCounter'
 
 import { callGroq as groqCall } from '../../lib/groqClient'
 import { buildSystemPrompt } from '../../lib/writingModes'
@@ -421,13 +425,48 @@ export default function FinanceEliteSimple() {
         title="Finance Élite — Analyse financière OHADA / BCEAO"
         description="Analyse financière complète conforme OHADA/SYSCOHADA : ratios, valorisation DCF, score crédit, bilan, compte de résultat, trésorerie. Rapport IA exportable PDF/Excel."
         keywords="analyse financière OHADA, SYSCOHADA, ratios financiers, valorisation DCF, score crédit BCEAO, bilan, compte de résultat, trésorerie, UEMOA"
-      />
+       image="/og-tools/finance.jpg"/>
       <main className="finance-elite-main">
-        {/* Header */}
-        <header className="finance-elite-header">
-          <h1 className="finance-elite-title">Finance Élite</h1>
-          <p className="finance-elite-subtitle">Analyse financière avancée CFA avec modèles OHADA et évaluation DCF</p>
-        </header>
+        <ToolHero
+          icon="📊"
+          badge="Analyse financière · OHADA"
+          title="Finance"
+          titleAccent="Élite"
+          subtitle="Ratios OHADA, valorisation DCF, score crédit BCEAO, rapport IA exportable PDF/Excel."
+          gradient="linear-gradient(135deg, #052e16 0%, #166534 45%, #16a34a 100%)"
+          glowColor="rgba(22,163,74,0.4)"
+          accentColor="#6EE7B7"
+          stats={[['📈','Ratios OHADA'],['💡','Valorisation DCF'],['🏦','Score crédit BCEAO'],['📄','Export PDF/Excel']]}
+        />
+
+        <ToolAccessHeader toolAccess={tool} toolName="Finance Élite" />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '0 0 8px' }}>
+          <TokenCounter />
+        </div>
+        <ToolInfoPanel
+          toolName="Finance Élite"
+          icon="📊"
+          description="Analyse financière complète conforme OHADA/SYSCOHADA avec ratios, valorisation DCF et score crédit IA"
+          benefits={[
+            'Saisissez votre compte de résultat, bilan et trésorerie dans un formulaire guidé',
+            'Obtenez automatiquement tous les ratios clés (rentabilité, liquidité, solvabilité) selon les normes OHADA',
+            'Générez un rapport IA expert signé CFA avec recommandations actionnables',
+            'Calculez la valorisation DCF et le score crédit pour vos dossiers bancaires',
+            'Exportez le rapport complet en PDF ou Excel pour vos auditeurs ou investisseurs',
+          ]}
+          howToUse={[
+            'Renseignez les informations de votre entreprise (secteur, forme juridique, effectif)',
+            'Saisissez les données de votre compte de résultat et de votre bilan',
+            'Complétez le tableau de trésorerie pour l\'analyse de liquidité',
+            'Cliquez sur « Générer le rapport IA » pour l\'analyse experte automatisée',
+            'Téléchargez le rapport PDF/Excel et partagez-le avec vos parties prenantes',
+          ]}
+          tips={[
+            'Vérifiez que l\'actif total = passif total avant de générer le rapport',
+            'La section « Risques » identifie les signaux d\'alerte spécifiques à votre secteur',
+            'Utilisez l\'analyse crédit pour préparer un dossier de financement bancaire solide',
+          ]}
+        />
 
         {/* Navigation */}
         <nav className="finance-elite-nav">
@@ -919,7 +958,7 @@ export default function FinanceEliteSimple() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-secondary)', borderRadius: 12 }}>
                   <thead>
-                    <tr style={{ background: '#0D1117' }}>
+                    <tr style={{ background: 'var(--bg-secondary)' }}>
                       <th style={{ padding: 16, textAlign: 'left', color: 'var(--text-secondary)', fontWeight: 600 }}>Risque</th>
                       <th style={{ padding: 16, textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>Probabilité</th>
                       <th style={{ padding: 16, textAlign: 'center', color: 'var(--text-secondary)', fontWeight: 600 }}>Impact</th>

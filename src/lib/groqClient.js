@@ -2,13 +2,14 @@ import { resolveRuntimeApiKey } from './runtimeApiKeys'
 
 const DEFAULT_GROQ_BASE_URL = 'https://api.groq.com/openai/v1'
 const DEFAULT_GROQ_MODEL = 'llama-3.3-70b-versatile'
-const GROQ_MODEL_FALLBACKS = ['llama-3.1-8b-instant', 'mixtral-8x7b-32768']
+const GROQ_MODEL_FALLBACKS = ['llama-3.1-8b-instant', 'gemma2-9b-it']
 
 // Détecte les valeurs masquées par Netlify Secrets Scanner ou autre middleware
 // (ex: "****************tile" au lieu de "llama-3.3-70b-versatile")
+const PLACEHOLDERS = new Set(['undefined', 'null', '', 'your_key_here', 'xxx', '***', 'sk-', 'gsk-'])
 function isMaskedValue(v) {
   if (!v || typeof v !== 'string') return true
-  return /\*{4,}/.test(v) || v.trim() === ''
+  return /\*{4,}/.test(v) || v.trim() === '' || PLACEHOLDERS.has(v.trim().toLowerCase())
 }
 function safeEnv(value, fallback) {
   return isMaskedValue(value) ? fallback : value
@@ -72,14 +73,38 @@ function getGroqBrowserKey() {
 
 function normalizeError(status, text = '') {
   const upperText = String(text || '').toUpperCase()
-  if (status === 401) return new Error('INVALID_KEY')
-  if (status === 403) return new Error('INVALID_KEY')
+  if (status === 401 || status === 403) {
+    return new Error('Clé API invalide. Vérifiez la variable d’environnement GROQ_API_KEY (ou VITE_GROQ_API_KEY / VITE_GROK_LLAMA_API_KEY) dans le dashboard Netlify, ou ajoutez une clé valide dans Paramètres > Clés API.')
+  }
   if (status === 429) return new Error('RATE_LIMIT')
   if (status === 413) return new Error('REQUEST_TOO_LARGE')
-  if (status === 400 && upperText.includes('MESSAGE')) return new Error('INVALID_PROMPT')
+  // Context / token length errors — check broad set of Groq error message variants
+  if (status === 400 && (
+    upperText.includes('CONTEXT_LENGTH') ||
+    upperText.includes('TOO_LARGE') ||
+    upperText.includes('TOO LARGE') ||
+    upperText.includes('REDUCE THE LENGTH') ||
+    upperText.includes('TOKENS_LIMIT') ||
+    upperText.includes('MAXIMUM CONTEXT') ||
+    upperText.includes('CONTEXT WINDOW') ||
+    upperText.includes('MAX_TOKENS')
+  )) return new Error('REQUEST_TOO_LARGE')
+  // Rate-limit returned as 400 by some providers
+  if (status === 400 && (upperText.includes('RATE_LIMIT') || upperText.includes('RATE LIMIT') || upperText.includes('TOO MANY'))) return new Error('RATE_LIMIT')
   if (status === 404 && (upperText.includes('MODEL') || upperText.includes('MODELS/'))) return new Error('MODEL_NOT_FOUND')
   if (status === 500 && upperText.includes('NOT CONFIGURED')) return new Error('NO_KEY')
   if (status >= 500) return new Error('GROQ_UPSTREAM_ERROR')
+  // json_object mode: "requires the word 'json' in the user message"
+  if (status === 400 && (
+    upperText.includes('REQUIRED WORD') ||
+    upperText.includes('TOOL_USE_FAILED') ||
+    upperText.includes('MESSAGES REQUIRED') ||
+    upperText.includes('JSON_MODE') ||
+    upperText.includes("REQUIRES THE WORD") ||
+    upperText.includes('RESPONSE_FORMAT')
+  )) return new Error('INVALID_PROMPT')
+  // Generic 400 — treat as transient so withRetry can handle it
+  if (status === 400) return new Error(`HTTP_400:${text ? text.slice(0, 120) : ''}`)
   return new Error(`HTTP_${status}${text ? `:${text.slice(0, 80)}` : ''}`)
 }
 
@@ -91,9 +116,9 @@ async function withRetry(fn, attempts = 3) {
     } catch (e) {
       lastErr = e
       const code = String(e?.message || '')
-      const transient = code.includes('RATE_LIMIT') || code.includes('UPSTREAM_ERROR') || code.includes('HTTP_5')
+      const transient = code.includes('RATE_LIMIT') || code.includes('UPSTREAM_ERROR') || code.includes('HTTP_5') || code.startsWith('HTTP_400')
       if (!transient || i === attempts - 1) break
-      await new Promise((r) => setTimeout(r, 1200 * (i + 1)))
+      await new Promise((r) => setTimeout(r, 1500 * (i + 1)))
     }
   }
   throw lastErr
@@ -273,7 +298,7 @@ export async function callGroqJSON(promptOrMessages, options = {}) {
   try {
     return JSON.parse(raw)
   } catch {
-    const match = raw.match(/[\[{][\s\S]*[\]}]/)
+    const match = raw.match(/[{[][\s\S]*[}\]]/)
     if (match) { try { return JSON.parse(match[0]) } catch { /* ignore */ } }
     return null
   }

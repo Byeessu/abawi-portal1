@@ -18,13 +18,22 @@ export default function CommunitiesPanel({ onClose, onSelectCommunity }) {
 
   useEffect(() => {
     loadCommunities();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadCommunities() {
     setLoading(true);
     const { data: all } = await supabase.from('communities').select('*').eq('is_public', true).order('created_at', { ascending: false });
     const { data: memberships } = await supabase.from('community_members').select('community_id').eq('user_id', membre?.id);
-    if (all) setCommunities(all);
+    if (all) {
+      // Enrich with member count and message count
+      const enriched = await Promise.all(all.map(async c => {
+        const { count: memberCount } = await supabase.from('community_members').select('*', { count: 'exact', head: true }).eq('community_id', c.id);
+        const { count: msgCount } = await supabase.from('community_messages').select('*', { count: 'exact', head: true }).eq('community_id', c.id);
+        return { ...c, memberCount: memberCount || 0, msgCount: msgCount || 0 };
+      }));
+      setCommunities(enriched);
+    }
     if (memberships) setJoined(memberships.map(m => m.community_id));
     setLoading(false);
   }
@@ -104,6 +113,10 @@ export default function CommunitiesPanel({ onClose, onSelectCommunity }) {
                 <div className="abv-community-info">
                   <div className="abv-community-name">{c.name}</div>
                   <div className="abv-community-desc">{c.description || 'Pas de description'}</div>
+                  <div className="abv-community-stats">
+                    <span>👥 {c.memberCount || 0} membre{(c.memberCount || 0) > 1 ? 's' : ''}</span>
+                    <span>💬 {c.msgCount || 0} message{(c.msgCount || 0) > 1 ? 's' : ''}</span>
+                  </div>
                 </div>
                 <div className="abv-community-actions">
                   {isJoined ? (

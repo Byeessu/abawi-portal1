@@ -1,8 +1,14 @@
 import './MentionsLegales.css'
+import SEO from '../components/SEO'
 
 function CGU() {
   return (
     <main className="ml-page">
+      <SEO
+        title="Conditions Générales d'Utilisation — ABAWI"
+        description="Conditions générales d'utilisation du portail ABAWI. Règles d'accès, propriété intellectuelle, responsabilités et modalités de service."
+        noindex={false}
+      />
       <h1 className="ml-title">Conditions générales d'utilisation</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
         Dernière mise à jour : avril 2026

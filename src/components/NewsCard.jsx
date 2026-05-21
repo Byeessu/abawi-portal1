@@ -11,7 +11,7 @@ export default function NewsCard({ article, featured = false }) {
   if (featured) {
     return (
       <Link to={`/news/${slug}`} className="news-featured-card" style={{ textDecoration: 'none' }}>
-        <img src={visual} alt={article.ti} className="news-featured-img" loading="eager" />
+        <img src={visual} alt={article.ti} className="news-featured-img" loading="eager" decoding="async" />
         <div className="news-featured-overlay" />
         <div className="news-featured-body">
           <div className="news-featured-tag" style={{ background: ts.bg, color: ts.text }}>{article.tag || 'Actualité'}</div>
@@ -19,8 +19,8 @@ export default function NewsCard({ article, featured = false }) {
           {article.su && <p className="news-featured-excerpt">{article.su}</p>}
           <div className="news-featured-meta">
             {dateStr && <span>{dateStr}</span>}
-            {article.rt && <span>⏱ {article.rt}</span>}
-            <span style={{ color: ts.bg, fontWeight: 800, marginLeft: 'auto' }}>Lire l'article →</span>
+            {article.rt && <span>{article.rt} de lecture</span>}
+            <span style={{ color: ts.bg, fontWeight: 800, marginLeft: 'auto' }}>Lire l article</span>
           </div>
         </div>
       </Link>
@@ -34,10 +34,10 @@ export default function NewsCard({ article, featured = false }) {
       style={{ '--accent-tag': ts.bg }}
     >
       <div className="news-card-img-wrap">
-        <img src={visual} alt={article.ti} loading="lazy" />
+        <img src={visual} alt={article.ti} width={320} height={180} loading="lazy" decoding="async" />
         <div className="news-card-img-gradient" />
         <div className="news-card-img-tag" style={{ background: ts.bg, color: ts.text }}>{article.tag || 'Actualité'}</div>
-        {article.rt && <div className="news-card-img-rt">⏱ {article.rt}</div>}
+        {article.rt && <div className="news-card-img-rt">{article.rt} de lecture</div>}
       </div>
 
       <div className="news-card-body">

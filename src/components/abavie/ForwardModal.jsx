@@ -16,6 +16,7 @@ export default function ForwardModal({ content, fileUrl, onClose, onForward }) {
 
   useEffect(() => {
     loadConversations();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadConversations() {

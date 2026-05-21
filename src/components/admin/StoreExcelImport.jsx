@@ -124,13 +124,13 @@ export default function StoreExcelImport({ onDone, showToast }) {
 
   return (
     <div style={{
-      background: '#0D1117', border: '1px solid #1A2332',
+      background: 'var(--bg-card)', border: '1px solid var(--border)',
       borderRadius: 12, padding: 20, marginBottom: 16,
     }}>
-      <h3 style={{ color: '#F0F2F5', marginTop: 0, marginBottom: 12, fontSize: '1rem', fontWeight: 800 }}>
+      <h3 style={{ color: 'var(--text-primary)', marginTop: 0, marginBottom: 12, fontSize: '1rem', fontWeight: 800 }}>
         📥 Import depuis Excel (WooCommerce)
       </h3>
-      <p style={{ color: '#8B95A5', fontSize: '0.82rem', marginBottom: 14, lineHeight: 1.5 }}>
+      <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: 14, lineHeight: 1.5 }}>
         Sélectionnez un fichier <code>.xlsx</code> au format WooCommerce (colonnes Name, SKU, Categories, Regular price, Images…).
         Les images sont récupérées depuis les URLs indiquées.
       </p>
@@ -141,12 +141,12 @@ export default function StoreExcelImport({ onDone, showToast }) {
           accept=".xlsx,.xls"
           onChange={(e) => { setFile(e.target.files?.[0] || null); setPreview(null) }}
           disabled={busy}
-          style={{ color: '#C8D3E0', fontSize: '0.85rem' }}
+          style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}
         />
         <select value={mode} onChange={(e) => setMode(e.target.value)} disabled={busy} style={{
           padding: '8px 12px', borderRadius: 8,
-          background: '#070B0F', border: '1px solid #1A2332',
-          color: '#F0F2F5', fontSize: '0.82rem',
+          background: 'var(--bg-primary)', border: '1px solid var(--border)',
+          color: 'var(--text-primary)', fontSize: '0.82rem',
         }}>
           <option value="merge">Fusion (upsert par SKU)</option>
           <option value="replace">Remplacer (supprimer tout puis insérer)</option>
@@ -167,27 +167,27 @@ export default function StoreExcelImport({ onDone, showToast }) {
 
       {preview && (
         <div style={{ marginBottom: 14 }}>
-          <div style={{ color: '#22C55E', fontSize: '0.85rem', marginBottom: 8, fontWeight: 700 }}>
+          <div style={{ color: 'var(--green)', fontSize: '0.85rem', marginBottom: 8, fontWeight: 700 }}>
             ✅ {preview.length} produit(s) détecté(s)
           </div>
           <div style={{
             maxHeight: 180, overflowY: 'auto',
-            background: '#070B0F', border: '1px solid #1A2332',
+            background: 'var(--bg-primary)', border: '1px solid var(--border)',
             borderRadius: 8, padding: 8,
           }}>
             {preview.slice(0, 8).map((p, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0', fontSize: '0.78rem', color: '#C8D3E0' }}>
+              <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0', fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
                 {p.image_url ? (
                   <img src={p.image_url} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} onError={(e) => { e.currentTarget.style.display = 'none' }} />
                 ) : (
-                  <span style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#0D1117', borderRadius: 4 }}>💻</span>
+                  <span style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-card)', borderRadius: 4 }}>💻</span>
                 )}
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                <span style={{ color: '#F0B429', fontWeight: 700, whiteSpace: 'nowrap' }}>{p.prix.toLocaleString()} FCFA</span>
+                <span style={{ color: 'var(--gold)', fontWeight: 700, whiteSpace: 'nowrap' }}>{p.prix.toLocaleString()} FCFA</span>
               </div>
             ))}
             {preview.length > 8 && (
-              <div style={{ color: '#64748B', fontSize: '0.72rem', marginTop: 4 }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginTop: 4 }}>
                 … et {preview.length - 8} autres
               </div>
             )}
@@ -211,7 +211,7 @@ export default function StoreExcelImport({ onDone, showToast }) {
           </button>
 
           {progress.errors.length > 0 && (
-            <div style={{ marginTop: 10, color: '#EF4444', fontSize: '0.78rem' }}>
+            <div style={{ marginTop: 10, color: 'var(--red)', fontSize: '0.78rem' }}>
               ⚠️ {progress.errors.length} erreur(s) — consultez la console pour le détail.
             </div>
           )}

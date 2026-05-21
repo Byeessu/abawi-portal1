@@ -166,7 +166,7 @@ export default function MarkdownText({ text, style = {}, compact = false, color 
           color: color || 'var(--text-secondary)',
           lineHeight: 1.4
         }}>
-          {subtitleText}
+          {t}
         </div>
       )
     } else if (/^[-•]\s/.test(t)) {

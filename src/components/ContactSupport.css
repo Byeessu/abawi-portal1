@@ -1,0 +1,14 @@
+.contact-support-fab {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  z-index: 8888;
+}
+
+@media (max-width: 640px) {
+  .contact-support-fab {
+    bottom: 80px;
+    left: 16px;
+    right: auto;
+  }
+}

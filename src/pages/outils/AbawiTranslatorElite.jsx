@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react'
+import SEO from '../../components/SEO'
 import { exportToPDF } from '../../lib/generatePDF'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
 import { groqChatCompletion } from '../../lib/groqClient'
+import { useAuth } from '../../context/AuthContext'
+import { useToolGuard } from '../../hooks/useToolGuard'
+import ToolUpsellModal, { ToolGuardBadge } from '../../components/ToolUpsellModal'
 
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
@@ -70,6 +75,9 @@ ${text}
 }
 
 export default function AbawiTranslatorElite() {
+  const { membre } = useAuth()
+  const guard = useToolGuard('abawi_translator_elite', 'abawi_translator_elite')
+
   const [text, setText] = useState('')
   const [fromLang, setFromLang] = useState('fr')
   const [toLang, setToLang] = useState('en')
@@ -85,7 +93,7 @@ export default function AbawiTranslatorElite() {
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
-  const canRun = useMemo(() => text.trim().length > 0 && !loading, [text, loading])
+  const canRun = useMemo(() => text.trim().length > 0 && !loading && guard.allowed, [text, loading, guard.allowed])
   // Refresh the export date every time a new translation result comes in,
   // even though the body does not directly read `result` — that is by design.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,8 +159,17 @@ export default function AbawiTranslatorElite() {
     URL.revokeObjectURL(url)
   }
 
+  async function checkAccessThen() {
+    const debitResult = await guard.checkAndDebit()
+    if (!debitResult.ok) return false
+    await guard.recordUsage()
+    return true
+  }
+
   async function runTranslation() {
     if (!canRun) return
+    const ok = await checkAccessThen()
+    if (!ok) return
     setLoading(true)
     setError('')
     try {
@@ -174,7 +191,21 @@ export default function AbawiTranslatorElite() {
   }
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px) 80px' }}>
+    <div style={{ maxWidth: '1400px', margin: '0 auto', padding: 'clamp(24px, 4vw, 40px) clamp(16px, 3vw, 32px) 80px' }}>
+      <SEO title="Abawi Translator Elite — Traduction avancée multilingue" description="Traduction et explication exhaustive dans la langue de votre choix. FR, EN, Wolof, Arabe, Espagnol et plus." image="/og-tools/translator-elite.jpg" />
+      <style>{`
+        @media (max-width: 700px) {
+          .at-grid-4 { grid-template-columns: 1fr 1fr !important; }
+          .at-grid-4-alt { grid-template-columns: 1fr 1fr !important; }
+          .at-grid-2 { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 420px) {
+          .at-grid-4, .at-grid-4-alt { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="ABAWI Translator Elite"
         icon="🌐"
@@ -200,6 +231,9 @@ export default function AbawiTranslatorElite() {
           'Le Wolof est en orthographe latine standardisée',
         ]}
       />
+      <div style={{ marginTop: 8 }}>
+        <ToolGuardBadge guard={guard} />
+      </div>
       <div style={{ border: '1px solid var(--border)', background: 'var(--bg-card)', borderRadius: 20, padding: 24, marginBottom: 20 }}>
         <div style={{ display: 'inline-flex', padding: '4px 12px', borderRadius: 999, background: 'var(--gold-glow)', color: 'var(--gold)', fontSize: '0.72rem', fontWeight: 800, marginBottom: 12 }}>
           🧠 ABAWI TRANSLATOR ELITE
@@ -215,7 +249,7 @@ export default function AbawiTranslatorElite() {
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.2fr', gap: 10, marginBottom: 10 }}>
+      <div className="at-grid-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.2fr', gap: 10, marginBottom: 10 }}>
         <select value={fromLang} onChange={(e) => setFromLang(e.target.value)} style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
           {LANGS.map((l) => <option key={l.id} value={l.id}>Depuis: {l.label}</option>)}
         </select>
@@ -231,7 +265,7 @@ export default function AbawiTranslatorElite() {
           ))}
         </select>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10, marginBottom: 12 }}>
+      <div className="at-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 10, marginBottom: 12 }}>
         <select value={translationMode} onChange={(e) => setTranslationMode(e.target.value)} style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}>
           <option value="pro">Mode professionnel</option>
           <option value="official">Mode officiel institutionnel</option>
@@ -243,7 +277,7 @@ export default function AbawiTranslatorElite() {
           style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }}
         />
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.4fr', gap: 10, marginBottom: 12 }}>
+      <div className="at-grid-4-alt" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.4fr', gap: 10, marginBottom: 12 }}>
         <input value={referenceCode} onChange={(e) => setReferenceCode(e.target.value)} placeholder="Référence document" style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
         <input value={authorName} onChange={(e) => setAuthorName(e.target.value)} placeholder="Auteur / Traducteur" style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
         <input value={organizationName} onChange={(e) => setOrganizationName(e.target.value)} placeholder="Organisation" style={{ padding: 10, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)' }} />
@@ -272,13 +306,13 @@ export default function AbawiTranslatorElite() {
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button
-              onClick={() => exportToPDF('translator-official-export', `Traduction-Officielle-${referenceCode}`)}
+              onClick={async () => { const ok = await checkAccessThen(); if (ok) exportToPDF('translator-official-export', `Traduction-Officielle-${referenceCode}`) }}
               style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--gold-border)', background: 'var(--gold-glow)', color: 'var(--gold)', fontWeight: 700, cursor: 'pointer' }}
             >
               Export PDF officiel
             </button>
             <button
-              onClick={exportOfficialWord}
+              onClick={async () => { const ok = await checkAccessThen(); if (ok) exportOfficialWord() }}
               style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontWeight: 700, cursor: 'pointer' }}
             >
               Export Word (.doc)
@@ -383,6 +417,16 @@ export default function AbawiTranslatorElite() {
           </div>
         </div>
       )}
+
+      <ToolUpsellModal
+        isOpen={guard.upsellOpen}
+        config={guard.upsellConfig}
+        onClose={guard.closeUpsell}
+        onUseCredit={async () => {
+          const r = await guard.checkAndDebit()
+          if (r.ok) guard.closeUpsell()
+        }}
+      />
     </div>
   )
 }

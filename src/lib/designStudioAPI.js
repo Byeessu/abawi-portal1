@@ -1,569 +1,257 @@
-// Studio Design API - Extension pour affiches, visuels, maquettes et designs complets
+import { groqChatCompletion } from './groqClient'
 
-import { callClaude } from './claudeClient'
-
-// Types de designs disponibles
 export const DESIGN_TYPES = {
-  LOGO: 'logo',
-  AFFICHE: 'affiche',
+  LOGO:          'logo',
+  AFFICHE:       'affiche',
   VISUEL_RESEAU: 'visuel_reseau',
-  MAQUETTE_WEB: 'maquette_web',
-  CARTE_VISITE: 'carte_visite',
-  BANNIERE: 'banniere',
-  FLYER: 'flyer',
-  BROCHURE: 'brochure',
-  PRESENTATION: 'presentation',
-  PACKAGING: 'packaging'
+  MAQUETTE_WEB:  'maquette_web',
+  CARTE_VISITE:  'carte_visite',
+  BANNIERE:      'banniere',
+  FLYER:         'flyer',
+  BROCHURE:      'brochure',
+  PRESENTATION:  'presentation',
+  PACKAGING:     'packaging',
 }
 
-// Fonction principale de génération de designs
-export async function generateDesign(formData, designType, engine = 'creative') {
-  console.log(`🎨 Génération design - Type: ${designType}, Moteur: ${engine}`)
-  
-  const startTime = Date.now()
-  
-  try {
-    let response
-    
-    switch (engine) {
-      case 'creative':
-        response = await generateDesignCreative(formData, designType)
-        break
-      case 'efficient':
-        response = await generateDesignEfficient(formData, designType)
-        break
-      case 'balanced':
-        response = await generateDesignBalanced(formData, designType)
-        break
-      default:
-        throw new Error('Moteur non reconnu')
-    }
-    
-    response.duration = Date.now() - startTime
-    response.designType = designType
-    response.engine = engine
-    
-    return response
-    
-  } catch (error) {
-    console.error('Erreur génération design:', error)
-    return generateDesignFallback(formData, designType)
+// Dimensions for HTML fallback
+const DIMS = {
+  affiche:       { w: 600, h: 850,  label: 'Affiche A3 portrait' },
+  flyer:         { w: 600, h: 850,  label: 'Flyer A5 portrait' },
+  visuel_reseau: { w: 600, h: 600,  label: 'Post carré' },
+  carte_visite:  { w: 550, h: 320,  label: 'Carte de visite' },
+  banniere:      { w: 728, h: 250,  label: 'Bannière web' },
+  maquette_web:  { w: 600, h: 900,  label: 'Landing page mobile' },
+  brochure:      { w: 600, h: 850,  label: 'Brochure' },
+  presentation:  { w: 700, h: 420,  label: 'Slide 16:9' },
+  packaging:     { w: 500, h: 700,  label: 'Packaging' },
+  logo:          { w: 512, h: 512,  label: 'Logo' },
+}
+
+// Replicate model selection per design type
+const REPLICATE_MODEL = {
+  logo:          'recraft-ai/recraft-v3',
+  affiche:       'black-forest-labs/flux-schnell',
+  flyer:         'black-forest-labs/flux-schnell',
+  visuel_reseau: 'black-forest-labs/flux-schnell',
+  carte_visite:  'black-forest-labs/flux-schnell',
+  banniere:      'black-forest-labs/flux-schnell',
+  maquette_web:  'black-forest-labs/flux-schnell',
+  brochure:      'black-forest-labs/flux-schnell',
+  presentation:  'black-forest-labs/flux-schnell',
+  packaging:     'black-forest-labs/flux-schnell',
+}
+
+// Aspect ratios for FLUX Schnell
+const FLUX_ASPECT = {
+  logo:          '1:1',
+  affiche:       '2:3',
+  flyer:         '2:3',
+  visuel_reseau: '1:1',
+  carte_visite:  '3:2',
+  banniere:      '16:9',
+  maquette_web:  '9:16',
+  brochure:      '2:3',
+  presentation:  '16:9',
+  packaging:     '2:3',
+}
+
+// Recraft v3 sizes (width x height strings)
+const RECRAFT_SIZE = {
+  logo:          '1024x1024',
+  affiche:       '683x1024',
+  flyer:         '683x1024',
+  visuel_reseau: '1024x1024',
+  carte_visite:  '1365x1024',
+  banniere:      '1365x1024',
+  maquette_web:  '683x1024',
+  brochure:      '683x1024',
+  presentation:  '1365x1024',
+  packaging:     '683x1024',
+}
+
+function buildPrompt(fd, type) {
+  const company = fd.nomEntreprise || 'ENTREPRISE'
+  const slogan  = fd.slogan ? `slogan "${fd.slogan}"` : ''
+  const sector  = fd.secteur || 'services'
+  const style   = fd.stylePrefere || 'professional modern'
+  const p       = fd.couleurPrimaire || '#1E40AF'
+  const s       = fd.couleurSecondaire || '#7C3AED'
+  const values  = fd.valeurs ? `, values: ${fd.valeurs}` : ''
+
+  const base = `${company}, ${slogan} ${sector} sector${values}, ${style} design, professional, high quality, commercial use`
+  const colorHint = `primary color ${p}, accent color ${s}`
+
+  const specific = {
+    logo: `Minimalist professional logo for "${company}", vector art style, clean white background, simple iconic symbol, ${style}, ${colorHint}, brand identity, scalable, suitable for printing`,
+    affiche: `Eye-catching advertising poster for "${company}" ${slogan}, ${sector}, ${colorHint}, bold typography, ${style}, professional print-ready A3 portrait poster, striking visual, marketing design`,
+    flyer: `Promotional flyer for "${company}" ${slogan}, ${sector}, ${colorHint}, ${style}, modern layout, bold headline, call to action, professional print quality, portrait format`,
+    visuel_reseau: `Social media post design for "${company}" ${slogan}, ${sector}, ${colorHint}, ${style}, square format, vibrant and bold, eye-catching, Instagram and Facebook ready`,
+    carte_visite: `Professional business card design for "${company}", ${sector}, ${colorHint}, ${style}, elegant minimal layout, clean typography, landscape format, print-ready`,
+    banniere: `Wide web banner for "${company}" ${slogan}, ${sector}, ${colorHint}, ${style}, horizontal format, digital advertising, modern and clean, call to action`,
+    maquette_web: `Modern website landing page mockup for "${company}", ${sector}, ${colorHint}, ${style}, mobile-first UI design, clean layout, professional web design`,
+    brochure: `Corporate brochure cover for "${company}", ${sector}, ${colorHint}, ${style}, premium print design, portrait format, professional brand communication`,
+    presentation: `Professional presentation slide for "${company}", ${sector}, ${colorHint}, ${style}, widescreen 16:9 corporate slide template, dark premium background, bold typography`,
+    packaging: `Product packaging label for "${company}", ${sector}, ${colorHint}, ${style}, premium retail packaging, professional product design, label artwork`,
   }
+
+  return specific[type] || `${base}, ${colorHint}, ${type} design`
 }
 
-// Génération créative avec Claude
-async function generateDesignCreative(formData, designType) {
+async function generateViaReplicate(formData, designType) {
+  const model   = REPLICATE_MODEL[designType] || 'black-forest-labs/flux-schnell'
+  const prompt  = buildPrompt(formData, designType)
+  const isRecraft = model.startsWith('recraft')
+
+  const input = isRecraft
+    ? {
+        prompt,
+        style: designType === 'logo' ? 'vector_illustration' : 'digital_illustration',
+        size: RECRAFT_SIZE[designType] || '1024x1024',
+      }
+    : {
+        prompt,
+        aspect_ratio: FLUX_ASPECT[designType] || '1:1',
+        output_format: 'png',
+        num_outputs: 1,
+        output_quality: 90,
+      }
+
+  const res = await fetch('/.netlify/functions/replicate-generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, input }),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || `replicate-generate HTTP ${res.status}`)
+  }
+
+  const data = await res.json()
+  if (!data.success || !data.output?.length) throw new Error('No image returned from Replicate')
+
+  return data.output[0]
+}
+
+// ── Groq HTML fallback ──────────────────────────────────────────────────────
+
+const GROQ_SYSTEM = "Tu es un Directeur Artistique senior. Génère UNIQUEMENT du HTML avec styles inline — un design visuel complet. Aucune explication, aucun markdown, aucune balise code. Uniquement le HTML du div racine."
+
+function buildHtmlPrompt(formData, designType) {
+  const d = DIMS[designType] || DIMS.affiche
+  const p = formData.couleurPrimaire || '#1d4ed8'
+  const s = formData.couleurSecondaire || '#7c3aed'
+  const name = formData.nomEntreprise || 'ENTREPRISE'
+
+  return `Génère un design ${d.label} HTML (${d.w}×${d.h}px).
+Div racine: width:${d.w}px;height:${d.h}px;overflow:hidden;position:relative;font-family:Arial,Helvetica,sans-serif;
+Styles inline uniquement. Couleurs ${p} et ${s}. Nom visible: "${name}". Slogan: "${formData.slogan || ''}".
+Design professionnel, gradients, typographie lisible, impact visuel fort.
+Réponds UNIQUEMENT avec le HTML du div racine.`
+}
+
+async function generateViaGroqHtml(formData, designType) {
+  const data = await groqChatCompletion({
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.6,
+    max_tokens: 4000,
+    messages: [
+      { role: 'system', content: GROQ_SYSTEM },
+      { role: 'user', content: buildHtmlPrompt(formData, designType) },
+    ],
+  })
+  const raw = data?.choices?.[0]?.message?.content?.trim() || ''
+  const match = raw.match(/<div[\s\S]*<\/div>/i)
+  return match ? match[0] : raw
+}
+
+function fallbackHtml(fd, type, dim) {
+  const p = fd.couleurPrimaire || '#1d4ed8'
+  const s = fd.couleurSecondaire || '#7c3aed'
+  const name = fd.nomEntreprise || 'ENTREPRISE'
+  const slogan = fd.slogan || 'Excellence & Innovation'
+  return `<div style="width:${dim.w}px;height:${dim.h}px;overflow:hidden;position:relative;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,${p} 0%,${s} 100%);">
+  <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.35);"></div>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;">
+    <div style="font-size:${Math.round(dim.w * 0.07)}px;font-weight:900;letter-spacing:-1px;margin-bottom:16px;">${name.toUpperCase()}</div>
+    <div style="font-size:${Math.round(dim.w * 0.03)}px;opacity:.85;font-weight:300;letter-spacing:3px;">${slogan.toUpperCase()}</div>
+    <div style="margin-top:32px;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.6);border-radius:40px;padding:12px 36px;font-size:${Math.round(dim.w * 0.026)}px;font-weight:700;display:inline-block;">Découvrir →</div>
+  </div>
+</div>`
+}
+
+// ── Main export ─────────────────────────────────────────────────────────────
+
+export async function generateDesign(formData, designType) {
+  const start = Date.now()
+  const dim = DIMS[designType] || DIMS.affiche
+
+  // 1. Try Replicate image generation
   try {
-    const prompt = buildCreativeDesignPrompt(formData, designType)
-    
-    const response = await callClaude(prompt, {
-      maxTokens: 4000,
-      temperature: 0.9,
-      model: 'claude-3-sonnet-20240229'
-    })
-    
-    const design = parseDesignResponse(response, designType)
-    
+    const imageUrl = await generateViaReplicate(formData, designType)
     return {
       success: true,
-      ...design,
-      provider: 'creative'
-    }
-    
-  } catch (error) {
-    console.error('Erreur design créatif:', error)
-    throw error
-  }
-}
-
-// Génération efficace (fallback simplifié)
-async function generateDesignEfficient(formData, designType) {
-  return generateDesignFallback(formData, designType)
-}
-
-// Génération équilibrée avec OpenAI
-async function generateDesignBalanced(formData, designType) {
-  try {
-    const response = await fetch('/.netlify/functions/openai-chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: 'system',
-            content: buildBalancedDesignPrompt(formData, designType)
-          },
-          {
-            role: 'user',
-            content: `Génère un design ${designType} pour: ${formData.nomEntreprise}`
-          }
-        ],
-        options: {
-          maxTokens: 3000,
-          temperature: 0.7,
-          model: 'gpt-4-turbo-preview'
-        }
-      })
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`)
-    }
-    
-    const data = await response.json()
-    const design = parseDesignResponse(data.content, designType)
-    
-    return {
-      success: true,
-      ...design,
-      provider: 'balanced'
-    }
-    
-  } catch (error) {
-    console.error('Erreur design équilibré:', error)
-    throw error
-  }
-}
-
-// Prompts créatifs pour chaque type de design
-function buildCreativeDesignPrompt(formData, designType) {
-  const baseContext = `
-ENTREPRISE: ${formData.nomEntreprise}
-SECTEUR: ${formData.secteur || 'général'}
-STYLE: ${formData.stylePrefere}
-COULEURS: ${formData.couleurPrimaire} et ${formData.couleurSecondaire}
-VALEURS: ${formData.valeurs || 'excellence et innovation'}
-PUBLIC: ${formData.publicCible || 'professionnels modernes'}
-`
-
-  const prompts = {
-    [DESIGN_TYPES.AFFICHE]: `
-Tu es un DIRECTEUR CRÉATIF PUBLICITAIRE de renommée mondiale. Crée une affiche PUBLICITAIRE EXTRAORDINAIRE pour "${formData.nomEntreprise}".
-
-${baseContext}
-
-EXIGENCE CRÉATIVE ABSOLUE:
-- Concept publicitaire percutant et mémorable
-- Hiérarchie visuelle parfaite
-- Call-to-action puissant
-- Impact émotionnel garanti
-- Différenciation concurrentielle radicale
-
-FORMAT JSON UNIQUEMENT:
-{
-  "design": {
-    "title": "TITRE ACCROCHEUR",
-    "tagline": "SLOGAN IMPACTANT",
-    "description": "description conceptuelle détaillée",
-    "visualConcept": "concept visuel principal",
-    "colorScheme": {
-      "primary": "#HEX",
-      "secondary": "#HEX",
-      "accent": "#HEX",
-      "background": "#HEX"
-    },
-    "typography": {
-      "headline": "typo titre",
-      "body": "typo corps",
-      "accent": "typo accent"
-    },
-    "layout": "layout spécifique",
-    "elements": [
-      {
-        "type": "élément",
-        "description": "description détaillée",
-        "position": "position",
-        "size": "taille"
-      }
-    ],
-    "emotionalImpact": "impact émotionnel recherché",
-    "targetAction": "action souhaitée du public",
-    "printSpecs": "spécifications impression",
-    "digitalAdaptation": "adaptation numérique"
-  }
-}
-
-CRÉE UNE AFFICHE QUI MARQUE LES ESPRITS !`,
-
-    [DESIGN_TYPES.VISUEL_RESEAU]: `
-Tu es un SOCIAL MEDIA MANAGER expert en contenu viral. Crée un visuel RÉSEAUX SOCIAUX ENGAGEANT pour "${formData.nomEntreprise}".
-
-${baseContext}
-
-EXIGENCE VIRALE:
-- Format optimé pour chaque plateforme
-- Engagement immédiat garanti
-- Partageabilité maximale
-- Identité visuelle forte
-- Message clair et concis
-
-FORMAT JSON UNIQUEMENT:
-{
-  "design": {
-    "platform": "plateforme principale",
-    "format": "format optimal",
-    "headline": "titre accrocheur",
-    "message": "message principal",
-    "visualStyle": "style visuel",
-    "colorPalette": ["#HEX", "#HEX", "#HEX"],
-    "typography": {
-      "primary": "typo principale",
-      "secondary": "typo secondaire"
-    },
-    "visualElements": [
-      {
-        "element": "élément visuel",
-        "purpose": "objectif",
-        "placement": "placement"
-      }
-    ],
-    "engagementHooks": ["hook 1", "hook 2"],
-    "cta": "call-to-action",
-    "hashtags": ["#hashtag1", "#hashtag2"],
-    "adaptations": {
-      "instagram": "adaptation IG",
-      "facebook": "adaptation FB",
-      "twitter": "adaptation TW",
-      "linkedin": "adaptation LI"
-    }
-  }
-}
-
-CRÉE UN VISUEL QUI DEVIENT VIRAL !`,
-
-    [DESIGN_TYPES.MAQUETTE_WEB]: `
-Tu es un UX/UI DESIGNER de classe mondiale. Crée une maquette WEB INNOVANTE pour "${formData.nomEntreprise}".
-
-${baseContext}
-
-EXIGENCE UX/UI:
-- Expérience utilisateur exceptionnelle
-- Design responsive parfait
-- Navigation intuitive
-- Conversion optimisée
-- Accessibilité totale
-
-FORMAT JSON UNIQUEMENT:
-{
-  "design": {
-    "pageType": "type de page",
-    "layout": "layout structurel",
-    "colorScheme": {
-      "primary": "#HEX",
-      "secondary": "#HEX",
-      "accent": "#HEX",
-      "neutral": "#HEX",
-      "background": "#HEX"
-    },
-    "typography": {
-      "headings": "typo titres",
-      "body": "typo corps",
-      "ui": "typo éléments"
-    },
-    "sections": [
-      {
-        "section": "nom section",
-        "purpose": "objectif",
-        "elements": ["élément 1", "élément 2"],
-        "layout": "layout section"
-      }
-    ],
-    "components": [
-      {
-        "component": "composant",
-        "description": "description détaillée",
-        "interaction": "interaction",
-        "state": "états"
-      }
-    ],
-    "userFlow": "flux utilisateur",
-    "conversionPoints": ["point 1", "point 2"],
-    "responsive": {
-      "desktop": "adaptation desktop",
-      "tablet": "adaptation tablette",
-      "mobile": "adaptation mobile"
-    }
-  }
-}
-
-CRÉE UNE MAQUETTE WEB QUI CONVERTIT !`,
-
-    [DESIGN_TYPES.CARTE_VISITE]: `
-Tu es un DESIGNER GRAPHIQUE spécialisé en identité visuelle. Crée une carte de visite PROFESSIONNELLE pour "${formData.nomEntreprise}".
-
-${baseContext}
-
-EXIGENCE PROFESSIONNELLE:
-- Impact visuel immédiat
-- Information claire et lisible
-- Qualité d'impression optimale
-- Mémorabilité garantie
-- Format standard respecté
-
-FORMAT JSON UNIQUEMENT:
-{
-  "design": {
-    "format": "format carte",
-    "orientation": "orientation",
-    "layout": "layout précis",
-    "front": {
-      "logo": "position logo",
-      "name": "nom et titre",
-      "contact": "coordonnées",
-      "visual": "élément visuel"
-    },
-    "back": {
-      "content": "contenu verso",
-      "services": "services principaux",
-      "branding": "éléments branding"
-    },
-    "colorScheme": {
-      "primary": "#HEX",
-      "secondary": "#HEX",
-      "accent": "#HEX",
-      "text": "#HEX"
-    },
-    "typography": {
-      "name": "typo nom",
-      "contact": "typo contact",
-      "details": "typo détails"
-    },
-    "paper": {
-      "type": "type papier",
-      "weight": "grammage",
-      "finish": "finition"
-    },
-    "specialFeatures": ["fonctionnalité 1", "fonctionnalité 2"]
-  }
-}
-
-CRÉE UNE CARTE DE VISITE QUI IMPRESSIONNE !`
-  }
-
-  return prompts[designType] || prompts[DESIGN_TYPES.AFFICHE]
-}
-
-// Prompt équilibré
-function buildBalancedDesignPrompt(formData, designType) {
-  return `Tu es un DESIGNER PROFESSIONNEL. Crée un design ${designType} de haute qualité pour "${formData.nomEntreprise}".
-
-CONTEXTE:
-- Entreprise: ${formData.nomEntreprise}
-- Secteur: ${formData.secteur}
-- Style: ${formData.stylePrefere}
-- Couleurs: ${formData.couleurPrimaire}, ${formData.couleurSecondaire}
-
-FORMAT JSON UNIQUEMENT avec structure complète du design.`
-}
-
-// Parsing des réponses design
-function parseDesignResponse(content, designType) {
-  try {
-    const jsonMatch = content.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error('Pas de JSON trouvé')
-    }
-    
-    const parsed = JSON.parse(jsonMatch[0])
-    
-    // Enrichir avec des métadonnées
-    return {
-      ...parsed,
+      imageUrl,
       designType,
-      generatedAt: new Date().toISOString(),
-      metadata: {
-        wordCount: content.length,
-        hasVisualElements: true,
-        hasColorScheme: true,
-        hasTypography: true
-      }
+      dim,
+      provider: 'replicate',
+      model: REPLICATE_MODEL[designType] || 'flux-schnell',
+      duration: Date.now() - start,
     }
-    
-  } catch (error) {
-    console.warn('Parsing design échoué:', error)
-    throw error
+  } catch (replicateErr) {
+    console.warn('[designStudio] Replicate failed, falling back to Groq HTML:', replicateErr.message)
+  }
+
+  // 2. Fallback: Groq-generated HTML visual
+  try {
+    const html = await generateViaGroqHtml(formData, designType)
+    return {
+      success: true,
+      html,
+      designType,
+      dim,
+      provider: 'groq',
+      duration: Date.now() - start,
+    }
+  } catch {
+    // 3. Last resort: static gradient
+    return {
+      success: true,
+      html: fallbackHtml(formData, designType, dim),
+      designType,
+      dim,
+      provider: 'fallback',
+      duration: Date.now() - start,
+    }
   }
 }
 
-// Fallback design
-function generateDesignFallback(formData, designType) {
-  const fallbackDesigns = {
-    [DESIGN_TYPES.AFFICHE]: {
-      design: {
-        title: `EXCEPTIONNEL ${formData.nomEntreprise}`,
-        tagline: "L'excellence redéfinie",
-        description: "Design professionnel et percutant",
-        visualConcept: "Approche minimaliste avec impact maximal",
-        colorScheme: {
-          primary: formData.couleurPrimaire || '#1E40AF',
-          secondary: formData.couleurSecondaire || '#DC2626',
-          accent: '#F59E0B',
-          background: '#FFFFFF'
-        },
-        typography: {
-          headline: 'Arial Black',
-          body: 'Arial',
-          accent: 'Helvetica'
-        },
-        layout: 'centré avec hiérarchie claire',
-        elements: [
-          {
-            type: 'titre principal',
-            description: 'Titre accrocheur en gros',
-            position: 'haut-centre',
-            size: 'très grand'
-          }
-        ],
-        emotionalImpact: 'Confiance et professionnalisme',
-        targetAction: 'Contact et conversion',
-        printSpecs: 'A3 (297x420mm), 300dpi',
-        digitalAdaptation: 'Optimisé pour web et réseaux sociaux'
-      }
-    },
-    [DESIGN_TYPES.VISUEL_RESEAU]: {
-      design: {
-        platform: 'Instagram',
-        format: '1080x1080px carré',
-        headline: formData.nomEntreprise,
-        message: 'Innovation et excellence',
-        visualStyle: 'moderne et épuré',
-        colorPalette: [formData.couleurPrimaire || '#1E40AF', formData.couleurSecondaire || '#DC2626', '#FFFFFF'],
-        typography: {
-          primary: 'Arial',
-          secondary: 'Helvetica'
-        },
-        visualElements: [
-          {
-            element: 'logo',
-            purpose: 'identification marque',
-            placement: 'centre'
-          }
-        ],
-        engagementHooks: ['Question engageante', 'Call-to-action clair'],
-        cta: 'Découvrez plus',
-        hashtags: ['#innovation', '#excellence', '#' + formData.nomEntreprise.replace(/\s+/g, '')],
-        adaptations: {
-          instagram: 'Format carré optimal',
-          facebook: 'Format adapté',
-          twitter: 'Version concise',
-          linkedin: 'Tone professionnel'
-        }
-      }
-    },
-    [DESIGN_TYPES.MAQUETTE_WEB]: {
-      design: {
-        pageType: 'Page d\'accueil',
-        layout: 'hero + sections + footer',
-        colorScheme: {
-          primary: formData.couleurPrimaire || '#1E40AF',
-          secondary: formData.couleurSecondaire || '#DC2626',
-          accent: '#F59E0B',
-          neutral: '#F3F4F6',
-          background: '#FFFFFF'
-        },
-        typography: {
-          headings: 'Arial',
-          body: 'system-ui',
-          ui: 'Inter'
-        },
-        sections: [
-          {
-            section: 'Hero',
-            purpose: 'impact immédiat',
-            elements: ['titre', 'sous-titre', 'cta'],
-            layout: 'centré'
-          }
-        ],
-        components: [
-          {
-            component: 'navigation',
-            description: 'barre de navigation',
-            interaction: 'hover et click',
-            state: 'fixe en scroll'
-          }
-        ],
-        userFlow: 'simple et direct',
-        conversionPoints: ['cta principal', 'formulaire contact'],
-        responsive: {
-          desktop: 'layout complet',
-          tablet: 'adapté',
-          mobile: 'stacked'
-        }
-      }
-    },
-    [DESIGN_TYPES.CARTE_VISITE]: {
-      design: {
-        format: 'standard 90x50mm',
-        orientation: 'paysage',
-        layout: 'logo à gauche, infos à droite',
-        front: {
-          logo: 'coin supérieur gauche',
-          name: 'nom et titre centrés',
-          contact: 'coordonnées en bas',
-          visual: 'élément graphique subtil'
-        },
-        back: {
-          content: 'services principaux',
-          services: ['service 1', 'service 2'],
-          branding: 'logo en filigrane'
-        },
-        colorScheme: {
-          primary: formData.couleurPrimaire || '#1E40AF',
-          secondary: formData.couleurSecondaire || '#DC2626',
-          accent: '#F59E0B',
-          text: '#1F2937'
-        },
-        typography: {
-          name: 'Arial Bold',
-          contact: 'Arial',
-          details: 'Helvetica'
-        },
-        paper: {
-          type: 'Carton mat',
-          weight: '350g',
-          finish: 'mat'
-        },
-        specialFeatures: ['logo embossé', 'vernis sélectif']
-      }
-    }
-  }
-
-  return {
-    success: true,
-    ...fallbackDesigns[designType] || fallbackDesigns[DESIGN_TYPES.AFFICHE],
-    provider: 'fallback-generated',
-    designType,
-    generatedAt: new Date().toISOString()
-  }
-}
-
-// Export des utilitaires (DESIGN_TYPES est déjà exporté plus haut)
 export function getDesignTypeName(type) {
-  const names = {
-    [DESIGN_TYPES.LOGO]: 'Logo',
-    [DESIGN_TYPES.AFFICHE]: 'Affiche Publicitaire',
+  return {
+    [DESIGN_TYPES.LOGO]:          'Logo',
+    [DESIGN_TYPES.AFFICHE]:       'Affiche Publicitaire',
     [DESIGN_TYPES.VISUEL_RESEAU]: 'Visuel Réseaux Sociaux',
-    [DESIGN_TYPES.MAQUETTE_WEB]: 'Maquette Web',
-    [DESIGN_TYPES.CARTE_VISITE]: 'Carte de Visite',
-    [DESIGN_TYPES.BANNIERE]: 'Bannière Web',
-    [DESIGN_TYPES.FLYER]: 'Flyer Promotionnel',
-    [DESIGN_TYPES.BROCHURE]: 'Brochure',
-    [DESIGN_TYPES.PRESENTATION]: 'Présentation',
-    [DESIGN_TYPES.PACKAGING]: 'Packaging Produit'
-  }
-  return names[type] || 'Design'
+    [DESIGN_TYPES.MAQUETTE_WEB]:  'Maquette Web',
+    [DESIGN_TYPES.CARTE_VISITE]:  'Carte de Visite',
+    [DESIGN_TYPES.BANNIERE]:      'Bannière Web',
+    [DESIGN_TYPES.FLYER]:         'Flyer Promotionnel',
+    [DESIGN_TYPES.BROCHURE]:      'Brochure',
+    [DESIGN_TYPES.PRESENTATION]:  'Présentation',
+    [DESIGN_TYPES.PACKAGING]:     'Packaging Produit',
+  }[type] || 'Design'
 }
 
 export function getAvailableDesignTypes() {
   return [
-    { id: DESIGN_TYPES.AFFICHE, name: 'Affiche Publicitaire', icon: '📢', description: 'Affiches impactantes pour campagnes' },
-    { id: DESIGN_TYPES.VISUEL_RESEAU, name: 'Visuel Réseaux Sociaux', icon: '📱', description: 'Visuels optimisés pour Instagram, Facebook, etc.' },
-    { id: DESIGN_TYPES.MAQUETTE_WEB, name: 'Maquette Web', icon: '🌐', description: 'Design de pages web et applications' },
-    { id: DESIGN_TYPES.CARTE_VISITE, name: 'Carte de Visite', icon: '💳', description: 'Cartes professionnelles et identité' },
-    { id: DESIGN_TYPES.BANNIERE, name: 'Bannière Web', icon: '🎨', description: 'Bannières publicitaires et headers' },
-    { id: DESIGN_TYPES.FLYER, name: 'Flyer Promotionnel', icon: '📄', description: 'Flyers et documents promotionnels' },
-    { id: DESIGN_TYPES.BROCHURE, name: 'Brochure', icon: '📖', description: 'Brochures multi-pages' },
-    { id: DESIGN_TYPES.PRESENTATION, name: 'Présentation', icon: '📊', description: 'Présentations professionnelles' },
-    { id: DESIGN_TYPES.PACKAGING, name: 'Packaging', icon: '📦', description: 'Design d\'emballage produit' }
+    { id: DESIGN_TYPES.LOGO,          name: 'Logo',                    icon: '🎯', description: 'Logo vectoriel professionnel (Recraft AI)' },
+    { id: DESIGN_TYPES.AFFICHE,       name: 'Affiche Publicitaire',    icon: '📢', description: 'Affiches A3 portrait impact maximal' },
+    { id: DESIGN_TYPES.FLYER,         name: 'Flyer Promotionnel',      icon: '📄', description: 'Flyers A5 et documents promotionnels' },
+    { id: DESIGN_TYPES.VISUEL_RESEAU, name: 'Visuel Réseaux Sociaux',  icon: '📱', description: 'Posts carré pour Instagram, Facebook…' },
+    { id: DESIGN_TYPES.CARTE_VISITE,  name: 'Carte de Visite',         icon: '💳', description: 'Cartes pro prêtes à imprimer' },
+    { id: DESIGN_TYPES.BANNIERE,      name: 'Bannière Web',            icon: '🖥',  description: 'Bannières publicitaires horizontales' },
+    { id: DESIGN_TYPES.MAQUETTE_WEB,  name: 'Maquette Web / App',      icon: '🌐', description: 'Landing page et maquette mobile' },
+    { id: DESIGN_TYPES.BROCHURE,      name: 'Brochure',                icon: '📖', description: 'Brochures et documents premium' },
+    { id: DESIGN_TYPES.PRESENTATION,  name: 'Slide Présentation',      icon: '📊', description: 'Slides professionnelles 16:9' },
+    { id: DESIGN_TYPES.PACKAGING,     name: 'Packaging Produit',       icon: '📦', description: "Design d'étiquette et emballage" },
   ]
 }

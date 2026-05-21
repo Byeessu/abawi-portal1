@@ -4,7 +4,7 @@ export async function probeUrl(url) {
     const head = await fetch(url, { method: 'HEAD' })
     if (head.ok) return true
   // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-  } catch {}
+  } catch { /* ignore */ }
   try {
     const get = await fetch(url, { method: 'GET', headers: { Range: 'bytes=0-0' } })
     return get.ok

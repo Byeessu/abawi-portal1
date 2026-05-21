@@ -1,48 +1,38 @@
 import { useState, useMemo, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { Icon } from 'leaflet'
+import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import SENEGAL_ROUTE_DATA, {
   CITIES_ROUTE, getActiveAlerts,
   getTrafficZonesBySeverity, getGpsLinks
 } from '../../data/senegalRouteData'
+import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import ToolHero from '../../components/ToolHero'
+import { callGroq } from '../../lib/groqClient'
 
-// Custom marker icons
-const routeIcon = new Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684809.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-  popupAnchor: [0, -28]
-})
+// Custom marker icons using divIcon (no CDN dependency)
+function mkIcon(emoji, bg, size=34) {
+  return divIcon({
+    className: '',
+    html: `<div style="background:${bg};width:${size}px;height:${size}px;border-radius:50%;border:2.5px solid white;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.44)}px;box-shadow:0 3px 10px rgba(0,0,0,0.3)">${emoji}</div>`,
+    iconSize:[size,size], iconAnchor:[size/2,size/2], popupAnchor:[0,-size/2-4]
+  })
+}
 
-const alertIcon = new Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/564/564619.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32]
-})
+const routeIcon    = mkIcon('🛣️','#3B82F6')
+const alertIcon    = mkIcon('⚠️','#EF4444',36)
+const serviceIcon  = mkIcon('⛽','#10B981')
+const cameraIcon   = mkIcon('📷','#64748B',28)
+const autoEcoleIcon= mkIcon('🎓','#F59E0B')
+function userGPSIcon() { return divIcon({ className:'', html:`<div style="background:#3B82F6;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 5px rgba(59,130,246,0.22)"></div>`, iconSize:[16,16], iconAnchor:[8,8] }) }
 
-const serviceIcon = new Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3125/3125848.png',
-  iconSize: [26, 26],
-  iconAnchor: [13, 26],
-  popupAnchor: [0, -26]
-})
-
-const cameraIcon = new Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/2967/2967402.png',
-  iconSize: [24, 24],
-  iconAnchor: [12, 24],
-  popupAnchor: [0, -24]
-})
-
-const autoEcoleIcon = new Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3202/3202926.png',
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-  popupAnchor: [0, -28]
-})
+const TILES = {
+  voyager: { url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr:'© OSM contributors, © CARTO' },
+  osm:     { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'© OpenStreetMap contributors' },
+  dark:    { url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr:'© OSM contributors, © CARTO' },
+}
 
 function MapBounds({ markers }) {
   const map = useMap()
@@ -58,10 +48,15 @@ function MapBounds({ markers }) {
 export default function AbawiAutoRoute() {
   const [selectedRoute, setSelectedRoute] = useState(null)
   const [selectedCity, setSelectedCity] = useState('')
-  const [activeTab, setActiveTab] = useState('carte') // 'carte', 'routes', 'alertes', 'services', 'autoecole', 'coderoute'
+  const [activeTab, setActiveTab] = useState('carte') // 'carte', 'routes', 'alertes', 'services', 'autoecole', 'coderoute', 'ia'
   const [showAlerts, setShowAlerts] = useState(true)
   const [showServices, setShowServices] = useState(true)
   const [selectedServiceType, setSelectedServiceType] = useState('')
+  const [mapTile, setMapTile] = useState('voyager')
+  const [userLoc, setUserLoc] = useState(null)
+  const [aiQuery, setAiQuery] = useState('')
+  const [aiResponse, setAiResponse] = useState('')
+  const [loadingAI, setLoadingAI] = useState(false)
 
   const activeAlerts = useMemo(() => getActiveAlerts(), [])
   const criticalZones = useMemo(() => getTrafficZonesBySeverity('critique'), [])
@@ -100,8 +95,67 @@ export default function AbawiAutoRoute() {
     return markers
   }, [selectedRoute, activeAlerts, filteredServices, showAlerts, showServices])
 
+  function locateMe() {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      p => setUserLoc({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => {}
+    )
+  }
+
+  async function askAI() {
+    if (!aiQuery.trim() || loadingAI) return
+    setLoadingAI(true); setAiResponse('')
+    try {
+      const prompt = `Tu es un expert en mobilité et routes au Sénégal. Réponds en français de façon pratique et locale.
+
+Question sur la route / circulation: "${aiQuery}"
+
+Donne des conseils précis et utiles incluant:
+- Horaires optimaux pour éviter les embouteillages
+- Zones à risque ou à éviter
+- Alternatives recommandées si applicable
+- Numéros utiles si urgence
+- Conseils pratiques spécifiques au Sénégal (Dakar, routes nationales, etc.)
+
+Réponds en 150-200 mots, format structuré avec **Titres:** en gras.`
+      const result = await callGroq(prompt, { maxTokens:500, temperature:0.7 })
+      setAiResponse(result)
+    } catch (err) {
+      console.error('[Autoroute IA] Erreur callGroq:', err)
+      setAiResponse('⚠️ **Service temporairement indisponible**\n\nL\'assistant IA route rencontre un problème de connexion. Vérifiez votre connexion internet ou réessayez dans quelques instants.\n\n*En attendant, consultez les données de trafic et les alertes en temps réel sur la carte ci-dessus.*')
+    }
+    setLoadingAI(false)
+  }
+
+  function btnStyle(bg, color='#fff') {
+    return { borderRadius:10, padding:'8px 14px', border:'1px solid var(--border)', cursor:'pointer', fontWeight:700, fontSize:'0.8rem', fontFamily:'inherit', background:bg, color:color }
+  }
+
   return (
-    <main style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 16px 80px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}>
+      <SEO
+        title="ABAWI AutoRoute — Routes, trafic & navigation Sénégal"
+        description="Assistant route et navigation au Sénégal : trafic temps réel, alertes circulation, stations-service, dépannage, auto-écoles, code route. Itinéraires optimisés Dakar et régions."
+        keywords="route Sénégal, trafic Dakar, navigation, auto-école, station-service, dépannage, code route, itinéraire"
+        image="/slider/pexels-r-924577792-25852451.jpg"
+      />
+      <style>{`.leaflet-div-icon { background: transparent !important; border: none !important; }`}</style>
+      <ToolHero
+        icon="🛣️"
+        badge="Routes · Navigation"
+        title="ABAWI"
+        titleAccent="AutoRoute"
+        subtitle="Assistant route et navigation : trafic temps réel, alertes circulation, stations-service, dépannage et code route."
+        gradient="linear-gradient(135deg, #1E3A5F 0%, #1e40af 40%, #1d4ed8 100%)"
+        glowColor="rgba(30,64,175,0.4)"
+        accentColor="#60A5FA"
+        stats={[['🗺️','Itinéraires'],['🚦','Trafic temps réel'],['⛽','Stations-service'],['🚗','Code route']]}
+      />
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 16px 80px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
       <ToolInfoPanel
         toolName="ABAWI AutoRoute"
         icon="🚗"
@@ -126,84 +180,6 @@ export default function AbawiAutoRoute() {
           'Le Samu route est joignable au 1515 en cas d\'accident'
         ]}
       />
-
-      {/* Hero Section */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #3730a3 50%, #1e40af 100%)',
-        borderRadius: 24,
-        padding: '36px 32px',
-        marginBottom: 28,
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: -50,
-          right: -50,
-          width: 200,
-          height: 200,
-          background: 'radial-gradient(circle, rgba(96,165,250,0.25) 0%, transparent 70%)',
-          borderRadius: '50%'
-        }} />
-        <div style={{
-          position: 'absolute',
-          bottom: -30,
-          left: 30,
-          width: 120,
-          height: 120,
-          background: 'radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%)',
-          borderRadius: '50%'
-        }} />
-        
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 24 }}>
-          <div style={{
-            background: 'rgba(96,165,250,0.2)',
-            borderRadius: 20,
-            padding: '20px 24px',
-            border: '1px solid rgba(96,165,250,0.3)'
-          }}>
-            <span style={{ fontSize: '3.5rem' }}>🚗</span>
-          </div>
-          
-          <div style={{ flex: 1 }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 14px',
-              background: 'rgba(96,165,250,0.9)',
-              borderRadius: 20,
-              marginBottom: 10
-            }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Navigation & Circulation
-              </span>
-            </div>
-            
-            <h1 style={{ margin: 0, color: '#fff', fontSize: 'clamp(1.8rem,3vw,2.4rem)', fontWeight: 800 }}>
-              ABAWI AutoRoute
-            </h1>
-            <p style={{ marginTop: 10, color: 'rgba(255,255,255,0.8)', fontSize: '1rem', maxWidth: 600 }}>
-              Votre copilote de route au Sénégal. Évitez les embouteillages, 
-              trouvez les services et naviguez intelligemment.
-            </p>
-            
-            <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-              {['9 Routes', '8 Zones Chaudes', 'GPS Intégré', 'Temps Réel'].map((tag, i) => (
-                <span key={i} style={{
-                  padding: '6px 14px',
-                  background: 'rgba(255,255,255,0.15)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: 20,
-                  fontSize: '0.8rem',
-                  color: '#fff',
-                  fontWeight: 600
-                }}>{tag}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Quick Actions */}
       <div style={{
@@ -249,7 +225,8 @@ export default function AbawiAutoRoute() {
           { id: 'alertes', label: '⚠️ Alertes', color: '#EF4444' },
           { id: 'services', label: '⛽ Services', color: '#10B981' },
           { id: 'autoecole', label: '🎓 Auto-École', color: '#F59E0B' },
-          { id: 'coderoute', label: '📘 Code Route', color: '#EC4899' }
+          { id: 'coderoute', label: '📘 Code Route', color: '#EC4899' },
+          { id: 'ia', label: '🤖 Conseiller IA', color: '#8B5CF6' }
         ].map(tab => (
           <button
             key={tab.id}
@@ -359,20 +336,29 @@ export default function AbawiAutoRoute() {
 
       {/* Content */}
       {activeTab === 'carte' && (
-        <div style={{
-          borderRadius: 20,
-          overflow: 'hidden',
-          border: '1px solid var(--border)',
-          height: 550
-        }}>
+        <div>
+          <div style={{ display:'flex', gap:8, marginBottom:10, flexWrap:'wrap', alignItems:'center' }}>
+            <button onClick={locateMe} style={btnStyle('#3B82F6')}>📍 Ma position</button>
+            {Object.keys(TILES).map(k => (
+              <button key={k} onClick={() => setMapTile(k)} style={btnStyle(mapTile===k ? '#6366F1' : 'var(--bg-card)', mapTile===k ? '#fff' : 'var(--text-secondary)')}>
+                {k==='voyager'?'🗺️ Voyager':k==='osm'?'🌿 OSM':'🌑 Nuit'}
+              </button>
+            ))}
+          </div>
+          <div style={{
+            borderRadius: 20,
+            overflow: 'hidden',
+            border: '1px solid var(--border)',
+            height: 550
+          }}>
           <MapContainer
             center={[14.6937, -17.4441]}
             zoom={12}
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution={TILES[mapTile].attr}
+              url={TILES[mapTile].url}
             />
             <MapBounds markers={mapMarkers.length > 0 ? mapMarkers : [{ coordinates: [14.6937, -17.4441] }]} />
             
@@ -518,7 +504,9 @@ export default function AbawiAutoRoute() {
                 </Popup>
               </Marker>
             ))}
+            {userLoc && <Marker position={[userLoc.lat, userLoc.lng]} icon={userGPSIcon()}><Popup><strong>📍 Ma position</strong></Popup></Marker>}
           </MapContainer>
+          </div>
         </div>
       )}
 
@@ -1348,6 +1336,37 @@ export default function AbawiAutoRoute() {
           </div>
         </div>
       )}
-    </main>
+
+      {activeTab === 'ia' && (
+        <div style={{ background:'var(--bg-card)', borderRadius:20, padding:28, border:'1px solid var(--border)' }}>
+          <h2 style={{ margin:'0 0 8px', fontSize:'1.1rem', fontWeight:900, color:'var(--text-primary)' }}>🤖 Conseiller Route IA</h2>
+          <p style={{ margin:'0 0 18px', fontSize:'0.88rem', color:'var(--text-secondary)', lineHeight:1.6 }}>
+            Décrivez votre trajet, destination ou problème de route — l'IA vous donne conseils, horaires optimaux, zones à éviter et alternatives.
+          </p>
+          <textarea
+            value={aiQuery}
+            onChange={e => setAiQuery(e.target.value)}
+            placeholder="Ex: Je pars de Dakar vers Thiès à 17h un vendredi, quels conseils ?"
+            style={{ width:'100%', minHeight:90, padding:'12px 14px', borderRadius:12, border:'1px solid var(--border)', background:'var(--bg-primary)', color:'var(--text-primary)', fontSize:'0.9rem', resize:'vertical', fontFamily:'inherit', boxSizing:'border-box' }}
+          />
+          <button onClick={askAI} disabled={!aiQuery.trim() || loadingAI}
+            style={{ marginTop:12, padding:'12px 24px', borderRadius:12, border:'none', background:'linear-gradient(135deg,#8B5CF6,#6D28D9)', color:'#fff', fontWeight:800, fontSize:'0.9rem', cursor:'pointer', fontFamily:'inherit', opacity: (!aiQuery.trim() || loadingAI) ? 0.55 : 1 }}>
+            {loadingAI ? '⏳ Analyse en cours…' : '✨ Obtenir les conseils'}
+          </button>
+          {aiResponse && (
+            <div style={{ marginTop:18, padding:'18px 20px', borderRadius:14, background:'color-mix(in srgb,#8B5CF6 8%,transparent)', border:'1px solid color-mix(in srgb,#8B5CF6 25%,transparent)' }}>
+              {aiResponse.split('\n').filter(Boolean).map((line,i) => {
+                const bold = line.startsWith('**')
+                const text = line.replace(/\*\*/g,'')
+                return bold
+                  ? <p key={i} style={{ margin:'8px 0 3px', fontWeight:800, fontSize:'0.88rem', color:'var(--text-primary)' }}>{text}</p>
+                  : <p key={i} style={{ margin:'2px 0', fontSize:'0.85rem', color:'var(--text-secondary)', lineHeight:1.65 }}>{text}</p>
+              })}
+            </div>
+          )}
+        </div>
+      )}
+      </div>
+    </div>
   )
 }

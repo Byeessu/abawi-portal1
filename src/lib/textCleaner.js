@@ -59,9 +59,9 @@ export function cleanIAText(text) {
   
   // === ÉTAPE 1.5: GESTION DES PUCES ET LISTES ===
   // Mettre les puces (•, -, *) au début de ligne sur une ligne isolée
-  cleaned = cleaned.replace(/([a-zA-Z])\s*[\-\*•]\s+([a-zA-Z])/g, '$1\n\n• $2')
+  cleaned = cleaned.replace(/([a-zA-Z])\s*[-*•]\s+([a-zA-Z])/g, '$1\n\n• $2')
   // Assurer que les puces markdown sont bien formatées
-  cleaned = cleaned.replace(/^\s*[\-\*•]\s*/gm, '• ')
+  cleaned = cleaned.replace(/^\s*[-*•]\s*/gm, '• ')
   
   // === ÉTAPE 2: CORRECTION AGRESSIVE DES MOTS COLLÉS ===
   
@@ -265,7 +265,7 @@ export function cleanIATextElite(text) {
     }
 
     // Détecter ligne avec puce — conserver comme puce (pas de conversion en numéro)
-    const bulletMatch = line.match(/^[\-\*•]\s+(.+)$/)
+    const bulletMatch = line.match(/^[-*•]\s+(.+)$/)
     if (bulletMatch) {
       const content = bulletMatch[1]
       result.push(`• ${content}`)

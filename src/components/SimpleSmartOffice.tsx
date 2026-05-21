@@ -9,7 +9,7 @@ import { resolveRuntimeApiKey } from '../lib/runtimeApiKeys';
 
 export default function SimpleSmartOffice() {
   const grokApiKey = resolveRuntimeApiKey({
-    envKeys: [import.meta.env.VITE_GROK_API_KEY, import.meta.env.VITE_GROQ_API_KEY],
+    envKeys: ([import.meta.env.VITE_GROK_API_KEY, import.meta.env.VITE_GROQ_API_KEY] as string[]),
     providerId: 'groq',
     includeAlias: true
   });

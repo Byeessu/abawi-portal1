@@ -74,35 +74,35 @@ export default function DocumentStudio() {
   }
 
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 16px 80px' }}>
+    <main style={{ maxWidth: 1400, margin: '0 auto', padding: '20px 16px 80px' }}>
       <section style={{ marginBottom: 18 }}>
         <span style={{ fontSize: '0.76rem', color: '#F0B429', fontWeight: 800, letterSpacing: 1 }}>NOUVEAU • ABAWI DOCUMENT STUDIO</span>
-        <h1 style={{ margin: '8px 0', color: '#F7F7F8' }}>Lecteur + Éditeur + Convertisseur multi-formats</h1>
-        <p style={{ color: '#9CA3AF', maxWidth: 820 }}>Importez vos documents, lisez-les, ajoutez vos notes de modification, puis exportez dans plusieurs formats professionnels.</p>
+        <h1 style={{ margin: '8px 0', color: 'var(--text-primary)' }}>Lecteur + Éditeur + Convertisseur multi-formats</h1>
+        <p style={{ color: 'var(--text-muted)', maxWidth: 820 }}>Importez vos documents, lisez-les, ajoutez vos notes de modification, puis exportez dans plusieurs formats professionnels.</p>
       </section>
 
       <section style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 16 }}>
-        <div style={{ border: '1px solid #1f2937', borderRadius: 14, overflow: 'hidden', minHeight: 600, background: '#0B1119' }}>
-          <div style={{ padding: 12, borderBottom: '1px solid #1f2937', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', minHeight: 600, background: 'var(--bg-card)' }}>
+          <div style={{ padding: 12, borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', gap: 10 }}>
             <input type="file" accept={ACCEPTED} multiple onChange={onUpload} />
             {sourceUrl && !isPdf && (
               <a href={sourceUrl} download={fileName} style={{ color: '#18A84A', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}>Télécharger original</a>
             )}
           </div>
-          {!sourceUrl && <div style={{ padding: 18, color: '#9CA3AF' }}>Chargez un document pour commencer.</div>}
+          {!sourceUrl && <div style={{ padding: 18, color: 'var(--text-muted)' }}>Chargez un document pour commencer.</div>}
           {sourceUrl && isPdf && (
             <iframe title={fileName || 'PDF'} src={`${sourceUrl}#toolbar=1`} style={{ width: '100%', height: 540, border: 'none' }} />
           )}
           {(sourceUrl && (!isPdf || content)) && (
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} style={{ width: '100%', minHeight: 540, border: 'none', background: '#0B1119', color: '#E5E7EB', padding: 14 }} />
+            <textarea value={content} onChange={(e) => setContent(e.target.value)} style={{ width: '100%', minHeight: 540, border: 'none', background: 'var(--bg-card)', color: 'var(--text-primary)', padding: 14 }} />
           )}
         </div>
 
-        <aside style={{ border: '1px solid #1f2937', borderRadius: 14, background: '#0B1119', padding: 14 }}>
-          <h3 style={{ marginTop: 0, color: '#F0F2F5' }}>Édition & conversion</h3>
-          <p style={{ color: '#9CA3AF', fontSize: '0.8rem' }}>Nom du fichier: {fileName || '—'}</p>
+        <aside style={{ border: '1px solid var(--border)', borderRadius: 14, background: 'var(--bg-card)', padding: 14 }}>
+          <h3 style={{ marginTop: 0, color: 'var(--text-primary)' }}>Édition & conversion</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Nom du fichier: {fileName || '—'}</p>
           {fileList.length > 1 && (
-            <p style={{ color: '#9CA3AF', fontSize: '0.78rem', marginTop: -6 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: -6 }}>
               +{fileList.length - 1} autres fichier(s) importés (texte fusionné).
             </p>
           )}
@@ -110,7 +110,7 @@ export default function DocumentStudio() {
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Notes de correction, mentions signature/cachet, consignes d'envoi..."
-            style={{ width: '100%', minHeight: 200, borderRadius: 10, background: '#111827', color: '#E5E7EB', border: '1px solid #374151', padding: 10 }}
+            style={{ width: '100%', minHeight: 200, borderRadius: 10, background: 'var(--bg-primary)', color: 'var(--text-primary)', border: '1px solid var(--border)', padding: 10 }}
           />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
             <button onClick={() => download('txt')} style={btn}>TXT</button>

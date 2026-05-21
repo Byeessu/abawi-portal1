@@ -1,3 +1,15 @@
+async function verifyToken(event, ownerEmail) {
+  const authHeader = event.headers?.authorization || event.headers?.Authorization || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim()
+  if (!token) return false
+  const { url, key } = env()
+  const { createClient } = require('@supabase/supabase-js')
+  const sb = createClient(url, key)
+  const { data: { user }, error } = await sb.auth.getUser(token)
+  if (error || !user) return false
+  return user.email?.toLowerCase() === ownerEmail.toLowerCase()
+}
+
 exports.handler = async function handler(event) {
   if (event.httpMethod !== 'POST') return res(405, { ok: false, error: 'Method not allowed' })
   try {
@@ -11,6 +23,9 @@ exports.handler = async function handler(event) {
 
     if (!ownerEmail) return res(400, { ok: false, error: 'ownerEmail required' })
     if (!ALLOWED_TABLES.includes(table)) return res(400, { ok: false, error: 'table not allowed' })
+
+    const authorized = await verifyToken(event, ownerEmail)
+    if (!authorized) return res(401, { ok: false, error: 'Unauthorized' })
 
     if (action === 'list') return res(200, { ok: true, data: await listRows(table, ownerEmail, filters) })
     if (action === 'insert') return res(200, { ok: true, row: await insertRow(table, ownerEmail, payload) })

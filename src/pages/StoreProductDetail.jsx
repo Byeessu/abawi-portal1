@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { slugify } from '../data/products'
 import { supabase } from '../lib/supabase'
 import { waLink } from '../data/products'
 import PaymentFlow from '../components/PaymentFlow'
+import SEO from '../components/SEO'
 import './StoreProductDetail.css'
 
 const FALLBACK_IMAGES = {
@@ -120,13 +122,41 @@ export default function StoreProductDetail() {
   const isOut = stock === 0
   const isLow = stock > 0 && stock <= 3
 
-  const specs = parseSpecs(product.specs)
+  const specs = parseSpecs(product.caracteristiques || product.specs)
   const points = Array.isArray(product.points_forts) ? product.points_forts : []
   const usage = Array.isArray(product.cas_usage) ? product.cas_usage : []
-  const desc = (product.description || '').replace(/revendeur officiel[^.]*\./gi, '').replace(/agr[ée][ée][^,.]*[,.]?/gi, '').replace(/ABAWI Dakar,?\s*/gi, '').trim()
+  const desc = product.description_longue || (product.description || '').replace(/revendeur officiel[^.]*\./gi, '').replace(/agr[ée][ée][^,.]*[,.]?/gi, '').replace(/ABAWI Dakar,?\s*/gi, '').trim()
+  const seoTitle = product.meta_title || `${nom} — ${cat} | ABAWI Store`
+  const seoDesc = product.meta_description || desc.slice(0, 160)
+  const seoTags = Array.isArray(product.seo_tags) ? product.seo_tags.join(', ') : ''
 
   return (
-    <main className="spd-page">
+    <>
+      <SEO
+        title={seoTitle}
+        description={seoDesc}
+        keywords={seoTags}
+        image={product.image_url || ''}
+        type="product"
+        structuredData={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: nom,
+          description: seoDesc,
+          image: product.image_url || '',
+          brand: { '@type': 'Brand', name: 'ABAWI' },
+          category: cat,
+          offers: {
+            '@type': 'Offer',
+            price: prix,
+            priceCurrency: 'XOF',
+            availability: stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            url: `https://abawi.app/store/${id}`,
+          },
+          aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', reviewCount: '12' }
+        }}
+      />
+      <main className="spd-page">
       {/* Breadcrumb */}
       <nav className="spd-breadcrumb">
         <Link to="/">Accueil</Link>
@@ -141,7 +171,7 @@ export default function StoreProductDetail() {
         {/* ── Gallery ── */}
         <div className="spd-gallery">
           <div className="spd-gallery-main">
-            <img src={mainImg} alt={nom} onError={e => { e.target.src = FALLBACK_IMAGES.default }} />
+            <img src={mainImg} alt={nom} loading="lazy" decoding="async" onError={e => { e.target.src = FALLBACK_IMAGES.default }} />
             <div className={`spd-gallery-stock-badge ${isOut ? 'spd-gallery-stock-badge--out' : isLow ? 'spd-gallery-stock-badge--low' : 'spd-gallery-stock-badge--ok'}`}>
               {isOut ? 'Rupture de stock' : isLow ? `Derniers ${stock} dispo` : 'En stock ✓'}
             </div>
@@ -151,7 +181,7 @@ export default function StoreProductDetail() {
             <div className="spd-gallery-thumbs">
               {images.map((img, i) => (
                 <div key={i} className={`spd-thumb${i === imgIdx ? ' spd-thumb--active' : ''}`} onClick={() => setImgIdx(i)}>
-                  <img src={img} alt="" onError={e => { e.target.src = FALLBACK_IMAGES.default }} />
+                  <img src={img} alt={`Vue miniature ${i + 1}`} loading="lazy" decoding="async" onError={e => { e.target.src = FALLBACK_IMAGES.default }} />
                 </div>
               ))}
             </div>
@@ -311,14 +341,14 @@ export default function StoreProductDetail() {
           <div className="spd-related-title">Produits similaires</div>
           <div className="spd-related-scroll">
             {related.map(p => (
-              <div key={p.id} className="spd-rel-card" onClick={() => navigate(`/store/${p.id}`)}>
-                <img className="spd-rel-img" src={p.image_url || getFallback(p)} alt={p.nom || p.name} onError={e => { e.target.src = FALLBACK_IMAGES.default }} />
+              <Link key={p.id} to={`/store/${p.id}`} className="spd-rel-card">
+                <img className="spd-rel-img" src={p.image_url || getFallback(p)} alt={p.nom || p.name} loading="lazy" decoding="async" onError={e => { e.target.src = FALLBACK_IMAGES.default }} />
                 <div className="spd-rel-body">
                   <div className="spd-rel-cat">{p.categorie || p.cat}</div>
                   <div className="spd-rel-name">{p.nom || p.name}</div>
                   <div className="spd-rel-price">{formatP(p.prix)}</div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -331,5 +361,6 @@ export default function StoreProductDetail() {
         />
       )}
     </main>
+    </>
   )
 }

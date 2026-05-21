@@ -4,26 +4,87 @@ import HomeSlider from '../components/HomeSlider'
 import { Link } from 'react-router-dom'
 import BienvenuePlayer from '../components/BienvenuePlayer'
 import { AudioPlayer } from '../components/AudioPlayer'
+import SEO from '../components/SEO'
 
 import { sections, stats } from '../data/home';
 
-const WA_LINK =
-  'https://wa.me/221775009740?text=Bonjour%20ABAWI%2C%20je%20veux%20le%20Pack%20Platine'
-
 function Home() {
   return (
-    <main className="home">
+    <main className="home home-cosmos">
+      <SEO
+        title="ABAWI — Guides Premium, Outils IA et Académie Business pour l'Afrique"
+        description="Portail premium africain : guides business, outils IA (CV, business plan, finance, juridique), académie Bac, actualités économiques. Créez vos documents professionnels en 5 minutes."
+        keywords="ABAWI, business plan Afrique, CV Sénégal, outils IA, OHADA, SYSCOHADA, académie Bac, guides business, fintech, entrepreneuriat africain"
+        image="/abawi-og-banner.jpg"
+      />
+
+      {/* === HERO BANNER ABAWI === */}
+      <section className="hhb">
+        {/* Éléments de fond */}
+        <div className="hhb-grid" aria-hidden="true" />
+        <div className="hhb-orb hhb-orb--1" aria-hidden="true" />
+        <div className="hhb-orb hhb-orb--2" aria-hidden="true" />
+        <div className="hhb-orb hhb-orb--3" aria-hidden="true" />
+
+        {/* Particules flottantes existantes */}
+        {[...Array(6)].map((_, i) => (
+          <span key={i} className={`hhb-particle hhb-particle--${i + 1}`} aria-hidden="true" />
+        ))}
+
+        {/* Logo */}
+        <div className="hhb-logo-wrap">
+          <div className="hhb-logo-circle">
+            <span className="hhb-ring" aria-hidden="true" />
+            <span className="hhb-ring hhb-ring--outer" aria-hidden="true" />
+            <div className="hhb-logo-img-wrap">
+              <img src="/favicon-abawi-256.webp" alt="ABAWI" className="hhb-logo-img" loading="eager" decoding="async" />
+            </div>
+          </div>
+        </div>
+
+        {/* Contenu */}
+        <div className="hhb-content">
+          <span className="hhb-badge">
+            <span className="hhb-badge-dot" aria-hidden="true" />
+            PORTAIL PREMIUM AFRICAIN
+          </span>
+          <h2 className="hhb-title">
+            Intelligence · <span className="hhb-title-accent">Création</span> · <span className="hhb-title-gold">Excellence</span>
+          </h2>
+          <p className="hhb-sub">
+            30+ outils IA, guides business, académie Bac, finance OHADA et communauté d'entrepreneurs africains — tout en un seul endroit.
+          </p>
+          <div className="hhb-tags">
+            <span className="hhb-tag">🤖 IA Expert 24h/24</span>
+            <span className="hhb-tag">📚 Guides Premium</span>
+            <span className="hhb-tag">⚖️ OHADA · BCEAO</span>
+            <span className="hhb-tag">💰 Finance Élite</span>
+            <span className="hhb-tag">🎓 Academy Bac</span>
+            <span className="hhb-tag">🌍 Communauté</span>
+          </div>
+        </div>
+
+        {/* Ticker bas */}
+        <div className="hhb-ticker-wrap" aria-hidden="true">
+          <div className="hhb-ticker">
+            ABAWI DIGITAL · GUIDES PREMIUM · OUTILS IA · BUSINESS PLAN · CV PRO · FINANCE OHADA · JURIDIQUE ÉLITE · ACADÉMIE BAC · PODCASTS · STORE IT · COMMUNAUTÉ AFRICAINE · ABAWI 360 · CRM · PLANIFICATION · MARKETING · RH · ABAWI DIGITAL ·
+          </div>
+        </div>
+      </section>
+
       {/* === HERO SLIDER PREMIUM === */}
-      <section className="hero-slider-section">
+      <section className="hero-slider-section" style={{ position: 'relative' }}>
+        {/* Étoiles filantes sur le slider */}
+        <span className="home-shooting-star home-shooting-star--1" aria-hidden="true" />
+        <span className="home-shooting-star home-shooting-star--2" aria-hidden="true" />
         <HomeSlider />
         <div className="hero-actions hero-actions--under-slider">
           <Link to="/digital" className="btn btn--gold">
             Découvrir les guides
           </Link>
-          <a href={WA_LINK} className="btn btn--whatsapp" target="_blank" rel="noopener noreferrer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Commander via WhatsApp
-          </a>
+          <Link to="/outils" className="btn btn--green">
+            Explorer les outils →
+          </Link>
         </div>
       </section>
 
@@ -33,7 +94,19 @@ function Home() {
       </section>
 
       {/* === ABAWI 360 — CARTE COMPACTE PREMIUM === */}
-      <section className="card-360-section">
+      <section className="card-360-section" style={{ position: 'relative' }}>
+        {/* Orbites décoratives */}
+        <div className="home-orbit home-orbit--1" aria-hidden="true" />
+        <div className="home-orbit home-orbit--2" aria-hidden="true" />
+        {/* Flottant : stat IA */}
+        <div className="home-float home-float--ai home-float--in-360" aria-hidden="true">
+          <span className="home-float__icon">🤖</span>
+          <div className="home-float__body">
+            <div className="home-float__title">IA Active</div>
+            <div className="home-float__sub">7 modes · 24h/24</div>
+          </div>
+          <span className="home-float__dot" />
+        </div>
         <div className="card-360">
           <div className="card-360-aura" />
           <div className="card-360-content">
@@ -66,12 +139,16 @@ function Home() {
       </section>
 
       {/* === SECTIONS CARDS === */}
-      <section className="sections">
+      <section className="sections" style={{ position: 'relative' }}>
+        {/* Sparks décoratifs entre les cards */}
+        {[...Array(4)].map((_, i) => (
+          <span key={i} className={`home-spark home-spark--${i + 1}`} aria-hidden="true" />
+        ))}
         <div className="sections-grid">
           {sections.map((s) => (
             <Link to={s.path} key={s.path} className={`section-card section-card--${s.color}`}>
               <div className={`section-card-icon section-card-icon--${s.color}`}>
-                {s.icon}
+                <s.Icon />
               </div>
               <h3 className="section-card-title">{s.title}</h3>
               <p className="section-card-desc">{s.desc}</p>
@@ -84,7 +161,16 @@ function Home() {
       </section>
 
       {/* === ABAWI 360 VISION — BANNIÈRE LARGE PREMIUM === */}
-      <section className="vision-360-section">
+      <section className="vision-360-section" style={{ position: 'relative' }}>
+        {/* Flottant métrique */}
+        <div className="home-float home-float--metric" aria-hidden="true">
+          <div className="home-float__stat-val">10×</div>
+          <div className="home-float__stat-label">Productivité</div>
+        </div>
+        <div className="home-float home-float--live home-float--live-360" aria-hidden="true">
+          <span className="home-float__live-dot" />
+          <span>Live · Sénégal</span>
+        </div>
         <div className="vision-360">
           <div className="vision-360-bg" />
           <div className="vision-360-overlay" />
@@ -114,7 +200,17 @@ function Home() {
       </section>
 
       {/* === SOCIAL PROOF === */}
-      <section className="proof">
+      <section className="proof" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Particules déco */}
+        {[...Array(5)].map((_, i) => (
+          <span key={i} className={`home-spark home-spark--${i + 1}`} aria-hidden="true" />
+        ))}
+        {/* Flottant membres */}
+        <div className="home-float home-float--members home-float--in-proof" aria-hidden="true">
+          <div className="home-float__stat-val">2 840+</div>
+          <div className="home-float__stat-label">Entrepreneurs</div>
+        </div>
+        <div className="home-proof-glow" aria-hidden="true" />
         <div className="proof-grid">
           {stats.map((s) => (
             <div key={s.label} className="proof-item">
@@ -145,22 +241,48 @@ function Home() {
         )
       })()}
 
-      {/* === PROMO BANNER === */}
-      <section className="promo-banner">
-        <div className="promo-inner">
-          <div className="promo-text">
-            <span className="promo-badge">Offre limitée</span>
-            <h2 className="promo-title">
-              Pack Platine <span className="text-gold">-67%</span>
+      {/* === ABAWI+ — POURQUOI REJOINDRE === */}
+      <section className="abawi-plus-section" style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* Éléments flottants premium */}
+        <div className="home-float home-float--badge home-float--badge-1" aria-hidden="true">✓ Business Plan IA</div>
+        <div className="home-float home-float--badge home-float--badge-2" aria-hidden="true">✓ CV Pro ATS</div>
+        <div className="home-float home-float--badge home-float--badge-3" aria-hidden="true">✓ Finance OHADA</div>
+        <div className="home-float home-float--badge home-float--badge-4" aria-hidden="true">✓ 150+ Guides PDF</div>
+        <div className="home-aura home-aura--plus" aria-hidden="true" />
+        <div className="abawi-plus-inner">
+          <div className="abawi-plus-header">
+            <span className="promo-badge">ABAWI+</span>
+            <h2 className="abawi-plus-title">
+              Tout ce dont vous avez besoin,{' '}
+              <span className="text-gold">sous un seul toit</span>
             </h2>
-            <p className="promo-desc">
-              Tous les guides ABAWI Digital + Academy pour seulement{' '}
-              <strong>49 990 FCFA</strong> au lieu de 150 000 FCFA
+            <p className="abawi-plus-sub">
+              Guides premium, 30+ outils IA, communauté privée — conçu pour les entrepreneurs africains qui veulent avancer vite.
             </p>
           </div>
-          <a href={WA_LINK} className="btn btn--gold btn--lg" target="_blank" rel="noopener noreferrer">
-            Commander maintenant &rarr;
-          </a>
+          <div className="abawi-plus-benefits">
+            <div className="abawi-plus-benefit">
+              <span className="abawi-plus-benefit-icon">🤖</span>
+              <h4>IA Expert Senior 24h/24</h4>
+              <p>30+ outils IA professionnels : Business Plan, CV Pro, Studio Design, Analyse Juridique et bien plus — disponibles à tout moment.</p>
+            </div>
+            <div className="abawi-plus-benefit">
+              <span className="abawi-plus-benefit-icon">📚</span>
+              <h4>150+ Ressources Premium</h4>
+              <p>Guides PDF, vidéos, podcasts, fascicules scolaires — tout le savoir stratégique dont un entrepreneur africain a besoin.</p>
+            </div>
+            <div className="abawi-plus-benefit">
+              <span className="abawi-plus-benefit-icon">🌍</span>
+              <h4>Rejoignez la Communauté ABAWI</h4>
+              <p>Groupe WhatsApp privé, réseau d'entrepreneurs africains, entraide et opportunités — une famille qui construit ensemble.</p>
+            </div>
+          </div>
+          <div className="abawi-plus-cta-wrap">
+            <Link to="/plans" className="btn btn--gold btn--lg">
+              Rejoindre ABAWI+ →
+            </Link>
+            <span className="abawi-plus-price">à partir de 4 990 FCFA/mois</span>
+          </div>
         </div>
       </section>
     </main>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
+import { supabase } from '../lib/supabase'
 
 export default function MaxAvisPublicForm() {
   const { surveyId } = useParams()
@@ -12,26 +13,33 @@ export default function MaxAvisPublicForm() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load surveys from localStorage
-    const storedSurveys = JSON.parse(localStorage.getItem('maxavis_surveys') || '[]')
-    
-    // Find survey by ID (extract from URL format or match directly)
-    const found = storedSurveys.find(s => 
-      s.link?.includes(surveyId) || s.id === surveyId
-    )
-    
-    if (found) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync from external source
-      setSurvey(found)
-      // Check if user already responded (using localStorage)
-      const hasResponded = localStorage.getItem(`maxavis_responded_${found.id}`)
-      if (hasResponded) {
-        setSubmitted(true)
+    async function loadSurvey() {
+      // Try Supabase first
+      const { data, error } = await supabase
+        .from('maxavis_surveys')
+        .select('*')
+        .eq('id', surveyId)
+        .maybeSingle()
+      if (data) {
+        setSurvey({ ...data, title: data.titre, description: data.description, questions: data.questions || [], settings: data.settings || {} })
+        const hasResponded = localStorage.getItem(`maxavis_responded_${data.id}`)
+        if (hasResponded) setSubmitted(true)
+        setLoading(false)
+        return
       }
-    } else {
-      setNotFound(true)
+      // Fallback: localStorage (legacy)
+      const stored = JSON.parse(localStorage.getItem('maxavis_surveys') || '[]')
+      const found = stored.find(s => s.link?.includes(surveyId) || s.id === surveyId)
+      if (found) {
+        setSurvey(found)
+        const hasResponded = localStorage.getItem(`maxavis_responded_${found.id}`)
+        if (hasResponded) setSubmitted(true)
+      } else {
+        setNotFound(true)
+      }
+      setLoading(false)
     }
-    setLoading(false)
+    loadSurvey()
   }, [surveyId])
 
   const handleResponseChange = (questionId, value) => {
@@ -41,23 +49,19 @@ export default function MaxAvisPublicForm() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!survey) return
 
-    // Save response to localStorage (in a real app, this would go to a server)
-    const existingResponses = JSON.parse(localStorage.getItem(`maxavis_responses_${survey.id}`) || '[]')
-    const newResponse = {
-      id: Date.now().toString(36),
-      surveyId: survey.id,
-      responses,
-      submittedAt: new Date().toISOString()
-    }
-    
-    localStorage.setItem(`maxavis_responses_${survey.id}`, JSON.stringify([...existingResponses, newResponse]))
+    // Save response to Supabase
+    await supabase.from('maxavis_responses').insert({
+      survey_id: survey.id,
+      answers: responses,
+      respondent: 'anonyme',
+    })
     localStorage.setItem(`maxavis_responded_${survey.id}`, 'true')
-    
+
     setSubmitted(true)
   }
 

@@ -3,13 +3,15 @@ import '../../styles/ThemeUniversal.css'
 import './Admin.css'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
-import { guides, allFascicules, podcasts, slugify } from '../../data/products'
+import { useThemeContext } from '../../context/ThemeContext'
+import { guides, allFascicules, podcasts, videos, summaries, fasciculeAudios, slugify } from '../../data/products'
 import { VOICE_SETTINGS_PRESETS, DEFAULT_VOICE_BY_TYPE } from '../../data/voices'
 import { uploadFile, uploadAudioSummary, testUpload } from '../../lib/uploadFile'
 import { generateSummaryText, generateMP3 } from '../../lib/generateAudio'
 import { testPaydunyaConnection } from '../../config/paydunya'
 import { cleanIATextLight } from '../../lib/cleanText'
 import { callGroq } from '../../lib/groqClient'
+import { fetchEvents, updateEvent, deleteEvent, createEvent } from '../../lib/senticketDb'
 import MarkdownText from '../../components/MarkdownText'
 import SocialShare from '../../components/SocialShare'
 import VoiceSelector from '../../components/VoiceSelector'
@@ -17,7 +19,11 @@ import StoreExcelImport from '../../components/admin/StoreExcelImport'
 import StoreProductBot from '../../components/StoreProductBot'
 import { Navigate } from 'react-router-dom'
 import AdminMessaging from '../../components/AdminMessaging'
-import SocialVault from '../../components/admin/SocialVault'
+import SupportTicketsPanel from '../../components/SupportTicketsPanel'
+import SocialConnectorExpert from '../../components/SocialConnectorExpert'
+import ArkelUpPanel from './ArkelUpPanel'
+import AnnahSocialPanel from '../../components/admin/AnnahSocialPanel'
+import AbavieStorePanel from '../../components/admin/AbavieStorePanel'
 import { Link } from 'react-router-dom'
 
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
@@ -30,9 +36,13 @@ const ADMIN_TABS = [
   { id: 'dashboard',  label: 'Dashboard',       icon: '📊' },
   { id: 'bot',        label: 'Bot ABAWI IA',    icon: '✦' },
   { id: 'health',     label: 'Santé API',       icon: '🩺' },
+  { id: 'quotas',     label: 'Quotas',          icon: '🎛️' },
   { id: 'guides',     label: 'Guides',           icon: '📚' },
   { id: 'fascicules', label: 'Fascicules',       icon: '🎓' },
   { id: 'podcasts',   label: 'Podcasts',         icon: '🎧' },
+  { id: 'videos',     label: 'Vidéos',           icon: '🎬' },
+  { id: 'summaries',  label: 'Résumés',          icon: '🎙️' },
+  { id: 'fascicule-audios', label: 'Audio Fascicules', icon: '🔊' },
   { id: 'news',       label: 'News',             icon: '📰' },
   { id: 'store',      label: 'Store IT',         icon: '💻' },
   { id: 'slider',     label: 'Slider',           icon: '🖼️' },
@@ -41,11 +51,17 @@ const ADMIN_TABS = [
   { id: 'outils-ia',  label: 'Outils IA',        icon: '🤖' },
   { id: 'membres',    label: 'Membres',          icon: '👥' },
   { id: 'paiements',  label: 'Paiements',        icon: '💰' },
+  { id: 'packs',      label: 'Packs Membres',    icon: '📦' },
   { id: 'medias',     label: 'Médiathèque',      icon: '🖼️' },
   { id: 'audio',      label: 'Audio Manager',    icon: '🎙️' },
+  { id: 'abavie-store', label: 'Boutique Abavie', icon: '🩺' },
   { id: 'stock',      label: 'Stocks',           icon: '📦' },
   { id: 'messagerie', label: 'Messagerie',        icon: '📨' },
+  { id: 'support',    label: 'Support Tickets',   icon: '🎫' },
   { id: 'sociaux',    label: 'Comptes sociaux',   icon: '🔐' },
+  { id: 'annah-social', label: 'Annah Social',    icon: '🤖' },
+  { id: 'arkelup',    label: "Arkel'Up Center",  icon: '🎓' },
+  { id: 'senticket',  label: 'SenTicket',        icon: '🎫' },
   { id: 'parametres', label: 'Paramètres',       icon: '⚙️' },
 ]
 
@@ -402,7 +418,7 @@ const DEFAULT_PROVIDERS = [
   { id: 'elevenlabs', label: 'ElevenLabs TTS', icon: '🎙️', category: 'Audio / TTS', env_var: 'VITE_ELEVENLABS_API_KEY', env_alias: 'VITE_ELEVEN_KEY', description: 'Synthèse vocale ultra-réaliste premium', doc_url: 'https://elevenlabs.io', test_type: 'elevenlabs', actif: true },
   { id: 'azure', label: 'Azure Speech', icon: '☁️', category: 'Audio / TTS', env_var: 'VITE_AZURE_SPEECH_KEY', env_alias: '', description: 'TTS neural français — Denise FR, voix backup', doc_url: 'https://portal.azure.com', test_type: 'azure', actif: true },
   { id: 'supabase', label: 'Supabase DB', icon: '🗄️', category: 'Base de données', env_var: 'VITE_SUPABASE_URL', env_alias: 'VITE_SUPABASE_ANON_KEY', description: 'BDD principale, auth membres, stockage', doc_url: 'https://app.supabase.com', test_type: 'supabase', actif: true },
-  { id: 'paydunya', label: 'PayDunya', icon: '💳', category: 'Paiement / Fintech', env_var: 'VITE_PAYDUNYA_MASTER_KEY', env_alias: 'VITE_PAYDUNYA_PRIVATE_KEY', description: 'Passerelle mobile money & CB — Wave, OM, Free Money', doc_url: 'https://paydunya.com', test_type: 'paydunya', actif: true },
+  { id: 'paydunya', label: 'PayDunya', icon: '💳', category: 'Paiement / Fintech', env_var: 'PAYDUNYA_MASTER_KEY', env_alias: 'PAYDUNYA_PRIVATE_KEY', description: 'Passerelle mobile money & CB — Wave, OM, Free Money. Variables SERVEUR uniquement (Netlify Dashboard).', doc_url: 'https://paydunya.com', test_type: 'paydunya', actif: true },
   { id: 'fyatu', label: 'Fyatu', icon: '🌍', category: 'Paiement / Fintech', env_var: 'VITE_FYATU_API_KEY', env_alias: 'VITE_FYATU_SECRET', description: 'Transferts transfrontaliers Afrique — AbawiPay international', doc_url: 'https://fyatu.com', test_type: 'key_check', actif: true },
   { id: 'onafriq', label: 'Onafriq (MFS Africa)', icon: '🌐', category: 'Paiement / Fintech', env_var: 'VITE_ONAFRIQ_API_KEY', env_alias: 'VITE_ONAFRIQ_SECRET', description: 'Réseau 45+ pays africains — interopérabilité mobile money', doc_url: 'https://onafriq.com', test_type: 'key_check', actif: true },
   { id: 'paymentology', label: 'Paymentology', icon: '🏦', category: 'Paiement / Fintech', env_var: 'VITE_PAYMENTOLOGY_API_KEY', env_alias: 'VITE_PAYMENTOLOGY_SECRET', description: 'Émission carte virtuelle/physique Visa & Mastercard', doc_url: 'https://paymentology.com', test_type: 'key_check', actif: true },
@@ -438,8 +454,6 @@ function getEnvValue(envVar, alias) {
     VITE_AZURE_SPEECH_KEY: import.meta.env.VITE_AZURE_SPEECH_KEY,
     VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
     VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    VITE_PAYDUNYA_MASTER_KEY: import.meta.env.VITE_PAYDUNYA_MASTER_KEY,
-    VITE_PAYDUNYA_PRIVATE_KEY: import.meta.env.VITE_PAYDUNYA_PRIVATE_KEY,
     VITE_POLOTNO_API_KEY: import.meta.env.VITE_POLOTNO_API_KEY,
     VITE_OPENAI_API_KEY: import.meta.env.VITE_OPENAI_API_KEY,
     VITE_ANTHROPIC_API_KEY: import.meta.env.VITE_ANTHROPIC_API_KEY,
@@ -1084,6 +1098,141 @@ function BannersPanel({ showToast }) {
   )
 }
 
+// ─── Quotas Panel ─────────────────────────────────────────────────────────────
+function QuotasPanel({ showToast }) {
+  const [configs, setConfigs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(null)
+
+  useEffect(() => {
+    loadConfigs()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function loadConfigs() {
+    setLoading(true)
+    const { data, error } = await supabase.from('tool_quotas').select('*').order('tool_key')
+    if (error) showToast?.('Erreur chargement quotas', 'error')
+    else setConfigs(data || [])
+    setLoading(false)
+  }
+
+  async function saveConfig() {
+    if (!editing) return
+    const payload = {
+      tool_key: editing.tool_key,
+      plan_id: editing.plan_id || 'all',
+      window_type: editing.window_type,
+      limit_count: Number(editing.limit_count) || 0,
+      cost_override: editing.cost_override ? Number(editing.cost_override) : null,
+      action_type: editing.action_type,
+      description: editing.description || '',
+    }
+    const { error } = editing.id
+      ? await supabase.from('tool_quotas').update(payload).eq('id', editing.id)
+      : await supabase.from('tool_quotas').insert(payload)
+    if (error) showToast?.(`Erreur: ${error.message}`, 'error')
+    else { showToast?.('Quota enregistré'); setEditing(null); loadConfigs() }
+  }
+
+  async function deleteConfig(id) {
+    if (!confirm('Supprimer cette règle de quota ?')) return
+    await supabase.from('tool_quotas').delete().eq('id', id)
+    loadConfigs()
+  }
+
+  const plans = ['all', 'gratuit', 'starter', 'pro', 'elite', '360', 'vip']
+  const windows = ['hour', 'day', 'week', 'month']
+  const actions = ['block', 'warn', 'premium_cost']
+
+  return (
+    <section>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>🎛️ Gestion des Quotas</h2>
+          <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+            Configurez les limites d'usage par outil et par plan. 0 = illimité.
+          </p>
+        </div>
+        <button onClick={() => setEditing({ tool_key: '', plan_id: 'all', window_type: 'day', limit_count: 5, action_type: 'block' })}
+          style={{ padding: '10px 18px', borderRadius: 10, border: 'none', fontWeight: 700, cursor: 'pointer', background: 'var(--gold)', color: '#000' }}>
+          + Nouveau quota
+        </button>
+      </div>
+
+      {loading ? <div style={{ color: 'var(--text-muted)', padding: 20 }}>Chargement...</div> : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {configs.map(c => (
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.85rem' }}>{c.tool_key}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  Plan: <strong>{c.plan_id}</strong> | Fenêtre: <strong>{c.window_type}</strong> | Limite: <strong>{c.limit_count}</strong> | Action: <strong>{c.action_type}</strong>
+                  {c.cost_override && <span> | Surcoût: <strong>{c.cost_override} crédits</strong></span>}
+                </div>
+                {c.description && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{c.description}</div>}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={() => setEditing(c)} style={{ padding: '6px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: 'rgba(59,130,246,0.1)', color: '#3B82F6', fontWeight: 700, fontSize: '0.75rem' }}>✏️</button>
+                <button onClick={() => deleteConfig(c.id)} style={{ padding: '6px 10px', borderRadius: 6, border: 'none', cursor: 'pointer', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontWeight: 700, fontSize: '0.75rem' }}>🗑️</button>
+              </div>
+            </div>
+          ))}
+          {configs.length === 0 && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>Aucune règle de quota configurée.</div>}
+        </div>
+      )}
+
+      {/* Modal édition */}
+      {editing && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 480 }}>
+            <h3 style={{ margin: '0 0 16px', color: 'var(--text-primary)' }}>{editing.id ? 'Modifier' : 'Nouveau'} quota</h3>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <Field label="Outil (tool_key)" value={editing.tool_key} onChange={v => setEditing({ ...editing, tool_key: v })} placeholder="ex: audio_studio" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <Select label="Plan" value={editing.plan_id} options={plans} onChange={v => setEditing({ ...editing, plan_id: v })} />
+                <Select label="Fenêtre" value={editing.window_type} options={windows} onChange={v => setEditing({ ...editing, window_type: v })} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <Field label="Limite" type="number" value={editing.limit_count} onChange={v => setEditing({ ...editing, limit_count: Number(v) })} />
+                <Field label="Surcoût crédits" type="number" value={editing.cost_override || ''} onChange={v => setEditing({ ...editing, cost_override: v ? Number(v) : null })} placeholder="optionnel" />
+              </div>
+              <Select label="Action" value={editing.action_type} options={actions} onChange={v => setEditing({ ...editing, action_type: v })} />
+              <Field label="Description" value={editing.description || ''} onChange={v => setEditing({ ...editing, description: v })} placeholder="ex: Studio Photo — 3/jour gratuits" />
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button onClick={saveConfig} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', fontWeight: 800, cursor: 'pointer', background: 'var(--gold)', color: '#000' }}>Enregistrer</button>
+              <button onClick={() => setEditing(null)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', fontWeight: 700, cursor: 'pointer', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function Field({ label, value, onChange, type = 'text', placeholder }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4 }}>{label}</label>
+      <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.82rem', boxSizing: 'border-box' }} />
+    </div>
+  )
+}
+
+function Select({ label, value, options, onChange }) {
+  return (
+    <div>
+      <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4 }}>{label}</label>
+      <select value={value} onChange={e => onChange(e.target.value)}
+        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.82rem' }}>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  )
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 function Dashboard({ showToast, setTab }) {
   const [stats, setStats] = useState({})
@@ -1129,6 +1278,9 @@ function Dashboard({ showToast, setTab }) {
         guides: guides.length,
         fascicules: allFascicules.length,
         podcasts: podcasts.length,
+        videos: videos.length,
+        summaries: summaries.length,
+        fasciculeAudios: fasciculeAudios.length,
         membres: membresRes.count || 0,
         membres_actifs: membresActifsRes.count || 0,
         membres_nouveaux: membresNouveauxRes.count || 0,
@@ -1144,6 +1296,9 @@ function Dashboard({ showToast, setTab }) {
         guides: guides.length,
         fascicules: allFascicules.length,
         podcasts: podcasts.length,
+        videos: videos.length,
+        summaries: summaries.length,
+        fasciculeAudios: fasciculeAudios.length,
         store: storeRes?.count || 0,
         paiements_pending: paiementsPendRes.count || 0,
       })
@@ -1202,6 +1357,9 @@ function Dashboard({ showToast, setTab }) {
         <StatCard icon="📚" label="Guides" value={stats.guides} color="var(--gold)" />
         <StatCard icon="🎓" label="Fascicules" value={stats.fascicules} color="var(--green)" />
         <StatCard icon="🎧" label="Podcasts" value={stats.podcasts} color="#8B5CF6" />
+        <StatCard icon="🎬" label="Vidéos" value={stats.videos} color="#EF4444" />
+        <StatCard icon="🎙️" label="Résumés" value={stats.summaries} color="#F97316" />
+        <StatCard icon="🔊" label="Audio Fascicules" value={stats.fasciculeAudios} color="#06B6D4" />
         <StatCard icon="👥" label="Membres actifs" value={stats.membres_actifs} color="#06B6D4" />
         <StatCard icon="🆕" label="Nouveaux (7j)" value={stats.membres_nouveaux} color="#F97316" />
         <StatCard icon="💰" label="Revenus du jour" value={`${(stats.revenus_jour||0).toLocaleString()} F`} color="var(--green)" />
@@ -1248,6 +1406,9 @@ function Dashboard({ showToast, setTab }) {
                 { icon: '📚', label: 'Guides', val: contentStats.guides, color: 'var(--green)' },
                 { icon: '🎓', label: 'Fascicules', val: contentStats.fascicules, color: '#8B5CF6' },
                 { icon: '🎧', label: 'Podcasts', val: contentStats.podcasts, color: '#06B6D4' },
+                { icon: '🎬', label: 'Vidéos', val: contentStats.videos, color: '#EF4444' },
+                { icon: '🎙️', label: 'Résumés', val: contentStats.summaries, color: '#F97316' },
+                { icon: '🔊', label: 'Audio Fascicules', val: contentStats.fasciculeAudios, color: '#06B6D4' },
                 { icon: '💻', label: 'Produits Store', val: contentStats.store, color: '#3B82F6' },
                 { icon: '⏳', label: 'Paiements en attente', val: contentStats.paiements_pending, color: contentStats.paiements_pending > 0 ? 'var(--red)' : 'var(--text-muted)' },
               ].map(({ icon, label, val, sub, color }) => (
@@ -1295,6 +1456,7 @@ function Dashboard({ showToast, setTab }) {
           { label: '+ Nouvel article', color: '#F0B429', bg: 'rgba(240,180,41,0.1)', tab: 'news' },
           { label: '+ Nouveau guide', color: '#18A84A', bg: 'rgba(24,168,74,0.1)', tab: 'guides' },
           { label: '+ Nouveau podcast', color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)', tab: 'podcasts' },
+          { label: '+ Nouvelle vidéo', color: '#EF4444', bg: 'rgba(239,68,68,0.1)', tab: 'videos' },
           { label: '+ Nouveau produit', color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', tab: 'store' },
           { label: '📨 Messagerie', color: '#06B6D4', bg: 'rgba(6,182,212,0.1)', tab: 'messagerie' },
         ].map(a => (
@@ -2806,6 +2968,85 @@ function MembresPanel({ showToast }) {
   )
 }
 
+// ─── Gestion Packs Membres ────────────────────────────────────────────────────
+function PacksPanel({ showToast }) {
+  const [packs, setPacks] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('tous')
+
+  // eslint-disable-next-line react-hooks/immutability
+  useEffect(() => { loadPacks() }, [])
+
+  async function loadPacks() {
+    const { data, error } = await supabase.from('user_packs').select('*, membres(email,prenom,nom)').order('created_at', { ascending: false }).limit(200)
+    if (error) console.error('[PacksPanel]', error)
+    setPacks(data || [])
+    setLoading(false)
+  }
+
+  async function toggleStatus(pack, newStatus) {
+    await supabase.from('user_packs').update({ status: newStatus }).eq('id', pack.id)
+    showToast('✅ Statut mis à jour')
+    loadPacks()
+  }
+
+  const filtered = filter === 'tous' ? packs : packs.filter(p => p.status === filter)
+  const productList = (ids) => Array.isArray(ids) ? ids.length + ' produit(s)' : '—'
+
+  const Btn = ({ label, onClick, color }) => (
+    <button onClick={onClick} style={{
+      padding: '4px 9px', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700,
+      background: `${color}15`, border: `1px solid ${color}25`, color, cursor: 'pointer',
+    }}>{label}</button>
+  )
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', flex: 1 }}>📦 Packs Membres</h2>
+        <div style={{ padding: '8px 16px', borderRadius: 10, background: 'rgba(24,168,74,0.1)', border: '1px solid rgba(24,168,74,0.3)', color: '#18A84A', fontWeight: 700 }}>
+          {packs.length} pack(s)
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        {[['tous', 'Tous'], ['active', 'Actifs'], ['expired', 'Expirés'], ['cancelled', 'Annulés']].map(([k, l]) => (
+          <button key={k} onClick={() => setFilter(k)} style={{
+            padding: '6px 14px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 700,
+            background: filter === k ? 'rgba(240,180,41,0.15)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${filter === k ? '#F0B429' : '#1A2332'}`,
+            color: filter === k ? '#F0B429' : '#8B95A5', cursor: 'pointer',
+          }}>{l}</button>
+        ))}
+      </div>
+
+      <DataTable
+        columns={['Date', 'Membre', 'Pack', 'Type', 'Produits', 'Statut', 'Actions']}
+        loading={loading}
+        rows={filtered.map(p => {
+          const statusColors = { active: '#18A84A', expired: '#F0B429', cancelled: '#ef4444' }
+          const sc = statusColors[p.status] || '#8B95A5'
+          return [
+            <span style={{ color: '#4A5568', fontSize: '0.78rem' }}>{new Date(p.created_at).toLocaleDateString('fr-FR')}</span>,
+            <span style={{ color: '#8B95A5', fontSize: '0.78rem' }}>{p.membres?.email || '—'}</span>,
+            <span style={{ color: 'var(--text-primary)', fontSize: '0.82rem', fontWeight: 600 }}>{p.pack_name}</span>,
+            <span style={{ color: '#8B95A5', fontSize: '0.78rem' }}>{p.pack_type}</span>,
+            <span style={{ color: '#8B95A5', fontSize: '0.78rem' }}>{productList(p.product_ids)}</span>,
+            <span style={{ padding: '3px 10px', borderRadius: 100, fontSize: '0.72rem', fontWeight: 700, background: `${sc}15`, color: sc }}>
+              {p.status}
+            </span>,
+            <div style={{ display: 'flex', gap: 6 }}>
+              {p.status === 'active' && <Btn label="❌ Annuler" onClick={() => toggleStatus(p, 'cancelled')} color="#ef4444" />}
+              {p.status === 'cancelled' && <Btn label="✅ Réactiver" onClick={() => toggleStatus(p, 'active')} color="#18A84A" />}
+            </div>,
+          ]
+        })}
+        emptyMsg="Aucun pack enregistré"
+      />
+    </div>
+  )
+}
+
 // ─── Gestion Paiements ────────────────────────────────────────────────────────
 function PaiementsPanel({ showToast }) {
   const [paiements, setPaiements] = useState([])
@@ -2827,6 +3068,16 @@ function PaiementsPanel({ showToast }) {
       // eslint-disable-next-line react-hooks/purity -- Called from event handlers/effects, not during pure render — instability is intentional or scoped
       const newDate = new Date(Date.now() + 30 * 86400000).toISOString()
       await supabase.from('membres').update({ statut: 'actif', date_fin: newDate }).eq('email', p.email)
+    }
+    if (p.product_type === 'pack' && p.user_id) {
+      await supabase.from('user_packs').upsert({
+        user_id: p.user_id,
+        pack_id: p.product_id || p.id,
+        pack_type: p.pack_type || 'digital',
+        pack_name: p.product_title || 'Pack',
+        status: 'active',
+        product_ids: p.product_ids || [],
+      }, { onConflict: 'user_id,pack_id' })
     }
     showToast('✅ Paiement validé')
     loadPaiements()
@@ -3296,65 +3547,63 @@ function StoreModal({ editData, editModal, upd, onSave, onClose, showToast }) {
     setAiLoading(true)
     try {
       const specsText = specs.map(s => `${s.label}: ${s.value}`).join(', ')
-      const prompt = `Tu es un expert en marketing digital et SEO pour le marché africain (Sénégal, Côte d'Ivoire, Bénin). Génère du contenu marketing COMPLET et OPTIMISÉ pour le référencement pour ce produit informatique.
+      const prompt = `Tu es un expert senior en stratégie produit, marketing digital, branding et social media pour le marché africain (Sénégal, Côte d'Ivoire, Bénin, Mali, Burkina Faso). Tu travailles pour ABAWI Store, la boutique IT de référence.
 
-Règles IMPORTANTES:
-- Description: 3-4 phrases captivantes, max 120 mots, mettre en avant les bénéfices
-- SEO: titre accrocheur avec mots-clés principaux
-- Meta description: appel à l'action inclus
-- Long-tail keywords: 5-7 phrases de recherche naturelle en français africain
-- FAQ: répondre aux vraies questions des clients
+Génère un DOSSIER PRODUIT COMPLET, premium et structuré pour :
+- Produit: ${editData.name}
+- Catégorie: ${cat}
+- Prix: ${editData.prix ? Number(editData.prix).toLocaleString('fr-FR') + ' FCFA' : 'prix sur demande'}
+- Spécifications: ${specsText || 'à consulter'}
 
-Réponds UNIQUEMENT en JSON valide selon ce schéma exact:
+Règles essentielles :
+- Ton : professionnel, rassurant, expert, chaleureux. Français avec sensibilité africaine.
+- Cible : professionnels, entreprises, startups, particuliers exigeants.
+- SEO : optimisé pour la recherche locale (villes, pays francophones ouest-africains).
+- Social : posts prêts à publier, engageants, avec storytelling.
+
+Réponds UNIQUEMENT en JSON valide selon ce schéma exact :
 {
-  "description": "texte commercial optimisé SEO",
-  "seo_title": "titre SEO 50-60 caractères avec mots-clés",
-  "seo_desc": "meta description 150-160 caractères avec CTA",
-  "long_tail_keywords": "mot-clé 1, mot-clé 2, mot-clé 3, mot-clé 4, mot-clé 5",
-  "points_forts": ["point 1", "point 2", "point 3", "point 4", "point 5"],
-  "facebook": "post Facebook engageant 120 mots avec emojis adaptés",
-  "instagram": "caption Instagram avec storytelling et hashtags",
-  "whatsapp": "message WhatsApp commercial chaleureux",
-  "twitter": "tweet percutant max 280 car avec hashtags",
+  "description_courte": "phrase d'accroche 1-2 lignes max, percutante",
+  "description": "description longue détaillée 4-6 lignes, bénéfices, usages, contexte africain",
+  "storytelling": "histoire émotionnelle autour du produit, 2-3 lignes, pourquoi il compte",
+  "angle_vente": "3 angles de vente distincts séparés par le caractère |",
+  "public_cible": "public cible précis et segmenté (professionnels, startups, etc.)",
+  "points_forts": ["point fort 1", "point fort 2", "point fort 3", "point fort 4", "point fort 5"],
+  "cas_usage": ["cas d'usage 1", "cas d'usage 2", "cas d'usage 3"],
+  "seo_title": "titre SEO optimisé, max 60 caractères",
+  "seo_desc": "meta description avec appel à l'action, max 160 caractères",
+  "long_tail_keywords": "mots-clés longs séparés par des virgules, inclure noms de villes africaines",
+  "facebook": "post Facebook engageant, 80-120 mots avec emojis adaptés",
+  "instagram": "caption Instagram storytelling + hashtags inline",
+  "whatsapp": "message WhatsApp commercial chaleureux et direct",
+  "twitter": "tweet percutant max 280 caractères avec hashtags",
   "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4", "#tag5", "#tag6"],
   "faq": [
-    {"q": "question fréquente 1", "r": "réponse détaillée et utile"},
-    {"q": "question fréquente 2", "r": "réponse détaillée et utile"},
-    {"q": "question fréquente 3", "r": "réponse détaillée et utile"}
+    {"q":"question fréquente 1","r":"réponse détaillée et utile"},
+    {"q":"question fréquente 2","r":"réponse détaillée et utile"},
+    {"q":"question fréquente 3","r":"réponse détaillée et utile"}
   ],
-  "tags_courts": "tag1, tag2, tag3, tag4, tag5"
-}
-
-Produit: ${editData.name}
-Catégorie: ${cat}
-Prix: ${editData.prix ? editData.prix + ' FCFA' : 'prix sur demande'}
-Spécifications: ${specsText || 'à consulter en magasin'}
-Contexte: Marché IT en Afrique de l'Ouest, clients professionnels et particuliers`
-      const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1200,
-          temperature: 0.7,
-          response_format: { type: 'json_object' },
-        }),
-      })
-      const data = await res.json()
-      const raw = data.choices?.[0]?.message?.content?.trim() || ''
+  "tags_courts": "tag1, tag2, tag3, tag4, tag5",
+  "schema_org": {"@context":"https://schema.org","@type":"Product","name":"${editData.name}","description":"...","brand":{"@type":"Brand","name":"ABAWI Store"},"offers":{"@type":"Offer","priceCurrency":"XOF","availability":"https://schema.org/InStock"}}
+}`
+      const raw = await callGroq(prompt, { maxTokens: 4000, temperature: 0.35, jsonMode: true })
       let parsed = null
-      try { parsed = JSON.parse(raw) } catch { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]) }
+      try { parsed = JSON.parse(raw) } catch { const m = (raw || '').match(/\{[\s\S]*\}/); if (m) try { parsed = JSON.parse(m[0]) } catch { /* ignore */ } }
       if (parsed) {
+        if (parsed.description_courte) upd('description_courte', parsed.description_courte)
         if (parsed.description) upd('description', parsed.description)
+        if (parsed.storytelling) upd('storytelling', parsed.storytelling)
+        if (parsed.angle_vente) upd('angle_vente', parsed.angle_vente)
+        if (parsed.public_cible) upd('public_cible', parsed.public_cible)
+        if (parsed.cas_usage) upd('cas_usage', parsed.cas_usage)
         if (parsed.seo_title) upd('seo_title', parsed.seo_title)
         if (parsed.seo_desc) upd('seo_desc', parsed.seo_desc)
         if (parsed.long_tail_keywords) upd('long_tail_keywords', parsed.long_tail_keywords)
         if (parsed.tags_courts) upd('tags', parsed.tags_courts)
-        if (parsed.tags) upd('tags', Array.isArray(parsed.hashtags) ? parsed.hashtags.join(' ') : (editData.tags || ''))
+        if (parsed.schema_org) upd('schema_org', typeof parsed.schema_org === 'object' ? JSON.stringify(parsed.schema_org, null, 2) : parsed.schema_org)
         setGeneratedMarketing(parsed)
         setShowMarketingPanel(true)
-        showToast('✅ Contenu IA généré — Description + SEO + Marketing')
+        showToast('✅ Dossier produit IA généré (Description + SEO + Social + FAQ)')
       } else {
         showToast('❌ Génération échouée', 'error')
       }
@@ -3381,9 +3630,10 @@ Contexte: Marché IT en Afrique de l'Ouest, clients professionnels et particulie
 
   const TABS = [
     { id: 'base', label: 'Infos de base', icon: '📋' },
+    { id: 'content', label: 'Contenu', icon: '✍️' },
     { id: 'specs', label: 'Spécifications', icon: '⚙️' },
     { id: 'images', label: 'Images', icon: '🖼️' },
-    { id: 'seo', label: 'SEO', icon: '🔍' },
+    { id: 'seo', label: 'SEO & Marketing', icon: '🔍' },
     { id: 'stock', label: 'Stock & Statut', icon: '📦' },
   ]
 
@@ -3438,6 +3688,29 @@ Contexte: Marché IT en Afrique de l'Ouest, clients professionnels et particulie
             <span style={{ marginLeft: 8, fontSize: '0.68rem', color: '#4A5568', fontWeight: 400 }}>→ Générer via IA dans l'onglet SEO</span>
           </label>
           <textarea style={{ ...S, minHeight: 80, resize: 'vertical' }} value={editData.description || ''} onChange={e => upd('description', e.target.value)} placeholder="Description commerciale du produit..." />
+        </div>
+      )}
+
+      {/* TAB: Contenu */}
+      {tab === 'content' && (
+        <div>
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#8B95A5', marginBottom: 5 }}>Description courte</label>
+          <textarea style={{ ...S, minHeight: 60, resize: 'vertical' }} value={editData.description_courte || ''} onChange={e => upd('description_courte', e.target.value)} placeholder="1-2 phrases d'accroche percutantes" />
+
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#8B95A5', marginBottom: 5 }}>Description longue</label>
+          <textarea style={{ ...S, minHeight: 100, resize: 'vertical' }} value={editData.description || ''} onChange={e => upd('description', e.target.value)} placeholder="Description commerciale détaillée..." />
+
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#8B95A5', marginBottom: 5 }}>Storytelling</label>
+          <textarea style={{ ...S, minHeight: 70, resize: 'vertical' }} value={editData.storytelling || ''} onChange={e => upd('storytelling', e.target.value)} placeholder="Histoire émotionnelle autour du produit..." />
+
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#8B95A5', marginBottom: 5 }}>Angles de vente (séparés par | )</label>
+          <input style={S} value={editData.angle_vente || ''} onChange={e => upd('angle_vente', e.target.value)} placeholder="Angle 1 | Angle 2 | Angle 3" />
+
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#8B95A5', marginBottom: 5 }}>Public cible</label>
+          <input style={S} value={editData.public_cible || ''} onChange={e => upd('public_cible', e.target.value)} placeholder="Professionnels, startups, particuliers..." />
+
+          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#8B95A5', marginBottom: 5 }}>Cas d'usage (séparés par des virgules)</label>
+          <input style={S} value={editData.cas_usage || ''} onChange={e => upd('cas_usage', e.target.value)} placeholder="Usage 1, Usage 2, Usage 3" />
         </div>
       )}
 
@@ -3626,6 +3899,46 @@ Contexte: Marché IT en Afrique de l'Ouest, clients professionnels et particulie
                       {generatedMarketing.points_forts.map((p, i) => (
                         <div key={i} style={{ fontSize: '0.82rem', color: '#BDC1C6', marginBottom: 4 }}>• {p}</div>
                       ))}
+                    </div>
+                  )}
+
+                  {/* Storytelling */}
+                  {generatedMarketing.storytelling && (
+                    <div style={{ background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 10, padding: 14 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#A855F7', marginBottom: 8 }}>✨ STORYTELLING</div>
+                      <div style={{ fontSize: '0.82rem', color: '#BDC1C6', lineHeight: 1.5 }}>{generatedMarketing.storytelling}</div>
+                    </div>
+                  )}
+
+                  {/* Angles de vente */}
+                  {generatedMarketing.angle_vente && (
+                    <div style={{ background: 'rgba(240,180,41,0.06)', border: '1px solid rgba(240,180,41,0.2)', borderRadius: 10, padding: 14 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F0B429', marginBottom: 8 }}>🎯 ANGLES DE VENTE</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {generatedMarketing.angle_vente.split('|').map((a, i) => (
+                          <span key={i} style={{ padding: '4px 10px', borderRadius: 20, background: 'rgba(240,180,41,0.1)', border: '1px solid rgba(240,180,41,0.25)', color: '#F0B429', fontSize: '0.75rem' }}>{a.trim()}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Public cible */}
+                  {generatedMarketing.public_cible && (
+                    <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10, padding: 14 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981', marginBottom: 8 }}>👥 PUBLIC CIBLE</div>
+                      <div style={{ fontSize: '0.82rem', color: '#BDC1C6' }}>{generatedMarketing.public_cible}</div>
+                    </div>
+                  )}
+
+                  {/* Cas d'usage */}
+                  {generatedMarketing.cas_usage?.length > 0 && (
+                    <div style={{ background: 'rgba(14,165,233,0.06)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 10, padding: 14 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0EA5E9', marginBottom: 8 }}>📌 CAS D'USAGE</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {generatedMarketing.cas_usage.map((u, i) => (
+                          <span key={i} style={{ padding: '4px 10px', borderRadius: 20, background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.25)', color: '#0EA5E9', fontSize: '0.75rem' }}>{u}</span>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -4164,7 +4477,7 @@ function ParametresPanel({ showToast }) {
       <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, marginBottom: 20 }}>
         <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#3B82F6', marginBottom: 12 }}>💳 Test PayDunya</h3>
         <div style={{ fontSize: '0.82rem', color: '#8B95A5', marginBottom: 14 }}>
-          Vérifie la connexion avec les clés <code style={{ background: 'var(--bg-primary)', padding: '1px 5px', borderRadius: 4 }}>VITE_PAYDUNYA_*</code> de votre .env.local
+          Vérifie la connexion avec les clés <code style={{ background: 'var(--bg-primary)', padding: '1px 5px', borderRadius: 4 }}>PAYDUNYA_*</code> configurées côté serveur (Netlify Dashboard)
         </div>
         <button onClick={testPaydunya} disabled={pdTest?.loading} style={{
           padding: '10px 20px', borderRadius: 10,
@@ -4348,9 +4661,391 @@ function AdminStock({ showToast }) {
   )
 }
 
+// ─── SenTicket Admin Panel ───────────────────────────────────────────────────
+function SenTicketAdminPanel({ showToast }) {
+  const [activeTab, setActiveTab] = useState('events')
+  const [events, setEvents] = useState([])
+  const [organizers, setOrganizers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [editModal, setEditModal] = useState(null)
+
+  useEffect(() => { loadEvents(); loadOrganizers() }, [])
+
+  async function loadEvents() {
+    setLoading(true)
+    const data = await fetchEvents()
+    if (data) setEvents(data)
+    else showToast('❌ Erreur chargement événements', 'error')
+    setLoading(false)
+  }
+
+  async function loadOrganizers() {
+    const { data, error } = await supabase
+      .from('membres')
+      .select('id, nom, prenom, email, role, plan_type, organizer_tier, created_at')
+      .order('created_at', { ascending: false })
+    if (error) { console.error('[Admin] loadOrganizers:', error); return }
+    setOrganizers(data || [])
+  }
+
+  async function handleDelete(eventId) {
+    if (!confirm('Supprimer cet événement définitivement ?')) return
+    const ok = await deleteEvent(eventId)
+    if (ok) {
+      showToast('✅ Événement supprimé')
+      loadEvents()
+    } else {
+      showToast('❌ Suppression échouée', 'error')
+    }
+  }
+
+  function parseCommissionRate(val) {
+    if (val == null || val === '') return undefined
+    const normalized = String(val).replace(',', '.').trim()
+    const n = Number(normalized)
+    return isNaN(n) ? undefined : n
+  }
+
+  async function handleSave(ev) {
+    const payload = {
+      event: {
+        titre: ev.titre,
+        description: ev.description || null,
+        date: ev.date,
+        heure: ev.heure,
+        ville: ev.ville,
+        lieu: ev.lieu,
+        categorie: ev.categorie,
+        statut: ev.statut || 'actif',
+        featured: ev.featured || false,
+        commission_rate: parseCommissionRate(ev.commission_rate),
+        cover_url: ev.cover_url || null,
+        image: ev.image || null,
+      },
+      billets: (ev.billets || []).map(b => ({
+        nom: b.nom,
+        prix: Number(b.prix),
+        places: Number(b.places),
+        vendus: Number(b.vendus || 0),
+      })),
+    }
+    const ok = await updateEvent(ev.id, payload)
+    if (ok) {
+      showToast('✅ Événement mis à jour')
+      setEditModal(null)
+      loadEvents()
+    } else {
+      showToast('❌ Mise à jour échouée', 'error')
+    }
+  }
+
+  async function handleCreate(ev) {
+    const payload = {
+      event: {
+        titre: ev.titre,
+        description: ev.description || null,
+        date: ev.date,
+        heure: ev.heure,
+        ville: ev.ville,
+        lieu: ev.lieu,
+        categorie: ev.categorie,
+        statut: ev.statut || 'actif',
+        featured: ev.featured || false,
+        commission_rate: parseCommissionRate(ev.commission_rate),
+        cover_url: ev.cover_url || null,
+        image: ev.image || null,
+      },
+      billets: (ev.billets || []).map(b => ({
+        nom: b.nom,
+        prix: Number(b.prix),
+        places: Number(b.places),
+        vendus: Number(b.vendus || 0),
+      })),
+    }
+    const ok = await createEvent(payload)
+    if (ok) {
+      showToast('✅ Événement créé')
+      setEditModal(null)
+      loadEvents()
+    } else {
+      showToast('❌ Création échouée', 'error')
+    }
+  }
+
+  async function updateOrganizerTier(userId, tier) {
+    const { error } = await supabase.from('membres').update({ organizer_tier: tier }).eq('id', userId)
+    if (error) {
+      showToast('❌ Erreur mise à jour tier', 'error')
+      console.error(error)
+    } else {
+      showToast('✅ Tier organisateur mis à jour')
+      loadOrganizers()
+    }
+  }
+
+  const filtered = events.filter(e =>
+    (e.titre || '').toLowerCase().includes(search.toLowerCase()) ||
+    (e.ville || '').toLowerCase().includes(search.toLowerCase()) ||
+    (e.categorie || '').toLowerCase().includes(search.toLowerCase())
+  )
+
+  const formatDate = (d) => {
+    if (!d) return '—'
+    const date = new Date(d)
+    if (isNaN(date)) return d
+    return date.toLocaleDateString('fr-FR')
+  }
+
+  const TIER_LABELS = { start: 'Start', pro: 'Pro', business: 'Business' }
+  const TIER_COLORS = { start: '#3B82F6', pro: '#8B5CF6', business: '#F0B429' }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, borderBottom: '1px solid var(--border)' }}>
+        {[
+          { id: 'events', label: `Événements (${events.length})`, icon: '🎫' },
+          { id: 'organizers', label: `Organisateurs (${organizers.length})`, icon: '👥' },
+        ].map(t => (
+          <button key={t.id} onClick={() => setActiveTab(t.id)}
+            style={{
+              padding: '10px 18px', border: 'none', background: 'transparent',
+              color: activeTab === t.id ? '#F0B429' : 'var(--text-secondary)',
+              borderBottom: activeTab === t.id ? '2px solid #F0B429' : '2px solid transparent',
+              cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'events' && (
+        <div>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', flex: 1 }}>🎫 SenTicket — Événements</h2>
+            <button onClick={() => setEditModal({ titre: '', description: '', date: '', heure: '', ville: 'Dakar', lieu: '', categorie: 'Concert', statut: 'actif', featured: false, commission_rate: '', billets: [], image: '🎫', cover_url: '' })} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#F0B429', color: '#070B0F', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>➕ Ajouter</button>
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher..."
+              style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minWidth: 200 }}
+            />
+          </div>
+
+          {loading ? <div style={{ color: 'var(--text-muted)', padding: 20 }}>Chargement...</div> : (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {filtered.length === 0 && (
+                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Aucun événement trouvé</div>
+              )}
+              {filtered.map(ev => (
+                <div key={ev.id} style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '12px 16px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: '1.5rem' }}>🎫</div>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{ev.titre}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                      📅 {formatDate(ev.date)} · 🕐 {ev.heure || '—'} · 📍 {ev.lieu || '—'}, {ev.ville || '—'} · {ev.categorie}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', marginTop: 4 }}>
+                      <span style={{ padding: '2px 8px', borderRadius: 100, background: ev.statut === 'actif' ? 'rgba(24,168,74,0.15)' : 'rgba(239,68,68,0.15)', color: ev.statut === 'actif' ? '#18A84A' : '#EF4444', fontWeight: 700 }}>
+                        {ev.statut || 'actif'}
+                      </span>
+                      {ev.featured && <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 100, background: 'rgba(240,180,41,0.15)', color: '#F0B429', fontWeight: 700 }}>⭐ Featured</span>}
+                      {ev.commission_rate != null && (
+                        <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 100, background: 'rgba(59,130,246,0.12)', color: '#3B82F6', fontWeight: 700 }}>
+                          💰 {(ev.commission_rate * 100).toFixed(1).replace('.0', '')}%
+                        </span>
+                      )}
+                      {ev.billets?.length > 0 && (
+                        <span style={{ marginLeft: 6, color: 'var(--text-secondary)' }}>
+                          🎫 {ev.billets.length} catégorie(s) · À partir de {Math.min(...ev.billets.map(b => b.prix)).toLocaleString()} F
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setEditModal(ev)} style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.8rem' }}>✏️ Modifier</button>
+                    <button onClick={() => handleDelete(ev.id)} style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: '0.8rem' }}>🗑️ Supprimer</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'organizers' && (
+        <div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 20 }}>👥 Organisateurs SenTicket</h2>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {organizers.length === 0 && (
+              <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Aucun organisateur trouvé</div>
+            )}
+            {organizers.map(org => (
+              <div key={org.id} style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '12px 16px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                <div style={{ fontSize: '1.5rem' }}>👤</div>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{org.prenom || ''} {org.nom || '—'}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                    {org.email || '—'} · Plan : {org.plan_type || 'gratuit'} · Rôle : {org.role || 'membre'}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{
+                    padding: '4px 10px', borderRadius: 100, fontWeight: 700, fontSize: '0.78rem',
+                    background: (TIER_COLORS[org.organizer_tier] || '#3B82F6') + '20',
+                    color: TIER_COLORS[org.organizer_tier] || '#3B82F6',
+                  }}>
+                    {TIER_LABELS[org.organizer_tier] || 'Start'}
+                  </span>
+                  <select
+                    value={org.organizer_tier || 'start'}
+                    onChange={e => updateOrganizerTier(org.id, e.target.value)}
+                    style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem', cursor: 'pointer' }}
+                  >
+                    <option value="start">Start (7%)</option>
+                    <option value="pro">Pro (4,5%)</option>
+                    <option value="business">Business (2%)</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {editModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 16, padding: 24, maxWidth: 540, width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--border)' }}>
+            <h3 style={{ marginBottom: 16, color: 'var(--text-primary)' }}>{editModal.id ? "✏️ Modifier l'événement" : "➕ Ajouter un événement"}</h3>
+            <SenTicketEditForm data={editModal} onChange={setEditModal} onSave={() => editModal.id ? handleSave(editModal) : handleCreate(editModal)} onCancel={() => setEditModal(null)} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SenTicketEditForm({ data, onChange, onSave, onCancel }) {
+  const [uploading, setUploading] = useState(false)
+  const field = (label, key, type = 'text', placeholder = '') => (
+    <div style={{ marginBottom: 12 }}>
+      <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4 }}>{label}</label>
+      {type === 'textarea' ? (
+        <textarea value={data[key] || ''} onChange={e => onChange({ ...data, [key]: e.target.value })} placeholder={placeholder}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.85rem', minHeight: 80, resize: 'vertical', boxSizing: 'border-box' }} />
+      ) : type === 'select' ? (
+        <select value={data[key] || ''} onChange={e => onChange({ ...data, [key]: e.target.value })}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.85rem', boxSizing: 'border-box' }}>
+          {placeholder.map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : (
+        <input type={type} value={data[key] || ''} onChange={e => onChange({ ...data, [key]: e.target.value })} placeholder={placeholder}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+      )}
+    </div>
+  )
+
+  const VILLES = ['Dakar', 'Thiès', 'Saint-Louis', 'Kaolack', 'Ziguinchor', 'Touba', 'Mbour', 'Popenguine']
+  const CATEGORIES = ['Concert', 'Festival', 'Conférence', 'Sport', 'Théâtre', 'Gala', 'Workshop', 'Culture', 'Business', 'Activité culturelle', 'Activité religieuse', "Activité d'Évangélisation"]
+
+  async function handleFileUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadFile(file, 'covers', 'senticket')
+      onChange({ ...data, cover_url: url })
+    } catch (err) {
+      alert('Erreur upload image: ' + err.message)
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <div>
+      {field('Titre', 'titre', 'text', "Titre de l'événement")}
+      {field('Icône (emoji)', 'image', 'text', "Ex: 🎫, ⛪, 🎵")}
+      {field('URL Flyer / Image', 'cover_url', 'text', "https://...")}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4 }}>Téléverser Flyer / Image</label>
+        <input type="file" accept="image/*" onChange={handleFileUpload} disabled={uploading}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+        {uploading && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>⏳ Upload en cours...</div>}
+        {data.cover_url && (
+          <div style={{ marginTop: 8 }}>
+            <img src={data.cover_url} alt="Flyer" style={{ maxWidth: '100%', maxHeight: 120, borderRadius: 8, border: '1px solid var(--border)' }} />
+          </div>
+        )}
+      </div>
+      {field('Description', 'description', 'textarea', "Description")}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {field('Date', 'date', 'date')}
+        {field('Heure', 'heure', 'time')}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {field('Ville', 'ville', 'select', VILLES)}
+        {field('Lieu', 'lieu', 'text', 'Lieu précis')}
+      </div>
+      {field('Catégorie', 'categorie', 'select', CATEGORIES)}
+      {field('Statut', 'statut', 'select', ['actif', 'inactif', 'annulé'])}
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 4 }}>Commission (%)</label>
+        <input type="text"
+          value={data.commission_rate != null ? data.commission_rate : ''}
+          onChange={e => onChange({ ...data, commission_rate: e.target.value })}
+          placeholder="0,07"
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'inherit', fontSize: '0.85rem', boxSizing: 'border-box' }} />
+        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>Override du tier organisateur (laisser vide pour utiliser le tier)</div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <input type="checkbox" checked={!!data.featured} onChange={e => onChange({ ...data, featured: e.target.checked })} style={{ width: 18, height: 18, accentColor: '#F0B429' }} />
+        <label style={{ fontSize: '0.85rem', color: 'var(--text-primary)', cursor: 'pointer' }}>⭐ Featured (mis en avant)</label>
+      </div>
+
+      {/* Billets */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>🎫 Catégories de billets</label>
+        {(data.billets || []).map((b, i) => (
+          <div key={b.id || i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+            <input value={b.nom || ''} onChange={e => {
+              const bb = [...(data.billets || [])]
+              bb[i] = { ...b, nom: e.target.value }
+              onChange({ ...data, billets: bb })
+            }} placeholder="Nom" style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem' }} />
+            <input type="number" value={b.prix || ''} onChange={e => {
+              const bb = [...(data.billets || [])]
+              bb[i] = { ...b, prix: Number(e.target.value) }
+              onChange({ ...data, billets: bb })
+            }} placeholder="Prix" style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem' }} />
+            <input type="number" value={b.places || ''} onChange={e => {
+              const bb = [...(data.billets || [])]
+              bb[i] = { ...b, places: Number(e.target.value) }
+              onChange({ ...data, billets: bb })
+            }} placeholder="Places" style={{ padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem' }} />
+            <button onClick={() => {
+              const bb = [...(data.billets || [])]
+              bb.splice(i, 1)
+              onChange({ ...data, billets: bb })
+            }} style={{ padding: '6px 8px', borderRadius: 6, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: '0.75rem' }}>🗑️</button>
+          </div>
+        ))}
+        <button onClick={() => onChange({ ...data, billets: [...(data.billets || []), { nom: '', prix: 0, places: 0, vendus: 0 }] })} style={{ padding: '8px 14px', borderRadius: 6, border: '1px dashed var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.8rem' }}>➕ Ajouter une catégorie</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button onClick={onCancel} style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem' }}>Annuler</button>
+        <button onClick={onSave} style={{ padding: '10px 18px', borderRadius: 8, border: 'none', background: '#F0B429', color: '#070B0F', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}>💾 Sauvegarder</button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Admin principal ──────────────────────────────────────────────────────────
 function Admin() {
   const { membre, isAdmin, loading: authLoading } = useAuth()
+  const { darkMode } = useThemeContext()
   const [tab, setTab] = useState('dashboard')
   const [toast, setToast] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -4360,12 +5055,193 @@ function Admin() {
   }
 
   if (authLoading) return (
-    <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B95A5' }}>
+    <main style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
       Chargement...
     </main>
   )
 
   if (!isAdmin) return <Navigate to="/membre" replace />
+
+// ─── Gestion Vidéos ─────────────────────────────────────────────────────────
+function VideosPanel({ showToast }) {
+  const [search, setSearch] = useState('')
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [editModal, setEditModal] = useState(null)
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchVideos()
+  }, [])
+
+  async function fetchVideos() {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase.from('videos').select('*').order('created_at', { ascending: false })
+      if (error) throw error
+      setItems(data || [])
+    } catch (e) {
+      showToast('❌ Erreur chargement vidéos: ' + e.message, 'error')
+    }
+    setLoading(false)
+  }
+
+  async function saveVideo(v) {
+    const payload = {
+      slug: v.slug || slugify(v.titre),
+      titre: v.titre,
+      categorie: v.categorie || 'Business & Digital',
+      description: v.description || null,
+      prix: v.prix || 1900,
+      video_url: v.video_url || null,
+      cover_url: v.cover_url || null,
+      premium: v.premium !== false,
+      gratuit: v.gratuit || false,
+      active: v.active !== false,
+      updated_at: new Date().toISOString(),
+    }
+    const { error } = await supabase.from('videos').upsert({ id: v.id, ...payload }, { onConflict: 'id' })
+    if (error) { showToast('❌ Sauvegarde impossible: ' + error.message, 'error'); return }
+    showToast('✅ Vidéo sauvegardée')
+    setEditModal(null)
+    fetchVideos()
+  }
+
+  async function deleteVideo(id) {
+    if (!confirm('Supprimer cette vidéo ?')) return
+    const { error } = await supabase.from('videos').delete().eq('id', id)
+    if (error) { showToast('❌ Suppression échouée: ' + error.message, 'error'); return }
+    showToast('✅ Vidéo supprimée')
+    fetchVideos()
+  }
+
+  const filtered = items.filter(v =>
+    v.titre.toLowerCase().includes(search.toLowerCase()) ||
+    (v.categorie || '').toLowerCase().includes(search.toLowerCase())
+  )
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', flex: 1 }}>🎬 Vidéos ({items.length})</h2>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minWidth: 200 }} />
+        <button onClick={() => setEditModal({ id: null, titre: '', categorie: 'Business & Digital', prix: 1900, video_url: '', premium: true, gratuit: false, active: true })}
+          style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#F0B429', color: '#070B0F', fontWeight: 700, cursor: 'pointer' }}>
+          + Nouvelle vidéo
+        </button>
+      </div>
+
+      {loading ? <div>Chargement...</div> : (
+        <div style={{ display: 'grid', gap: 12 }}>
+          {filtered.map(v => (
+            <div key={v.id} style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '12px 16px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: '1.5rem' }}>🎬</div>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontWeight: 700 }}>{v.titre}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{v.categorie} · {v.prix} F · {v.premium ? 'Premium' : 'Gratuit'} · {v.active ? 'Actif' : 'Inactif'}</div>
+                {v.video_url && <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: 2 }}>{v.video_url}</div>}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setEditModal(v)} style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.8rem' }}>Modifier</button>
+                <button onClick={() => deleteVideo(v.id)} style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: '0.8rem' }}>Supprimer</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: 16, padding: 24, maxWidth: 520, width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '1px solid var(--border)' }}>
+            <h3 style={{ marginBottom: 16 }}>{editModal.id ? 'Modifier' : 'Nouvelle'} vidéo</h3>
+            <VideoEditForm data={editModal} onChange={setEditModal} onSave={() => saveVideo(editModal)} onCancel={() => setEditModal(null)} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function VideoEditForm({ data, onChange, onSave, onCancel }) {
+  const upd = (k, v) => onChange({ ...data, [k]: v })
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>Titre</label>
+      <input value={data.titre} onChange={e => upd('titre', e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+      <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>Catégorie</label>
+      <input value={data.categorie} onChange={e => upd('categorie', e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+      <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>URL vidéo</label>
+      <input value={data.video_url || ''} onChange={e => upd('video_url', e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+      <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>URL cover</label>
+      <input value={data.cover_url || ''} onChange={e => upd('cover_url', e.target.value)} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+      <label style={{ fontSize: '0.78rem', fontWeight: 700 }}>Prix (FCFA)</label>
+      <input type="number" value={data.prix || 0} onChange={e => upd('prix', parseInt(e.target.value) || 0)} style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <label><input type="checkbox" checked={data.premium} onChange={e => upd('premium', e.target.checked)} /> Premium</label>
+        <label><input type="checkbox" checked={data.gratuit} onChange={e => upd('gratuit', e.target.checked)} /> Gratuit</label>
+        <label><input type="checkbox" checked={data.active} onChange={e => upd('active', e.target.checked)} /> Actif</label>
+      </div>
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
+        <button onClick={onCancel} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer' }}>Annuler</button>
+        <button onClick={onSave} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#F0B429', color: '#070B0F', fontWeight: 700, cursor: 'pointer' }}>Sauvegarder</button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Gestion Résumés ────────────────────────────────────────────────────────
+function SummariesPanel({ showToast }) {
+  const [search, setSearch] = useState('')
+  const [items, setItems] = useState(summaries)
+  const filtered = items.filter(s => s.titre.toLowerCase().includes(search.toLowerCase()))
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', flex: 1 }}>🎙️ Résumés ({items.length})</h2>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minWidth: 200 }} />
+      </div>
+      <div style={{ display: 'grid', gap: 12 }}>
+        {filtered.map(s => (
+          <div key={s.id} style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '12px 16px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ fontSize: '1.5rem' }}>🎙️</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700 }}>{s.titre}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{s.categorie}</div>
+            </div>
+            <audio controls style={{ width: 200, height: 32 }} src={s.audio_url} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Gestion Audio Fascicules ────────────────────────────────────────────────
+function FasciculeAudiosPanel({ showToast }) {
+  const [search, setSearch] = useState('')
+  const [items, setItems] = useState(fasciculeAudios)
+  const filtered = items.filter(fa => fa.titre.toLowerCase().includes(search.toLowerCase()) || (fa.matiere || '').toLowerCase().includes(search.toLowerCase()))
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', flex: 1 }}>🔊 Audio Fascicules ({items.length})</h2>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', minWidth: 200 }} />
+      </div>
+      <div style={{ display: 'grid', gap: 12 }}>
+        {filtered.map(fa => (
+          <div key={fa.id} style={{ background: 'var(--bg-card)', borderRadius: 12, padding: '12px 16px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ fontSize: '1.5rem' }}>🔊</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700 }}>{fa.titre}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{fa.serie} · {fa.matiere}</div>
+            </div>
+            <audio controls style={{ width: 200, height: 32 }} src={fa.audio_url} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
   const PANEL_PROPS = { showToast }
 
@@ -4376,6 +5252,9 @@ function Admin() {
     guides: <GuidesPanel {...PANEL_PROPS} />,
     fascicules: <FasciculesPanel {...PANEL_PROPS} />,
     podcasts: <PodcastsPanel {...PANEL_PROPS} />,
+    videos: <VideosPanel {...PANEL_PROPS} />,
+    summaries: <SummariesPanel {...PANEL_PROPS} />,
+    'fascicule-audios': <FasciculeAudiosPanel {...PANEL_PROPS} />,
     news: <NewsPanel {...PANEL_PROPS} />,
     store: <StorePanel {...PANEL_PROPS} />,
     slider: <SliderPanel {...PANEL_PROPS} />,
@@ -4384,39 +5263,36 @@ function Admin() {
     'outils-ia': <OutilsIAPanel />,
     membres: <MembresPanel {...PANEL_PROPS} />,
     paiements: <PaiementsPanel {...PANEL_PROPS} />,
+    packs: <PacksPanel {...PANEL_PROPS} />,
     medias: <MediaPanel {...PANEL_PROPS} />,
     audio: <AudioPanel {...PANEL_PROPS} />,
+    quotas: <QuotasPanel {...PANEL_PROPS} />,
+    'abavie-store': <AbavieStorePanel />,
     stock: <AdminStock {...PANEL_PROPS} />,
     messagerie: <AdminMessaging {...PANEL_PROPS} />,
-    sociaux: <SocialVault {...PANEL_PROPS} />,
+    support: <SupportTicketsPanel showToast={(msg, type) => showToast(msg, type)} />,
+    sociaux: <SocialConnectorExpert owner={membre?.email || ''} toast={(msg, type) => showToast(msg, type)} />,
+    'annah-social': <AnnahSocialPanel owner={membre?.email || ''} showToast={(msg, type) => showToast(msg, type)} />,
+    arkelup: <ArkelUpPanel />,
+    senticket: <SenTicketAdminPanel showToast={(msg, type) => showToast(msg, type)} />,
     parametres: <ParametresPanel {...PANEL_PROPS} />,
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
+    <div data-mode={darkMode ? 'dark' : 'light'} style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* Sidebar */}
-      <aside style={{
+      <aside className={`adm-sidebar${sidebarOpen ? ' adm-sidebar--open' : ''}`} style={{
         width: 220, flexShrink: 0,
         background: 'var(--bg-primary)', borderRight: '1px solid var(--border)',
-        position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+        position: 'sticky', top: 'var(--navbar-total-h, 60px)', height: 'calc(100vh - var(--navbar-total-h, 60px))', overflowY: 'auto',
         display: 'flex', flexDirection: 'column',
-        // Mobile: hidden by default
-        ...(typeof window !== 'undefined' && window.innerWidth < 768 ? {
-          position: 'fixed', inset: 0, zIndex: 1000,
-          transform: sidebarOpen ? 'none' : 'translateX(-100%)',
-          width: 260, transition: 'transform 0.3s ease',
-        } : {}),
       }}>
         {/* Logo admin */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ fontSize: '0.72rem', color: '#4A5568', fontWeight: 700, letterSpacing: '2px', marginBottom: 4 }}>ABAWI</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--text-primary)' }}>⚙️ Admin</div>
-          <div style={{ fontSize: '0.72rem', color: '#F0B429', marginTop: 4 }}>
-            {membre?.prenom} {membre?.nom}
-            <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 100, background: 'rgba(240,180,41,0.15)', fontWeight: 700 }}>ADMIN</span>
-          </div>
+        <div style={{ padding: '24px 20px 18px', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '2px', marginBottom: 6 }}>ABAWI</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text-primary)' }}>⚙️ Admin</div>
         </div>
 
         {/* Nav */}
@@ -4428,7 +5304,7 @@ function Admin() {
               background: tab === t.id ? 'rgba(240,180,41,0.1)' : 'transparent',
               border: 'none',
               borderLeft: `3px solid ${tab === t.id ? '#F0B429' : 'transparent'}`,
-              color: tab === t.id ? '#F0B429' : '#8B95A5',
+              color: tab === t.id ? 'var(--gold)' : 'var(--text-secondary)',
               fontWeight: tab === t.id ? 700 : 500,
               fontSize: '0.85rem', cursor: 'pointer', textAlign: 'left',
               fontFamily: 'Outfit, sans-serif',
@@ -4442,7 +5318,7 @@ function Admin() {
 
         {/* Footer sidebar */}
         <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
-          <Link to="/" style={{ fontSize: '0.78rem', color: '#4A5568', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Link to="/" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
             ← Retour au site
           </Link>
         </div>
@@ -4457,27 +5333,24 @@ function Admin() {
       )}
 
       {/* Main content */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
+      <div className="adm-main" style={{ flex: 1, overflow: 'hidden' }}>
         {/* Header */}
         <header style={{
-          position: 'sticky', top: 0, zIndex: 100,
           background: 'var(--bg-primary)', borderBottom: '1px solid var(--border)',
           padding: '14px 24px', display: 'flex', alignItems: 'center', gap: 12,
         }}>
-          <button onClick={() => setSidebarOpen(s => !s)} style={{
-            display: 'none', // Only visible on mobile via CSS
+          <button className="adm-menu-btn" onClick={() => setSidebarOpen(s => !s)} style={{
             background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '1.2rem',
-            '@media(max-width:768px)': { display: 'flex' },
           }} aria-label="Menu">☰</button>
           <h1 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)', flex: 1 }}>
             {ADMIN_TABS.find(t => t.id === tab)?.icon} {ADMIN_TABS.find(t => t.id === tab)?.label}
           </h1>
-          <Link to="/" style={{ fontSize: '0.78rem', color: '#4A5568', textDecoration: 'none' }}>← Retour au site</Link>
+          <Link to="/" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textDecoration: 'none' }}>← Retour au site</Link>
         </header>
 
         {/* Content */}
-        <main style={{ padding: '32px 28px', maxWidth: 1200, margin: '0 auto' }}>
-          {panels[tab] || <div style={{ color: '#8B95A5' }}>Section en construction</div>}
+        <main style={{ padding: '32px 28px', maxWidth: 1400, margin: '0 auto' }}>
+          {panels[tab] || <div style={{ color: 'var(--text-muted)' }}>Section en construction</div>}
         </main>
       </div>
     </div>

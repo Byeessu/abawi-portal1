@@ -257,7 +257,7 @@ async function pushOpsAlert(payload) {
         payload,
       }),
     })
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 async function triggerOpsNotify(alertPayload) {
@@ -274,5 +274,5 @@ async function triggerOpsNotify(alertPayload) {
         context: alertPayload,
       }),
     })
-  } catch {}
+  } catch { /* ignore */ }
 }

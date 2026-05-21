@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 110" width="420" height="110">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F1F5C"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="barGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── ICON BACKGROUND ── -->
+  <rect x="6" y="6" width="98" height="98" rx="20" fill="url(#bgGrad)"/>
+
+  <!-- Soft inner glow top-left -->
+  <ellipse cx="32" cy="26" rx="28" ry="20" fill="white" opacity="0.07"/>
+
+  <!-- ── ASCENDING BARS (growth / levels) ── -->
+  <!-- Bar 1 — short -->
+  <rect x="18" y="68" width="20" height="26" rx="5" fill="url(#barGrad)"/>
+  <!-- Bar 2 — medium -->
+  <rect x="46" y="50" width="20" height="44" rx="5" fill="url(#barGrad)"/>
+  <!-- Bar 3 — tall -->
+  <rect x="74" y="30" width="20" height="64" rx="5" fill="url(#barGrad)"/>
+
+  <!-- Gold star on top of tallest bar -->
+  <circle cx="84" cy="24" r="7" fill="url(#goldGrad)"/>
+  <path d="M84 18.5 L85.5 22.5 L89.8 22.5 L86.4 25.1 L87.7 29.1 L84 26.5 L80.3 29.1 L81.6 25.1 L78.2 22.5 L82.5 22.5 Z"
+        fill="white" opacity="0.9"/>
+
+  <!-- ── WORDMARK ── -->
+  <!-- ARKEL — dark navy -->
+  <text x="122" y="58"
+        font-family="'Arial Black', 'Arial', Helvetica, sans-serif"
+        font-size="44" font-weight="900"
+        fill="#0F172A"
+        letter-spacing="-1">ARKEL</text>
+
+  <!-- UP — gold accent -->
+  <text x="297" y="58"
+        font-family="'Arial Black', 'Arial', Helvetica, sans-serif"
+        font-size="44" font-weight="900"
+        fill="#D97706"
+        letter-spacing="-1"> UP</text>
+
+  <!-- CENTER — letter-spaced gray -->
+  <text x="124" y="82"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="15" font-weight="700"
+        fill="#6B7280"
+        letter-spacing="5.5">CENTER</text>
+
+  <!-- Thin accent line under wordmark -->
+  <rect x="122" y="88" width="270" height="3" rx="1.5" fill="url(#goldGrad)" opacity="0.75"/>
+
+  <!-- Tagline -->
+  <text x="124" y="104"
+        font-family="Arial, Helvetica, sans-serif"
+        font-size="10" fill="#9CA3AF"
+        letter-spacing="1.8">FORMATION PROFESSIONNELLE · DAKAR</text>
+</svg>

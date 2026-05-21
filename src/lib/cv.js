@@ -69,3 +69,76 @@ Retourne uniquement un tableau JSON de 3 chaînes, sans commentaire. Ex: ["Titre
   }
   return [];
 }
+
+/**
+ * Adapte un CV complet à une offre d'emploi.
+ * @param {Object} cvData — { info, exps, formations, skills, langues }
+ * @param {string} offerText — texte brut de l'offre (extrait de PDF, image OCR, ou texte collé)
+ * @returns {Object|null} — cvData adapté ou null
+ */
+export async function adaptCVToOffer(cvData, offerText) {
+  if (!offerText || offerText.length < 20) return null;
+  const context = JSON.stringify({
+    info: cvData.info,
+    exps: cvData.exps.map(e => ({ poste: e.poste, entreprise: e.entreprise, desc: e.desc })),
+    formations: cvData.formations.map(f => ({ diplome: f.diplome, ecole: f.ecole, ville: f.ville, annee: f.annee })),
+    skills: cvData.skills.map(s => s.name),
+    langues: cvData.langues.map(l => ({ langue: l.langue, niveau: l.niveau })),
+  }, null, 2);
+
+  const prompt = `Tu es un expert RH et rédacteur de CV senior pour le marché africain.
+
+MISSION : Adapte le CV ci-dessous à l'offre d'emploi fournie.
+Règles strictes :
+- Reformule le titre professionnel pour matcher exactement le poste visé
+- Réécrit le résumé professionnel pour mettre en avant les compétences et expériences les plus pertinentes pour l'offre
+- Réorganise/reformule les descriptions d'expériences pour mettre en avant les réalisations liées au poste (verbes d'action + résultats chiffrés)
+- Ajoute 3-5 compétences techniques manquantes qui sont demandées dans l'offre (si pertinent)
+- Garde les formations inchangées sauf si une certification spécifique est demandée
+- Ne supprime aucune expérience : reformule seulement
+- Le ton doit être professionnel, rassurant, adapté au marché africain
+
+RÉPONSE : UNIQUEMENT un JSON valide (sans markdown) avec cette structure exacte :
+{
+  "info": { "titre": "", "resume": "" },
+  "exps": [{ "poste": "", "entreprise": "", "debut": "", "fin": "", "desc": "" }],
+  "skills": ["skill1", "skill2"],
+  "langues": [{ "langue": "", "niveau": "" }]
+}
+
+OFFRE D'EMPLOI :
+${offerText.slice(0, 6000)}
+
+CV ACTUEL :
+${context.slice(0, 4000)}`;
+
+  const raw = await groqChat(prompt, 2500);
+  try {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        info: { ...cvData.info, ...parsed.info },
+        exps: parsed.exps?.length ? parsed.exps.map((e, i) => ({ ...cvData.exps[i], ...e })) : cvData.exps,
+        formations: cvData.formations,
+        skills: parsed.skills?.length ? parsed.skills.map(s => (typeof s === 'string' ? { name: s, level: 'Intermédiaire' } : s)) : cvData.skills,
+        langues: parsed.langues?.length ? parsed.langues : cvData.langues,
+      };
+    }
+  } catch (e) {
+    console.error('[cv] adaptCVToOffer parse error:', e);
+  }
+  return null;
+}
+
+/**
+ * Extrait le texte d'une offre d'emploi depuis un texte brut (OCR ou copié/collé).
+ * Nettoie et structure l'offre.
+ */
+export async function extractOfferText(rawText) {
+  if (!rawText) return '';
+  const prompt = `Nettoie et structure cette offre d'emploi. Supprime les éléments de mise en page inutiles, les en-têtes/pieds de page, et garde uniquement le contenu utile : titre, description, missions, profil recherché, compétences requises, type de contrat, lieu, salaire. Réponds en texte brut structuré (pas de markdown) :
+
+${rawText.slice(0, 4000)}`;
+  return groqChat(prompt, 1200);
+}

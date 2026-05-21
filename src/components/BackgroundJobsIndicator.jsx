@@ -19,9 +19,9 @@ export default function BackgroundJobsIndicator() {
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '10px 16px', borderRadius: 999,
-          background: runningCount > 0 ? 'linear-gradient(135deg,#1A2332,#0D1117)' : 'linear-gradient(135deg,#18A84A22,#0D1117)',
-          border: `1px solid ${runningCount > 0 ? '#F0B429' : '#18A84A'}`,
-          color: runningCount > 0 ? '#F0B429' : '#18A84A',
+          background: 'linear-gradient(135deg,#1A2332,#0D1117)',
+          border: `1px solid ${runningCount > 0 ? '#F0B429' : '#0EA5E9'}`,
+          color: runningCount > 0 ? '#F0B429' : '#38BDF8',
           fontWeight: 800, fontSize: '0.78rem', cursor: 'pointer',
           boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
           fontFamily: 'Outfit, sans-serif',

@@ -14,49 +14,49 @@ const FALLBACK_SLIDES = [
     title: 'ABAWI 360 — Pilotage business tout-en-un',
     description: 'CRM, planification, statistiques, finance et execution pour accelerer votre croissance.',
     link: '/abawi360',
-    img: '/slider/pexels-mikhail-nilov-6893835.jpg',
+    img: '/slider/pexels-mikhail-nilov-6893835.avif',
   },
   {
     id: 'fallback-finance',
     title: 'Finance Elite — decisions basees sur des chiffres',
     description: 'DCF, score credit, projections et analyses OHADA pour mieux negocier avec banques et investisseurs.',
     link: '/outils/finance',
-    img: '/slider/pexels-freestockpro-10925757.jpg',
+    img: '/slider/pexels-freestockpro-10925757.avif',
   },
   {
     id: 'fallback-juridique',
     title: 'Juridique Elite — conformite OHADA sans approximation',
     description: 'Contrats, statuts, clauses et documents legaux generes avec une structure professionnelle.',
     link: '/outils/juridique',
-    img: '/slider/pexels-ekaterina-bolovtsova-6077870.jpg',
+    img: '/slider/pexels-ekaterina-bolovtsova-6077870.avif',
   },
   {
     id: 'fallback-outils',
     title: 'Outils ABAWI — productivite immediate',
     description: 'CV Pro, Business Plan, Analyse CV IA et documents metier prets a etre utilises.',
     link: '/outils',
-    img: '/slider/pexels-tima-miroshnichenko-5439136.jpg',
+    img: '/slider/pexels-tima-miroshnichenko-5439136.avif',
   },
   {
     id: 'fallback-ia',
     title: 'ABAWI IA — votre copilote intelligent',
     description: 'Generation intelligente, assistant contextuel et automatisations pour gagner du temps chaque jour.',
     link: '/outils/abawi-ia',
-    img: '/slider/pexels-dkomov-34804023.jpg',
+    img: '/slider/pexels-dkomov-34804023.avif',
   },
   {
     id: 'fallback-podcast',
     title: 'Podcasts ABAWI — apprendre et agir en continu',
     description: 'Des episodes strategiques pour entrepreneurs, etudiants et professionnels en Afrique francophone.',
     link: '/podcasts',
-    img: '/slider/pexels-orione-conceicao-1531154-8663192.jpg',
+    img: '/slider/pexels-orione-conceicao-1531154-8663192.avif',
   },
   {
     id: 'fallback-store',
     title: 'Store IT et équipements professionnels',
     description: 'Materiel et accessoires performants pour elever votre niveau de production digitale.',
     link: '/store',
-    img: '/slider/Drop-Expression-Series-Mechtropolis-Keyboard-01.jpeg',
+    img: '/slider/Drop-Expression-Series-Mechtropolis-Keyboard-01.avif',
   },
 ]
 
@@ -179,6 +179,40 @@ export default function HomeSlider() {
           --slider-badge-border: rgba(240,180,41,0.45);
           --slider-badge-color: #f0b429;
           --slider-grid-line: rgba(148,163,184,0.06);
+          position: relative;
+        }
+        .home-slider-wrapper::before,
+        .home-slider-wrapper::after {
+          content: '';
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+          z-index: 0;
+          filter: blur(60px);
+        }
+        .home-slider-wrapper::before {
+          top: -8%;
+          left: -6%;
+          width: 380px;
+          height: 320px;
+          background: radial-gradient(circle, rgba(240,180,41,0.18) 0%, transparent 70%);
+          animation: sliderGlow1 8s ease-in-out infinite;
+        }
+        .home-slider-wrapper::after {
+          bottom: -10%;
+          right: -4%;
+          width: 300px;
+          height: 260px;
+          background: radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 70%);
+          animation: sliderGlow2 10s ease-in-out infinite;
+        }
+        @keyframes sliderGlow1 {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.08); }
+        }
+        @keyframes sliderGlow2 {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.9; transform: scale(1.06); }
         }
         [data-mode="light"] .home-slider-wrapper,
         html.light .home-slider-wrapper {
@@ -189,6 +223,14 @@ export default function HomeSlider() {
           --slider-badge-border: rgba(212,161,23,0.34);
           --slider-badge-color: #6b3f00;
           --slider-grid-line: rgba(71,85,105,0.08);
+        }
+        [data-mode="light"] .home-slider-wrapper::before,
+        html.light .home-slider-wrapper::before {
+          background: radial-gradient(circle, rgba(240,180,41,0.10) 0%, transparent 70%);
+        }
+        [data-mode="light"] .home-slider-wrapper::after,
+        html.light .home-slider-wrapper::after {
+          background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%);
         }
         .swiper { width: 100%; height: 100%; }
         .swiper-slide { overflow: hidden; }
@@ -228,7 +270,7 @@ export default function HomeSlider() {
           border: 1px solid var(--slider-badge-border);
           background: var(--slider-badge-bg);
           color: var(--slider-badge-color);
-          font-size: 0.72rem;
+          font-size: 0.75rem;
           font-weight: 800;
           letter-spacing: 1px;
         }
@@ -366,6 +408,7 @@ export default function HomeSlider() {
         }
         .slide-title {
           text-wrap: balance;
+          text-shadow: 0 0 28px rgba(240,180,41,0.35), 0 2px 8px rgba(0,0,0,0.45);
         }
         .slide-title.title-short {
           font-size: clamp(1.52rem, 2.38vw, 2.26rem) !important;
@@ -379,6 +422,9 @@ export default function HomeSlider() {
           font-size: clamp(1.24rem, 1.88vw, 1.72rem) !important;
           line-height: 1.22 !important;
           letter-spacing: 0.25px !important;
+        }
+        .slide-badge {
+          box-shadow: 0 0 12px rgba(240,180,41,0.15);
         }
 
         .ia-code-stream {
@@ -415,7 +461,7 @@ export default function HomeSlider() {
           border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
           background: rgba(8,12,24,0.75);
           color: var(--accent) !important;
-          font-size: 0.74rem;
+          font-size: 0.75rem;
           font-weight: 700;
           padding: 8px 12px;
           backdrop-filter: blur(4px);
@@ -427,7 +473,7 @@ export default function HomeSlider() {
           100% { transform: translateY(0); opacity: 0.85; }
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
           .home-slider-wrapper {
             height: 620px !important;
           }
@@ -460,7 +506,7 @@ export default function HomeSlider() {
             letter-spacing: 0.2px !important;
           }
           .slider-copy-pane p {
-            font-size: 0.74rem !important;
+            font-size: 0.75rem !important;
             line-height: 1.5 !important;
             margin-bottom: 10px !important;
           }
@@ -470,12 +516,39 @@ export default function HomeSlider() {
           }
           .btn-elite-gold {
             padding: 8px 14px !important;
-            font-size: 0.68rem !important;
+            font-size: 0.75rem !important;
             letter-spacing: 0 !important;
           }
           .swiper-button-next, .swiper-button-prev { display: none !important; }
           .ia-bubble { display: none; }
-          .ia-code-stream { font-size: 0.68rem; bottom: 14%; }
+          .ia-code-stream { font-size: 0.75rem; bottom: 14%; }
+        }
+        @media (max-width: 640px) {
+          .home-slider-wrapper {
+            height: clamp(320px, 80vw, 440px) !important;
+            border-radius: 14px !important;
+          }
+          .slider-copy-pane {
+            padding: 0 14px !important;
+          }
+          .slider-copy-pane h1 {
+            font-size: clamp(1rem, 4.2vw, 1.3rem) !important;
+            letter-spacing: 0 !important;
+          }
+          .slider-copy-pane p { display: none !important; }
+          .slider-copy-pane .slide-title {
+            font-size: clamp(0.95rem, 3.8vw, 1.2rem) !important;
+            margin-bottom: 6px !important;
+          }
+          .btn-elite-gold {
+            padding: 7px 12px !important;
+            font-size: 0.65rem !important;
+          }
+          .ia-code-stream { display: none !important; }
+          .swiper-pagination-bullet { width: 6px !important; height: 6px !important; }
+        }
+        @media (max-width: 390px) {
+          .home-slider-wrapper { height: clamp(280px, 82vw, 360px) !important; }
         }
       `}</style>
 
@@ -493,10 +566,11 @@ export default function HomeSlider() {
         }}
         loop={true}
       >
-        {slides.map((slide) => {
+        {slides.map((slide, slideIdx) => {
           const meta = getSlideMeta(slide);
           const titleDensityClass = getTitleDensityClass(slide.title);
           const visualVariant = getVisualVariant(slide);
+          const isFirst = slideIdx === 0;
           return (
           <SwiperSlide key={slide.id}>
             <div className={`slider-slide-shell ${visualVariant}`}>
@@ -509,7 +583,7 @@ export default function HomeSlider() {
               }}>
                 <div className="slide-copy-inner">
                 <span className="slide-badge">{meta.badge}</span>
-                <h1 className={`slide-title ${titleDensityClass}`} style={{ 
+                <h1 className={`slide-title ${titleDensityClass}`} style={{
                   color: 'var(--slider-title-color)', fontSize: 'clamp(1.45rem, 2.25vw, 2.1rem)', fontWeight: 900,
                   lineHeight: 1.14,
                   marginBottom: '8px',
@@ -525,7 +599,7 @@ export default function HomeSlider() {
                 }}>
                   {slide.title || 'ABAWI'}
                 </h1>
-                <p style={{ 
+                <p style={{
                   color: 'var(--slider-body-color)', fontSize: '0.8rem', marginBottom: '10px',
                   maxWidth: '100%', width: '100%', boxSizing: 'border-box', lineHeight: 1.52, opacity: 0.9,
                   whiteSpace: 'normal',
@@ -546,8 +620,11 @@ export default function HomeSlider() {
               }}>
                 <img
                   className="slide-image"
-                  src={slide.img || '/slider/pexels-fauxels-3184451.jpg'}
+                  src={slide.img || '/slider/pexels-fauxels-3184451.avif'}
                   alt={slide.title || 'ABAWI slide'}
+                  loading={isFirst ? 'eager' : 'lazy'}
+                  fetchpriority={isFirst ? 'high' : undefined}
+                  decoding={isFirst ? 'async' : 'async'}
                   style={{
                     objectPosition: 'center',
                   }}

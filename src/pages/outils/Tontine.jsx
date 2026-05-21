@@ -16,11 +16,14 @@
  * - Design premium UI/UX
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import '../../components/elite/elite.css'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import ToolHero from '../../components/ToolHero'
 import { useToolAccess } from '../../hooks/useToolAccess'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 
 // ═══════════════════════════════════════════════════════════════
 // ICONES SVG PROFESSIONNELS - Remplacent les emojis
@@ -758,13 +761,33 @@ export default function Tontine() {
     return () => style.remove()
   }, [])
 
+  const { membre: authMembre, isAdmin: authAdmin } = useAuth()
+
   // États principaux
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [tontines, setTontines] = useLocalStorage(`${STORAGE_KEY}_tontines`, [])
-  const [membres, setMembres] = useLocalStorage(`${STORAGE_KEY}_membres`, [])
-  const [tours, setTours] = useLocalStorage(`${STORAGE_KEY}_tours`, [])
-  const [paiements, setPaiements] = useLocalStorage(`${STORAGE_KEY}_paiements`, [])
-  const [currentUser, setCurrentUser] = useLocalStorage(USER_KEY, { role: 'admin', id: 1, name: 'Admin' })
+  const [tontines, setTontines] = useState([])
+  const [membres, setMembres] = useState([])
+  const [tours, setTours] = useState([])
+  const [paiements, setPaiements] = useState([])
+  const [currentUser] = useState({ role: authAdmin ? 'admin' : 'membre', id: authMembre?.id || 1, name: authMembre ? `${authMembre.prenom || ''} ${authMembre.nom || ''}`.trim() : 'Admin' })
+  const [dbLoading, setDbLoading] = useState(true)
+
+  const loadTontineData = useCallback(async () => {
+    setDbLoading(true)
+    const [{ data: t }, { data: m }, { data: to }, { data: p }] = await Promise.all([
+      supabase.from('tontines').select('*').order('created_at', { ascending: false }),
+      supabase.from('tontine_membres').select('*').order('ordre', { ascending: true }),
+      supabase.from('tontine_tours').select('*').order('numero', { ascending: true }),
+      supabase.from('tontine_paiements').select('*').order('created_at', { ascending: false }),
+    ])
+    if (t) setTontines(t)
+    if (m) setMembres(m)
+    if (to) setTours(to)
+    if (p) setPaiements(p)
+    setDbLoading(false)
+  }, [])
+
+  useEffect(() => { loadTontineData() }, [loadTontineData])
   
   // États UI
   const [selectedTontine, setSelectedTontine] = useState(null)
@@ -901,67 +924,79 @@ export default function Tontine() {
   /* ═══════════════════════════════════════════════════════════════
      FONCTIONS CRUD
   ════════════════════════════════════════════════════════════════ */
-  const creerTontine = () => {
-    const tontine = {
-      id: Date.now(),
-      ...newTontine,
+  const creerTontine = async () => {
+    const row = {
+      admin_id: String(currentUser.id),
+      nom: newTontine.nom,
+      type: newTontine.type,
       montant: parseFloat(newTontine.montant),
-      statut: 'active',
-      dateCreation: new Date().toISOString(),
-      createurId: currentUser.id
+      frequence: newTontine.frequence,
+      date_debut: newTontine.dateDebut || null,
+      duree: newTontine.duree,
+      description: newTontine.description || '',
+      statut: 'actif',
     }
-    setTontines([...tontines, tontine])
+    const { data: created, error } = await supabase.from('tontines').insert(row).select().single()
+    if (error) { alert('❌ ' + error.message); return }
+    setTontines(p => [...p, created])
     setNewTontine({ nom: '', type: 'classique', montant: '', frequence: 'mensuel', dateDebut: '', duree: 12, description: '' })
     setShowCreateModal(false)
   }
 
-  const creerMembre = () => {
-    const membre = {
-      id: Date.now(),
-      ...newMembre,
+  const creerMembre = async () => {
+    const row = {
+      tontine_id: newMembre.tontineId,
+      membre_id: String(currentUser.id),
+      nom: newMembre.nom,
+      prenom: newMembre.prenom || '',
+      telephone: newMembre.telephone || '',
+      email: newMembre.email || '',
+      ordre: newMembre.ordre,
       statut: 'actif',
-      dateInscription: new Date().toISOString()
     }
-    setMembres([...membres, membre])
+    const { data: created, error } = await supabase.from('tontine_membres').insert(row).select().single()
+    if (error) { alert('❌ ' + error.message); return }
+    setMembres(p => [...p, created])
     setNewMembre({ nom: '', prenom: '', telephone: '', email: '', tontineId: null, ordre: null })
     setShowMemberModal(false)
   }
 
-  const enregistrerPaiement = () => {
-    const paiement = {
-      id: Date.now(),
-      ...newPaiement,
+  const enregistrerPaiement = async () => {
+    const row = {
+      tontine_id: newPaiement.tontineId,
+      membre_id: newPaiement.membreId || null,
+      tour_id: newPaiement.tourId || null,
       montant: parseFloat(newPaiement.montant),
-      enregistrePar: currentUser.id,
-      dateEnregistrement: new Date().toISOString()
+      type: newPaiement.type,
+      statut: newPaiement.statut,
+      date_paiement: newPaiement.date,
     }
-    setPaiements([...paiements, paiement])
+    const { data: created, error } = await supabase.from('tontine_paiements').insert(row).select().single()
+    if (error) { alert('❌ ' + error.message); return }
+    setPaiements(p => [...p, created])
     setNewPaiement({ membreId: '', tontineId: '', tourId: '', montant: '', date: new Date().toISOString().split('T')[0], type: 'cotisation', statut: 'paye' })
     setShowPaymentModal(false)
   }
 
-  const attribuerTour = (tontineId) => {
+  const attribuerTour = async (tontineId) => {
     const tontine = tontines.find(t => t.id === tontineId)
-    const membresTontine = membres.filter(m => m.tontineId === tontineId && m.statut === 'actif')
-    
+    const membresTontine = membres.filter(m => m.tontine_id === tontineId && m.statut === 'actif')
     if (!tontine || membresTontine.length === 0) return
-
-    const toursExistants = tours.filter(t => t.tontineId === tontineId)
-    const prochainOrdre = (toursExistants.length % membresTontine.length)
+    const toursExistants = tours.filter(t => t.tontine_id === tontineId)
+    const prochainOrdre = toursExistants.length % membresTontine.length
     const beneficiaire = membresTontine[prochainOrdre]
-
-    const tour = {
-      id: Date.now(),
-      tontineId,
-      beneficiaireId: beneficiaire.id,
+    const freq = FREQUENCES.find(f => f.id === tontine.frequence)
+    const row = {
+      tontine_id: tontineId,
+      beneficiaire_id: beneficiaire.id,
       numero: toursExistants.length + 1,
       montant: tontine.montant * membresTontine.length,
-      date: new Date(Date.now() + FREQUENCES.find(f => f.id === tontine.frequence)?.jours * 24 * 60 * 60 * 1000).toISOString(),
-      statut: 'planifie',
-      dateAttribution: new Date().toISOString()
+      date_prevue: new Date(Date.now() + (freq?.jours || 30) * 86400000).toISOString().split('T')[0],
+      statut: 'en_attente',
     }
-
-    setTours([...tours, tour])
+    const { data: created, error } = await supabase.from('tontine_tours').insert(row).select().single()
+    if (error) { alert('❌ ' + error.message); return }
+    setTours(p => [...p, created])
     setShowTourModal(false)
   }
 
@@ -1609,29 +1644,17 @@ ${t.nom}
       />
       
       <div className="tontine-container">
-        {/* Header */}
-        <div className="tontine-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ 
-              background: 'white', 
-              borderRadius: '50%', 
-              padding: 8, 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <TontineLogo size={48} />
-            </div>
-            <div>
-              <h1 className="tontine-header-title">Tontine SN Max</h1>
-              <p className="tontine-header-subtitle">Gestion professionnelle • 3 niveaux de prix</p>
-            </div>
-          </div>
-          <span className="tontine-badge">
-            {stats.tontinesActives} tontine{stats.tontinesActives > 1 ? 's' : ''} active{stats.tontinesActives > 1 ? 's' : ''}
-          </span>
-        </div>
+        <ToolHero
+          icon="💰"
+          badge="Tontines · Épargne collective"
+          title="Tontine"
+          titleAccent="SN Max"
+          subtitle="Gestion professionnelle de tontines : membres, tours, paiements et alertes automatiques pour l'Afrique de l'Ouest"
+          accentColor="#10B981"
+          accentFrom="#022c22"
+          accentTo="#059669"
+          stats={[['👥', 'Membres illimités'], ['🔄', 'Tours automatiques'], ['💳', 'Suivi paiements'], ['📊', 'Reporting complet']]}
+        />
 
         {/* Navigation */}
         <div className="tontine-nav">

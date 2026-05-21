@@ -67,7 +67,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
           setConfig(next)
         }
       // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-      } catch {}
+      } catch { /* ignore */ }
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -165,7 +165,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
         .limit(15)
       if (!error) setHistory(data || [])
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
     setHistoryLoading(false)
   }
 
@@ -180,7 +180,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
         .limit(25)
       if (!error) setQueueRows(data || [])
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   async function loadPauseState() {
@@ -195,7 +195,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
       const out = await res.json()
       setQueuePaused(!!out.paused)
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   async function loadOpsSignals() {
@@ -212,7 +212,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
       setLatestOpsReport(report || null)
       setLatestOpsAlert(alert || null)
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   async function loadAlertsConfig() {
@@ -229,7 +229,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
         setAlertsConfig((prev) => ({ ...prev, ...data.content_value }))
       }
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
   }
 
   async function saveAlertsConfig() {
@@ -316,24 +316,24 @@ export default function SocialConnectorExpert({ owner, toast }) {
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
-      <section style={{ border: '1px solid #1A2332', borderRadius: 16, background: '#0D1117', padding: 16 }}>
-        <h3 style={{ marginTop: 0, color: '#F0F2F5' }}>Connecteur Social Expert</h3>
-        <p style={{ color: '#8B95A5', fontSize: '0.84rem' }}>Connecte tes canaux, prépare des campagnes validées, puis déclenche un dispatch piloté.</p>
+      <section style={{ border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-bg-secondary)', padding: 16 }}>
+        <h3 style={{ marginTop: 0, color: 'var(--color-text-primary)' }}>Connecteur Social Expert</h3>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.84rem' }}>Connecte tes canaux, prépare des campagnes validées, puis déclenche un dispatch piloté.</p>
         <div style={{ color: '#18A84A', fontSize: '0.82rem', fontWeight: 700 }}>{readyCount} connecteur(s) prêt(s)</div>
       </section>
 
-      <section style={{ border: '1px solid #1A2332', borderRadius: 16, background: '#0D1117', padding: 16 }}>
+      <section style={{ border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-bg-secondary)', padding: 16 }}>
         {loading ? (
-          <p style={{ color: '#8B95A5' }}>Chargement connecteurs...</p>
+          <p style={{ color: 'var(--color-text-secondary)' }}>Chargement connecteurs...</p>
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
             {CONNECTORS.map((c) => {
               const v = config[c.id]
               return (
-                <div key={c.id} style={{ border: '1px solid #243044', borderRadius: 12, padding: 10, background: '#0A1017' }}>
+                <div key={c.id} style={{ border: '1px solid var(--color-border-hover)', borderRadius: 12, padding: 10, background: 'var(--color-bg-card)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ color: '#F0F2F5', fontWeight: 700 }}>{c.icon} {c.label}</div>
-                    <label style={{ color: '#8B95A5', fontSize: '0.8rem' }}>
+                    <div style={{ color: 'var(--color-text-primary)', fontWeight: 700 }}>{c.icon} {c.label}</div>
+                    <label style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>
                       <input
                         type="checkbox"
                         checked={!!v.enabled}
@@ -363,13 +363,13 @@ export default function SocialConnectorExpert({ owner, toast }) {
                       style={inp}
                     />
                   </div>
-                  <div style={{ marginTop: 6, color: '#8B95A5', fontSize: '0.74rem' }}>
+                  <div style={{ marginTop: 6, color: 'var(--color-text-secondary)', fontSize: '0.74rem' }}>
                     Token: {v.token ? mask(v.token) : 'non configuré'}
                   </div>
                   <div style={{ marginTop: 6 }}>
                     <button
                       onClick={() => testConnector(c.id)}
-                      style={{ borderRadius: 8, border: '1px solid #2A3344', background: '#111827', color: '#9CA3AF', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
+                      style={{ borderRadius: 8, border: '1px solid var(--color-border-hover)', background: 'var(--color-bg-secondary)', color: 'var(--color-text-muted)', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
                     >
                       Tester
                     </button>
@@ -386,30 +386,30 @@ export default function SocialConnectorExpert({ owner, toast }) {
         </div>
       </section>
 
-      <section style={{ border: '1px solid #1A2332', borderRadius: 16, background: '#0D1117', padding: 16 }}>
-        <h4 style={{ marginTop: 0, color: '#F0F2F5' }}>Dispatch campagne multi-plateforme</h4>
+      <section style={{ border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-bg-secondary)', padding: 16 }}>
+        <h4 style={{ marginTop: 0, color: 'var(--color-text-primary)' }}>Dispatch campagne multi-plateforme</h4>
         <div style={{ display: 'grid', gap: 8 }}>
           <input placeholder="Nom campagne" value={campaignName} onChange={(e) => setCampaignName(e.target.value)} style={inp} />
           <textarea placeholder="Message à publier..." value={message} onChange={(e) => setMessage(e.target.value)} style={{ ...inp, minHeight: 110, resize: 'vertical' }} />
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {CONNECTORS.map((c) => (
-              <button key={c.id} onClick={() => toggleSelection(c.id)} style={{ borderRadius: 999, border: `1px solid ${selected.includes(c.id) ? '#EC4899' : '#2A3344'}`, background: selected.includes(c.id) ? 'rgba(236,72,153,0.15)' : '#111827', color: selected.includes(c.id) ? '#EC4899' : '#9CA3AF', padding: '6px 10px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 700 }}>
+              <button key={c.id} onClick={() => toggleSelection(c.id)} style={{ borderRadius: 999, border: `1px solid ${selected.includes(c.id) ? '#EC4899' : 'var(--color-border-hover)'}`, background: selected.includes(c.id) ? 'rgba(236,72,153,0.15)' : 'var(--color-bg-secondary)', color: selected.includes(c.id) ? '#EC4899' : 'var(--color-text-muted)', padding: '6px 10px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 700 }}>
                 {c.icon} {c.label}
               </button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <label style={{ color: '#8B95A5', fontSize: '0.8rem' }}>
+            <label style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>
               <input type="radio" checked={dispatchMode === 'dry-run'} onChange={() => setDispatchMode('dry-run')} style={{ marginRight: 6 }} />
               Dry run (simulation)
             </label>
-            <label style={{ color: '#8B95A5', fontSize: '0.8rem' }}>
+            <label style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>
               <input type="radio" checked={dispatchMode === 'live'} onChange={() => setDispatchMode('live')} style={{ marginRight: 6 }} />
               Live (déclenchement)
             </label>
           </div>
           {dispatchMode === 'live' && (
-            <label style={{ color: '#8B95A5', fontSize: '0.8rem' }}>
+            <label style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>
               <input type="checkbox" checked={useQueue} onChange={(e) => setUseQueue(e.target.checked)} style={{ marginRight: 6 }} />
               Utiliser la file d’attente (recommandé)
             </label>
@@ -421,34 +421,34 @@ export default function SocialConnectorExpert({ owner, toast }) {
       {report && (
         <section style={{ border: '1px solid rgba(24,168,74,0.24)', borderRadius: 16, background: 'rgba(24,168,74,0.06)', padding: 16 }}>
           <h4 style={{ marginTop: 0, color: '#18A84A' }}>Rapport de dispatch</h4>
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: '#C8D3E0', fontSize: '0.78rem' }}>
+          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', color: 'var(--color-text-primary)', fontSize: '0.78rem' }}>
             {JSON.stringify(report, null, 2)}
           </pre>
         </section>
       )}
 
-      <section style={{ border: '1px solid #1A2332', borderRadius: 16, background: '#0D1117', padding: 16 }}>
+      <section style={{ border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-bg-secondary)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <h4 style={{ margin: 0, color: '#F0F2F5' }}>Historique dispatch (live status)</h4>
-          <button onClick={loadHistory} style={{ borderRadius: 8, border: '1px solid #2A3344', background: '#111827', color: '#9CA3AF', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}>
+          <h4 style={{ margin: 0, color: 'var(--color-text-primary)' }}>Historique dispatch (live status)</h4>
+          <button onClick={loadHistory} style={{ borderRadius: 8, border: '1px solid var(--color-border-hover)', background: 'var(--color-bg-secondary)', color: 'var(--color-text-muted)', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}>
             Actualiser
           </button>
         </div>
         {historyLoading ? (
-          <p style={{ color: '#8B95A5', margin: 0 }}>Chargement historique...</p>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>Chargement historique...</p>
         ) : history.length === 0 ? (
-          <p style={{ color: '#8B95A5', margin: 0 }}>Aucun dispatch enregistré.</p>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>Aucun dispatch enregistré.</p>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {history.map((h) => {
               const sum = h.payload?.summary || {}
               return (
-                <div key={h.id} style={{ border: '1px solid #243044', borderRadius: 10, background: '#0A1017', padding: '8px 10px' }}>
+                <div key={h.id} style={{ border: '1px solid var(--color-border-hover)', borderRadius: 10, background: 'var(--color-bg-card)', padding: '8px 10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ color: '#F0F2F5', fontWeight: 700, fontSize: '0.82rem' }}>{h.campaign_name || 'Campagne'}</div>
-                    <div style={{ color: '#8B95A5', fontSize: '0.73rem' }}>{new Date(h.created_at).toLocaleString('fr-FR')}</div>
+                    <div style={{ color: 'var(--color-text-primary)', fontWeight: 700, fontSize: '0.82rem' }}>{h.campaign_name || 'Campagne'}</div>
+                    <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.73rem' }}>{new Date(h.created_at).toLocaleString('fr-FR')}</div>
                   </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '0.75rem', marginTop: 4 }}>
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', marginTop: 4 }}>
                     mode={h.mode} · posted={sum.posted || 0} · failed={sum.failed || 0} · retried={sum.retried || 0}
                   </div>
                 </div>
@@ -458,9 +458,9 @@ export default function SocialConnectorExpert({ owner, toast }) {
         )}
       </section>
 
-      <section style={{ border: '1px solid #1A2332', borderRadius: 16, background: '#0D1117', padding: 16 }}>
+      <section style={{ border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-bg-secondary)', padding: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <h4 style={{ margin: 0, color: '#F0F2F5' }}>File d’attente dispatch</h4>
+          <h4 style={{ margin: 0, color: 'var(--color-text-primary)' }}>File d’attente dispatch</h4>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={retryFailed} disabled={opsBusy} style={{ borderRadius: 8, border: '1px solid rgba(240,180,41,0.35)', background: 'rgba(240,180,41,0.1)', color: '#F0B429', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}>
               Relancer failed
@@ -468,7 +468,7 @@ export default function SocialConnectorExpert({ owner, toast }) {
             <button onClick={togglePause} disabled={opsBusy} style={{ borderRadius: 8, border: '1px solid rgba(59,130,246,0.35)', background: 'rgba(59,130,246,0.1)', color: '#3B82F6', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}>
               {queuePaused ? 'Reprendre queue' : 'Pause queue'}
             </button>
-            <button onClick={loadQueue} style={{ borderRadius: 8, border: '1px solid #2A3344', background: '#111827', color: '#9CA3AF', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}>
+            <button onClick={loadQueue} style={{ borderRadius: 8, border: '1px solid var(--color-border-hover)', background: 'var(--color-bg-secondary)', color: 'var(--color-text-muted)', padding: '6px 10px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}>
               Actualiser
             </button>
           </div>
@@ -477,16 +477,16 @@ export default function SocialConnectorExpert({ owner, toast }) {
           {queuePaused ? 'Queue state: PAUSED' : 'Queue state: RUNNING'}
         </div>
         {queueRows.length === 0 ? (
-          <p style={{ color: '#8B95A5', margin: 0 }}>Aucune tâche en file pour le moment.</p>
+          <p style={{ color: 'var(--color-text-secondary)', margin: 0 }}>Aucune tâche en file pour le moment.</p>
         ) : (
           <div style={{ display: 'grid', gap: 8 }}>
             {queueRows.map((q) => (
-              <div key={q.id} style={{ border: '1px solid #243044', borderRadius: 10, background: '#0A1017', padding: '8px 10px' }}>
+              <div key={q.id} style={{ border: '1px solid var(--color-border-hover)', borderRadius: 10, background: 'var(--color-bg-card)', padding: '8px 10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-                  <div style={{ color: '#F0F2F5', fontWeight: 700, fontSize: '0.82rem' }}>#{q.id} · {q.campaign_name || 'Campagne'} · {q.platform}</div>
+                  <div style={{ color: 'var(--color-text-primary)', fontWeight: 700, fontSize: '0.82rem' }}>#{q.id} · {q.campaign_name || 'Campagne'} · {q.platform}</div>
                   <div style={{ color: statusColor(q.status), fontWeight: 800, fontSize: '0.75rem' }}>{q.status}</div>
                 </div>
-                <div style={{ color: '#9CA3AF', fontSize: '0.74rem', marginTop: 4 }}>
+                <div style={{ color: 'var(--color-text-muted)', fontSize: '0.74rem', marginTop: 4 }}>
                   attempts={q.attempts || 0} · created={new Date(q.created_at).toLocaleString('fr-FR')}
                 </div>
                 {!!q.last_error && <div style={{ color: '#EF4444', fontSize: '0.74rem', marginTop: 4 }}>{q.last_error}</div>}
@@ -505,16 +505,16 @@ export default function SocialConnectorExpert({ owner, toast }) {
             </div>
           )}
           {latestOpsReport && (
-            <div style={{ color: '#C8D3E0', fontSize: '0.78rem', lineHeight: 1.6 }}>
+            <div style={{ color: 'var(--color-text-primary)', fontSize: '0.78rem', lineHeight: 1.6 }}>
               Rapport quotidien: processed={latestOpsReport.payload?.totals?.processed ?? 0}, failed={latestOpsReport.payload?.totals?.failed ?? 0}, failureRate={latestOpsReport.payload?.totals?.failureRate ?? 0}%.
             </div>
           )}
         </section>
       )}
 
-      <section style={{ border: '1px solid #1A2332', borderRadius: 16, background: '#0D1117', padding: 16 }}>
-        <h4 style={{ marginTop: 0, color: '#F0F2F5' }}>Canaux d’alerte (Ops)</h4>
-        <p style={{ color: '#8B95A5', fontSize: '0.78rem' }}>
+      <section style={{ border: '1px solid var(--color-border)', borderRadius: 16, background: 'var(--color-bg-secondary)', padding: 16 }}>
+        <h4 style={{ marginTop: 0, color: 'var(--color-text-primary)' }}>Canaux d’alerte (Ops)</h4>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.78rem' }}>
           Configure ici les valeurs de référence. Les notifications live utilisent les variables d’environnement serveur.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -538,9 +538,9 @@ export default function SocialConnectorExpert({ owner, toast }) {
 const inp = {
   width: '100%',
   borderRadius: 10,
-  border: '1px solid #1A2332',
-  background: '#070B0F',
-  color: '#F0F2F5',
+  border: '1px solid var(--color-border)',
+  background: 'var(--color-bg-primary)',
+  color: 'var(--color-text-primary)',
   padding: '9px 10px',
   fontSize: '0.82rem',
   fontFamily: 'Outfit,sans-serif',

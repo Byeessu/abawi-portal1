@@ -9,7 +9,6 @@ import {
   encryptForRecipient,
   decryptFromSender,
   importPublicKey,
-  exportPublicKey,
 } from './abavieE2E'
 import { cacheE2EKey, getE2EKey } from './abavieIndexedDB'
 

@@ -16,10 +16,11 @@ export function normalizePlan(membre) {
 
 const ADMIN_EMAILS = ['ngomlaurentblog@gmail.com', 'contactabawi@gmail.com']
 
-function isSystemAdmin(membre) {
+export function isSystemAdmin(membre) {
   if (!membre) return false
   const email = (membre.email || '').toLowerCase().trim()
-  return membre.role === 'admin' || membre.isAdminUser === true || ADMIN_EMAILS.includes(email)
+  // Admin = email whitelist OU (role=admin ET flag isAdminUser explicite)
+  return ADMIN_EMAILS.includes(email) || (membre.role === 'admin' && membre.isAdminUser === true)
 }
 
 export function hasAllInclusiveAccess(membre) {
@@ -106,8 +107,16 @@ export const TOOL_ACCESS = {
   photoStudio: 'outils-essentiels',
   abawiIA: 'outils-essentiels',
   smartOffice: 'outils-elite',
+  abzone: 'public',
+  abspacegps: 'outils-elite',
   tontine: 'outils-elite',
   maxavis: 'outils-elite',
+  procardElite: 'public',
+  qrcodepro: 'public',
+  senticket: 'public',
+  recrutemoisn: 'public',
+  espaceouvrier: 'public',
+  placeouvrier: 'public',
 }
 
 /**

@@ -17,6 +17,7 @@ export default function ContactsList({ onClose, onStartConversation, onInvite })
   useEffect(() => {
     if (!membre) return;
     loadContacts();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membre]);
 
   async function loadContacts() {
@@ -29,7 +30,7 @@ export default function ContactsList({ onClose, onStartConversation, onInvite })
       .order('nom', { ascending: true });
 
     // Load user's saved contacts (phone book synced)
-    const saved = JSON.parse(localStorage.getItem('abavie_contacts') || '[]');
+    const saved = JSON.parse(localStorage.getItem('abtalk_contacts') || '[]');
 
     // Mark which saved contacts have Abavie accounts
     const enriched = saved.map(c => {
@@ -48,11 +49,11 @@ export default function ContactsList({ onClose, onStartConversation, onInvite })
   }
 
   async function addContact(name, email, phone) {
-    const saved = JSON.parse(localStorage.getItem('abavie_contacts') || '[]');
+    const saved = JSON.parse(localStorage.getItem('abtalk_contacts') || '[]');
     const existing = saved.find(c => c.email === email || c.phone === phone);
     if (existing) return;
     saved.push({ id: `contact-${Date.now()}`, name, email, phone, invitedAt: null });
-    localStorage.setItem('abavie_contacts', JSON.stringify(saved));
+    localStorage.setItem('abtalk_contacts', JSON.stringify(saved));
     loadContacts();
   }
 
@@ -69,11 +70,11 @@ export default function ContactsList({ onClose, onStartConversation, onInvite })
     }
 
     // Mark as invited
-    const saved = JSON.parse(localStorage.getItem('abavie_contacts') || '[]');
+    const saved = JSON.parse(localStorage.getItem('abtalk_contacts') || '[]');
     const idx = saved.findIndex(c => c.id === contact.id);
     if (idx >= 0) {
       saved[idx].invitedAt = new Date().toISOString();
-      localStorage.setItem('abavie_contacts', JSON.stringify(saved));
+      localStorage.setItem('abtalk_contacts', JSON.stringify(saved));
       loadContacts();
     }
     onInvite?.(contact);

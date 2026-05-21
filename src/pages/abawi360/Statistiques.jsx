@@ -3,16 +3,12 @@ import { useAuth } from '../../context/AuthContext'
 import { cleanIATextLight } from '../../lib/cleanText'
 import { useToast } from '../../context/ToastContext'
 import { run360Crud } from '../../lib/abawi360CrudClient'
+import { callGroq, callGroqJSON } from '../../lib/groqClient'
 import './Abawi360Tools.css'
 import './Statistiques.css'
 import SyncStatus from '../../components/SyncStatus'
 import MarkdownText from '../../components/MarkdownText'
-import { Link } from 'react-router-dom'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
-
-const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
-const GROQ_BASE_URL = import.meta.env.VITE_GROQ_BASE_URL || 'https://api.groq.com/openai/v1'
-const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
 const FIELD_TYPES = [
   { id: 'text', label: 'Texte libre' },
@@ -107,26 +103,14 @@ export default function Statistiques() {
 
   async function generateFormIA() {
     if (!aiFormPrompt.trim()) return
-    if (!GROQ_KEY) { toast("❌ Clé GROQ manquante (VITE_GROQ_API_KEY).", 'error'); return }
     setGeneratingForm(true)
     try {
-      const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GROQ_MODEL, max_tokens: 800, temperature: 0.6,
-          messages: [{
-            role: 'user',
-            content: `Génère un formulaire de sondage pour : "${aiFormPrompt}". Réponds UNIQUEMENT avec un JSON valide (sans markdown) au format :
-{"titre":"...","description":"...","champs":[{"id":"1","type":"text|number|select|rating","label":"...","required":true|false,"options":"opt1,opt2"}]}`
-          }],
-        }),
-      })
-      const data = await res.json()
-      const text = data.choices?.[0]?.message?.content || ''
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('Format invalide')
-      const parsed = JSON.parse(jsonMatch[0])
+      const parsed = await callGroqJSON(
+        `Génère un formulaire de sondage pour : "${aiFormPrompt}". Réponds UNIQUEMENT avec un JSON valide (sans markdown) au format :
+{"titre":"...","description":"...","champs":[{"id":"1","type":"text|number|select|rating","label":"...","required":true|false,"options":"opt1,opt2"}]}`,
+        { maxTokens: 800, temperature: 0.6 }
+      )
+      if (!parsed) throw new Error('Format invalide')
       setFormTitle(parsed.titre || aiFormPrompt)
       setFormDesc(parsed.description || '')
       setChamps((parsed.champs || []).map((c, i) => ({ ...c, id: c.id || String(Date.now() + i) })))
@@ -138,22 +122,16 @@ export default function Statistiques() {
   async function analyzeWithAI(form) {
     const reps = reponses.filter(r => r.formulaire_id === form.id)
     if (reps.length === 0) { toast('Aucune réponse à analyser', 'info'); return }
-    if (!GROQ_KEY) { toast("❌ Clé GROQ manquante (VITE_GROQ_API_KEY).", 'error'); return }
     setGenerating(true)
     try {
       const summary = JSON.stringify(reps.slice(0, 10).map(r => r.reponse || r.reponses || {}))
-      const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GROQ_MODEL, max_tokens: 600, temperature: 0.5,
-          messages: [{ role: 'user', content: `Analyse ces ${reps.length} réponses au formulaire "${form.titre}" et donne les insights clés en français :\n${summary}` }],
-        }),
-      })
-      const data = await res.json()
-      setAiAnalyse(cleanIATextLight(data.choices?.[0]?.message?.content || ''))
+      const text = await callGroq(
+        `Analyse ces ${reps.length} réponses au formulaire "${form.titre}" et donne les insights clés en français :\n${summary}`,
+        { maxTokens: 600, temperature: 0.5 }
+      )
+      setAiAnalyse(cleanIATextLight(text || ''))
       toast('✅ Analyse générée', 'success')
-    } catch { toast('❌ Erreur IA', 'error') }
+    } catch(e) { toast('❌ Erreur IA: ' + e.message, 'error') }
     setGenerating(false)
   }
 

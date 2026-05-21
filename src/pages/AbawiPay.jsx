@@ -1,10 +1,15 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useThemedStyles, resolveVar } from '../lib/theme';
 import QRCode from 'qrcode'
-import { sendPayment, getAvailableProviders } from '../lib/abawiPayService'
+import {
+  sendPayment, getAvailableProviders, getBalance, getTransactions, recordTransaction,
+  getSavingsGoal, createSavingsGoal, updateSavingsGoal
+} from '../lib/abawiPayService'
+import { useAuth } from '../context/AuthContext'
 import { Chart, registerables } from 'chart.js'
 import { createInvoice, isPaydunyaConfigured, waLink } from '../config/paydunya'
 import './AbawiPay.css'
+import SEO from '../components/SEO'
 
 Chart.register(...registerables)
 
@@ -18,9 +23,11 @@ function AbawiPayIcon({ size = 36 }) {
       flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <img
-        src="/abawi-pay-icon.jpg"
+        src="/abawi-pay-icon.webp"
         width={size}
         height={size}
+        loading="eager"
+        decoding="async"
         alt="AbawiPay"
         style={{
           display: 'block', objectFit: 'cover',
@@ -77,7 +84,7 @@ function BillLogo({ id, size = 42 }) {
   const r = Math.round(size * 0.2)
   if (img) return (
     <div style={{ width: size, height: size, borderRadius: r, background: 'var(--bg-secondary)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <img src={img} alt={id} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      <img src={img} alt={id} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
     </div>
   )
   return <div style={{ fontSize: size * 0.55, lineHeight: 1 }}>{item?.icon || '📄'}</div>
@@ -89,7 +96,7 @@ function NetLogo({ id, size = 34 }) {
   const imgSrc = NET_IMGS[id]
   if (imgSrc) return (
     <div style={{ width:s, height:s, borderRadius:r, background: id === 'Virement bancaire' ? 'var(--bg-primary)' : 'var(--bg-secondary)', overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid var(--border)' }}>
-      <img src={imgSrc} alt={id} width={s} height={s} style={{ display:'block', objectFit:'cover', width:'100%', height:'100%' }} />
+      <img src={imgSrc} alt={id} width={s} height={s} loading="lazy" decoding="async" style={{ display:'block', objectFit:'cover', width:'100%', height:'100%' }} />
     </div>
   )
   return <AbawiPayIcon size={s} />
@@ -105,18 +112,6 @@ const CONTACT_COLORS = [
   { bg:'rgba(168,85,247,0.1)', color:'#A855F7' },
   { bg:'rgba(236,72,153,0.1)', color:'#EC4899' },
   { bg:'rgba(20,184,166,0.1)', color:'#14B8A6' },
-]
-
-/* ─── Transactions ─── */
-const TRANSACTIONS = [
-  { id:1, icon:'💰', name:'Mamadou Diallo',        meta:'Wave → Abawi · Aujourd\'hui 14:32', type:'recv', amount:'+50 000', fee:'0 XOF frais',    pill:'Reçu',     pillColor:'green' },
-  { id:2, icon:'🛒', name:'Jumia Sénégal',          meta:'Paiement marchand · Hier 09:15',    type:'marchand', amount:'-22 000', fee:'154 XOF', pill:'Marchand',  pillColor:'red' },
-  { id:3, icon:'🌍', name:'Transfert → Côte d\'Ivoire', meta:'International · Jeu. 10:48',  type:'intl',  amount:'-75 000', fee:'525 XOF (0.7%)', pill:'Intl',     pillColor:'yellow' },
-  { id:4, icon:'📲', name:'Marie-Claire F.',        meta:'QR Pay · Mer. 16:05',              type:'recv',  amount:'+15 000', fee:'0 XOF frais',    pill:'Reçu',     pillColor:'green' },
-  { id:5, icon:'📤', name:'Ibrahima Sow',           meta:'Abawi → Wave · Mar. 11:22',        type:'send',  amount:'-30 000', fee:'90 XOF (0.3%)', pill:'Envoi',    pillColor:'blue' },
-  { id:6, icon:'💸', name:'Sophie Mendy',           meta:'Code secret · Lun. 08:55',         type:'recv',  amount:'+20 000', fee:'0 XOF frais',    pill:'Reçu',     pillColor:'green' },
-  { id:7, icon:'📱', name:'Recharge Orange',        meta:'Recharge mobile · Dim. 12:10',     type:'marchand', amount:'-5 000', fee:'0 XOF frais', pill:'Recharge', pillColor:'red' },
-  { id:8, icon:'⚡', name:'SENELEC Facture',        meta:'Facture électricité · Sam. 09:30', type:'marchand', amount:'-45 000', fee:'0 XOF frais', pill:'Facture',  pillColor:'yellow' },
 ]
 
 /* ─── Pill ─── */
@@ -342,6 +337,28 @@ export default function AbawiPay() {
   const [bankRef, setBankRef] = useState('');
   const { themed } = useThemedStyles();
 
+  /* ── Auth & Supabase data ── */
+  const { membre } = useAuth()
+  const userId = membre?.id || null
+  const [balance, setBalance] = useState(0)
+  const [txList, setTxList] = useState([])
+  const [payDataLoading, setPayDataLoading] = useState(false)
+  const [savings, setSavings] = useState(null)
+  const [savingMode, setSavingMode] = useState('round_500')
+  const [savingTarget, setSavingTarget] = useState(100000)
+  const [savingLock, setSavingLock] = useState('none')
+  const [withdrawAmt, setWithdrawAmt] = useState('')
+
+  useEffect(() => {
+    if (!userId) return
+    setPayDataLoading(true)
+    Promise.all([
+      getBalance(userId).then(setBalance),
+      getTransactions(userId, { limit: 50 }).then(setTxList),
+      getSavingsGoal(userId).then(s => { if (s) { setSavings(s); setSavingMode(s.mode); setSavingTarget(s.target_amount); setSavingLock(s.lock_period) } }),
+    ]).finally(() => setPayDataLoading(false))
+  }, [userId])
+
   /* ── Contacts persistants ── */
   const [contacts, setContacts] = useState(() => {
     try { return JSON.parse(localStorage.getItem('abawi_pay_contacts') || 'null') || [] } catch { return [] }
@@ -448,6 +465,34 @@ export default function AbawiPay() {
     try {
       const result = await sendPayment({ amount: parseInt(montant), phone: destInput, network: selectedNet, description: note || `Envoi ABAWI · ${selectedNet}` })
       const ref = result?.reference || result?.token || ('ABW-' + Date.now().toString().slice(-6))
+
+      // Record transaction in Supabase
+      if (userId) {
+        await recordTransaction({
+          userId,
+          type: 'send',
+          amount: parseInt(montant),
+          fee,
+          status: result?.checkout_url ? 'pending' : 'completed',
+          description: note || `Envoi ABAWI · ${selectedNet}`,
+          reference: ref,
+          recipientPhone: destInput,
+          recipientName: '',
+          network: selectedNet,
+          metadata: { checkout_url: result?.checkout_url || null, simulated: !!result?.simulated }
+        })
+        // Refresh balance & transactions
+        const newBal = await getBalance(userId)
+        const newTx = await getTransactions(userId, { limit: 50 })
+        setBalance(newBal)
+        setTxList(newTx)
+      }
+
+      // If PayDunya checkout URL, redirect
+      if (result?.checkout_url) {
+        window.location.href = result.checkout_url
+        return
+      }
       setSendConfirmed({ dest: destInput, amt: parseInt(montant), fee, ref, simulated: result?.simulated })
     } catch (e) { setPayError(e.message) }
     finally { setPayLoading(false) }
@@ -500,7 +545,7 @@ export default function AbawiPay() {
     }
     const prices = { standard: 2500, gold: 5000, premium: 9900 }
     const labels = { standard: 'Carte Abawi Pay Standard', gold: 'Carte Abawi Pay Gold', premium: 'Carte Abawi Pay Premium' }
-    if (!isPaydunyaConfigured()) {
+    if (!await isPaydunyaConfigured()) {
       const wa = waLink(labels[cardType], prices[cardType])
       window.open(wa, '_blank')
       return
@@ -521,11 +566,21 @@ export default function AbawiPay() {
     setPayLoading(false)
   }
 
-  const filteredTx = TRANSACTIONS.filter(t => txFilter === 'all' || t.type === txFilter)
+  /* ── Stats pre-computation ── */
+  const totalSent = txList.filter(t => t.type === 'send' && t.status === 'completed').reduce((s, t) => s + Number(t.amount), 0)
+  const totalReceived = txList.filter(t => t.type === 'receive' && t.status === 'completed').reduce((s, t) => s + Number(t.amount), 0)
+  const totalFees = txList.filter(t => t.status === 'completed').reduce((s, t) => s + Number(t.fee), 0)
+  const completedCount = txList.filter(t => t.status === 'completed').length
 
   /* ─────────────────── RENDER ─────────────────── */
   return (
     <div className="ap-root" style={{ paddingTop: stickyH }}>
+      <SEO
+        title="ABAWI Pay — Portefeuille Mobile & Paiements"
+        description="Portefeuille mobile ABAWI Pay : envoi et réception d'argent, paiement de factures, objectifs d'épargne, QR code et historique de transactions."
+        keywords="mobile money, portefeuille mobile, paiement mobile Sénégal, Wave, Orange Money, Free Money, ABAWI Pay"
+        image="/abawi-og-banner.jpg"
+      />
 
       {/* Header + Nav — fixed to viewport, immune to page-content translateY animation */}
       <div ref={stickyRef} className="ap-sticky-top" style={{ position: 'fixed', top: navbarH, left: 0, right: 0, zIndex: 100 }}>
@@ -571,12 +626,12 @@ export default function AbawiPay() {
                 </svg>
               </button>
             </div>
-            <div className="ap-bal-amount">124 500 <span className="ap-bal-currency">XOF</span></div>
+            <div className="ap-bal-amount">{balance.toLocaleString('fr-FR')} <span className="ap-bal-currency">XOF</span></div>
             <div className="ap-bal-sub">Mis à jour il y a 2 min · <span style={{ color:'#22c55e' }}>0% frais Abawi↔Abawi</span></div>
             <div className="ap-bal-stats">
-              <div><div className="ap-bal-stat-label">Reçu (Avr.)</div><div className="ap-bal-stat-val pos">+342 000</div></div>
-              <div><div className="ap-bal-stat-label">Envoyé</div><div className="ap-bal-stat-val neg">-178 000</div></div>
-              <div><div className="ap-bal-stat-label">Épargne</div><div className="ap-bal-stat-val neutral">12 500</div></div>
+              <div><div className="ap-bal-stat-label">Reçu</div><div className="ap-bal-stat-val pos">+{txList.filter(t => t.type === 'receive' && t.status === 'completed').reduce((s, t) => s + Number(t.amount), 0).toLocaleString('fr-FR')}</div></div>
+              <div><div className="ap-bal-stat-label">Envoyé</div><div className="ap-bal-stat-val neg">-{txList.filter(t => t.type === 'send' && t.status === 'completed').reduce((s, t) => s + Number(t.amount), 0).toLocaleString('fr-FR')}</div></div>
+              <div><div className="ap-bal-stat-label">Épargne</div><div className="ap-bal-stat-val neutral">{balance.toLocaleString('fr-FR')}</div></div>
             </div>
           </div>
 
@@ -638,7 +693,7 @@ export default function AbawiPay() {
           {/* Contacts */}
           <div className="ap-section-label" style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <span>Contacts fréquents</span>
-            {contacts.length > 0 && <span style={{ fontSize:'0.7rem', color:'var(--ap-grey)', fontWeight:600 }}>{contacts.length} contact{contacts.length !== 1 ? 's' : ''}</span>}
+            {contacts.length > 0 && <span style={{ fontSize:'0.75rem', color:'var(--ap-grey)', fontWeight:600 }}>{contacts.length} contact{contacts.length !== 1 ? 's' : ''}</span>}
           </div>
           <div className="ap-contacts-scroll">
             {contacts.map(c => (
@@ -659,16 +714,24 @@ export default function AbawiPay() {
           {/* Recent transactions */}
           <div className="ap-section-label">Transactions récentes</div>
           <div className="ap-card">
-            {TRANSACTIONS.slice(0, 4).map(tx => (
+            {payDataLoading && <div style={{padding:12,color:'var(--ap-grey)',fontSize:13}}>Chargement...</div>}
+            {!payDataLoading && txList.length === 0 && (
+              <div style={{padding:12,color:'var(--ap-grey)',fontSize:13}}>Aucune transaction. Connectez-vous pour voir votre historique.</div>
+            )}
+            {txList.slice(0, 4).map(tx => (
               <div key={tx.id} className="ap-tx-item">
-                <div className="ap-tx-icon">{tx.icon}</div>
+                <div className="ap-tx-icon">
+                  {tx.type === 'receive' ? '💰' : tx.type === 'send' ? '📤' : tx.type === 'marchand' ? '🛒' : tx.type === 'intl' ? '🌍' : '📱'}
+                </div>
                 <div className="ap-tx-info">
-                  <div className="ap-tx-name">{tx.name}</div>
-                  <div className="ap-tx-meta">{tx.meta}</div>
+                  <div className="ap-tx-name">{tx.description || tx.type}</div>
+                  <div className="ap-tx-meta">{tx.network || 'Abawi Pay'} · {new Date(tx.created_at).toLocaleDateString('fr-FR')}</div>
                 </div>
                 <div className="ap-tx-right">
-                  <div className={`ap-tx-amount ${tx.amount.startsWith('+') ? 'pos' : 'neg'}`}>{tx.amount}</div>
-                  <div className="ap-tx-fee">{tx.fee}</div>
+                  <div className={`ap-tx-amount ${tx.type === 'receive' ? 'pos' : 'neg'}`}>
+                    {tx.type === 'receive' ? '+' : '-'}{Number(tx.amount).toLocaleString('fr-FR')} XOF
+                  </div>
+                  <div className="ap-tx-fee">{tx.fee > 0 ? `${Number(tx.fee).toLocaleString('fr-FR')} XOF frais` : '0 XOF frais'}</div>
                 </div>
               </div>
             ))}
@@ -1038,111 +1101,40 @@ export default function AbawiPay() {
         </div>
       )}
 
-      {/* ── RECHARGE MOBILE ── */}
+      {/* ── RECHARGE MOBILE — Fallback WhatsApp ── */}
       {tab === 'recharge' && (
         <div className="ap-section">
           <div className="ap-card">
             <div className="ap-card-title">📱 Recharge téléphone</div>
-            <div className="ap-card-sub">Rechargez n'importe quel numéro instantanément — 0% de frais</div>
-
-            <div className="ap-section-label" style={{ marginBottom:10 }}>Opérateur</div>
-            <div className="ap-net-grid">
-              {[
-                { id:'orange',    dot:'#ff6d00', label:'Orange',    textColor:'#fff' },
-                { id:'free',      dot:'#d50000', label:'Free',      textColor:'#fff' },
-                { id:'expresso',  dot:'#6200ea', label:'Expresso',  textColor:'#fff' },
-                { id:'togocel',   dot:'#007f5f', label:'Togocel',   textColor:'#fff' },
-                { id:'moov',      dot:'#0039cb', label:'Moov',      textColor:'#fff' },
-                { id:'mtn',       dot:'#f5c518', label:'MTN',       textColor:'#000' },
-              ].map(n => (
-                <button key={n.id} className={`ap-net-btn${rechargeNet === n.id ? ' selected' : ''}`} onClick={() => setRechargeNet(n.id)}>
-                  <NetLogo id={n.id} size={30} />
-                  <p>{n.label}</p>
-                </button>
-              ))}
-            </div>
-
-            <div className="ap-input-group">
-              <label>Numéro à recharger</label>
-              <input value={rechargeTel} onChange={e => setRechargeTel(e.target.value)} placeholder="Ex: 77 123 45 67" />
-            </div>
-
-            <div className="ap-section-label" style={{ marginBottom:10 }}>Montant</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8, marginBottom:10 }}>
-              {['500','1000','2000','3000','5000','10000','20000','50000','100000','200000'].map(v => (
-                <button key={v} onClick={() => setRechargeAmt(v)} style={{
-                  padding:'10px 4px', borderRadius:10, border:`2px solid ${rechargeAmt === v ? 'var(--ap-yellow)' : 'var(--ap-border)'}`,
-                  background: rechargeAmt === v ? 'var(--ap-yellow-soft)' : 'var(--ap-card)',
-                  color: rechargeAmt === v ? 'var(--ap-yellow)' : 'var(--ap-grey)',
-                  cursor:'pointer', fontWeight:700, fontSize:11
-                }}>{parseInt(v).toLocaleString()}</button>
-              ))}
-            </div>
-            <div className="ap-input-group" style={{ marginBottom:16 }}>
-              <label>Ou saisir un montant personnalisé (XOF)</label>
-              <input
-                type="number"
-                placeholder="Ex: 75 000"
-                value={rechargeAmt}
-                onChange={e => setRechargeAmt(e.target.value)}
-                style={{ fontWeight:700, fontSize:'1rem', color:'var(--ap-yellow)' }}
-              />
-            </div>
-
-            <div className="ap-fee-box">
-              <div>
-                <div className="ap-fee-label">Montant de la recharge</div>
-                <div className="ap-fee-note">0 frais · Crédit immédiat</div>
+            <div className="ap-card-sub">Service temporairement via WhatsApp — 0% frais</div>
+            <div style={{ padding:'16px', background:'rgba(245,197,24,0.06)', borderRadius:12, border:'1px solid rgba(245,197,24,0.15)', marginBottom:16 }}>
+              <div style={{ fontSize:13, color:'var(--ap-grey)', lineHeight:1.6 }}>
+                ⚡ <strong style={{ color:'var(--ap-yellow)' }}>Recharge instantanée</strong> disponible via notre service WhatsApp.<br/>
+                Envoyez : <em>Numéro + Montant + Opérateur</em> et nous rechargerons sous 2 min.
               </div>
-              <div className="ap-fee-val">{parseInt(rechargeAmt).toLocaleString('fr-FR')} XOF</div>
             </div>
-            <button className="ap-btn-primary" onClick={() => rechargeTel ? alert(`✅ ${parseInt(rechargeAmt).toLocaleString()} XOF rechargés sur le ${rechargeTel}`) : alert('Entrez un numéro')}>
-              RECHARGER MAINTENANT →
-            </button>
+            <a href={waLink('Recharge téléphone', 0)} target="_blank" rel="noopener noreferrer" className="ap-btn-primary" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, textDecoration:'none' }}>
+              💬 Commander via WhatsApp
+            </a>
           </div>
         </div>
       )}
 
-      {/* ── FACTURES ── */}
+      {/* ── FACTURES — Fallback WhatsApp ── */}
       {tab === 'factures' && (
         <div className="ap-section">
           <div className="ap-card">
             <div className="ap-card-title">⚡ Paiement de factures</div>
-            <div className="ap-card-sub">Payez vos factures sans vous déplacer — Instantané</div>
-
-            <div className="ap-section-label" style={{ marginBottom:10 }}>Type de facture</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:16 }}>
-              {FACTURES_LIST.map(f => (
-                <button key={f.id} onClick={() => setFacture(f.id)} style={{
-                  padding:'12px 8px', borderRadius:12, textAlign:'center', cursor:'pointer',
-                  border:`2px solid ${facture === f.id ? 'var(--ap-yellow)' : 'var(--ap-border)'}`,
-                  background: facture === f.id ? 'var(--ap-yellow-soft)' : 'var(--ap-card)',
-                  display:'flex', flexDirection:'column', alignItems:'center', gap:6,
-                }}>
-                  <BillLogo id={f.id} size={40} />
-                  <div style={{ fontSize:10, color: facture === f.id ? 'var(--ap-yellow)' : 'var(--ap-grey)', fontWeight:700, lineHeight:1.2 }}>{f.label}</div>
-                </button>
-              ))}
-            </div>
-
-            <div className="ap-input-group">
-              <label>Numéro de référence / contrat</label>
-              <input value={factureRef} onChange={e => setFactureRef(e.target.value)} placeholder="Ex: SEN-1234567" />
-            </div>
-            <div className="ap-input-group">
-              <label>Montant (XOF)</label>
-              <input type="number" value={factureAmt} onChange={e => setFactureAmt(e.target.value)} placeholder="Ex: 45 000" />
-            </div>
-            <div className="ap-fee-box">
-              <div>
-                <div className="ap-fee-label">Frais de service</div>
-                <div className="ap-fee-note">0 XOF — Service gratuit Abawi Pay</div>
+            <div className="ap-card-sub">Service temporairement via WhatsApp — 0% frais</div>
+            <div style={{ padding:'16px', background:'rgba(245,197,24,0.06)', borderRadius:12, border:'1px solid rgba(245,197,24,0.15)', marginBottom:16 }}>
+              <div style={{ fontSize:13, color:'var(--ap-grey)', lineHeight:1.6 }}>
+                📋 <strong style={{ color:'var(--ap-yellow)' }}>Paiement de factures</strong> disponible via WhatsApp.<br/>
+                Envoyez : <em>Type (SENELEC/Woyofal/etc.) + Référence + Montant</em> et nous payons sous 5 min.
               </div>
-              <div className="ap-fee-val">0 XOF</div>
             </div>
-            <button className="ap-btn-primary" onClick={() => factureRef && factureAmt ? alert(`✅ Facture ${facture.toUpperCase()} payée ! Réf: ${factureRef}`) : alert('Remplis la référence et le montant')}>
-              PAYER LA FACTURE →
-            </button>
+            <a href={waLink('Paiement facture', 0)} target="_blank" rel="noopener noreferrer" className="ap-btn-primary" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, textDecoration:'none' }}>
+              💬 Payer via WhatsApp
+            </a>
           </div>
         </div>
       )}
@@ -1273,13 +1265,19 @@ export default function AbawiPay() {
         <div className="ap-section">
           <div className="ap-epargne-card">
             <div className="ap-section-label" style={{ marginBottom:6 }}>💰 Mon Épargne Automatique</div>
-            <div className="ap-bal-amount" style={{ fontSize:26, margin:'8px 0' }}>12 500 <span style={{ fontSize:14, color:'var(--ap-grey)' }}>XOF</span></div>
-            <div style={{ fontSize:11, color:'var(--ap-grey)' }}>Objectif : 100 000 XOF · <span style={{ color:'var(--ap-green)' }}>12,5% atteint</span></div>
-            <div className="ap-epargne-progress"><div className="ap-epargne-bar" style={{ width:'12.5%' }} /></div>
+            <div className="ap-bal-amount" style={{ fontSize:26, margin:'8px 0' }}>
+              {(savings?.current_amount || 0).toLocaleString('fr-FR')} <span style={{ fontSize:14, color:'var(--ap-grey)' }}>XOF</span>
+            </div>
+            <div style={{ fontSize:11, color:'var(--ap-grey)' }}>
+              Objectif : {(savingTarget || 100000).toLocaleString('fr-FR')} XOF · <span style={{ color:'var(--ap-green)' }}>{savings?.target_amount ? Math.min(100, Math.round((savings.current_amount / savings.target_amount) * 100)) : 0}% atteint</span>
+            </div>
+            <div className="ap-epargne-progress">
+              <div className="ap-epargne-bar" style={{ width: `${savings?.target_amount ? Math.min(100, (savings.current_amount / savings.target_amount) * 100) : 0}%` }} />
+            </div>
             <div style={{ display:'flex', gap:14, marginTop:8 }}>
-              <div><div className="ap-bal-stat-label">Taux annuel</div><div className="ap-bal-stat-val neutral">3,5%</div></div>
-              <div><div className="ap-bal-stat-label">Prochain virement</div><div className="ap-bal-stat-val" style={{ color:'var(--ap-white)' }}>1 mai</div></div>
-              <div><div className="ap-bal-stat-label">Fréquence</div><div className="ap-bal-stat-val" style={{ color:'var(--ap-white)' }}>Mensuel</div></div>
+              <div><div className="ap-bal-stat-label">Taux annuel</div><div className="ap-bal-stat-val neutral">{(savings?.interest_rate || 3.5).toFixed(1)}%</div></div>
+              <div><div className="ap-bal-stat-label">Mode</div><div className="ap-bal-stat-val" style={{ color:'var(--ap-white)' }}>{savingMode === 'round_500' ? 'Arrondi 500' : savingMode === 'round_1000' ? 'Arrondi 1k' : savingMode === 'percent_5' ? '5%' : savingMode === 'percent_10' ? '10%' : 'Fixe'}</div></div>
+              <div><div className="ap-bal-stat-label">Verrou</div><div className="ap-bal-stat-val" style={{ color:'var(--ap-white)' }}>{savingLock === 'none' ? 'Aucun' : savingLock}</div></div>
             </div>
           </div>
 
@@ -1288,28 +1286,37 @@ export default function AbawiPay() {
             <div className="ap-card-sub">Un montant est prélevé automatiquement à chaque transaction</div>
             <div className="ap-input-group">
               <label>Mode d'épargne</label>
-              <select>
-                <option>Arrondir à 500 XOF</option>
-                <option>Arrondir à 1 000 XOF</option>
-                <option>5% de chaque envoi</option>
-                <option>10% de chaque envoi</option>
-                <option>Montant fixe mensuel</option>
+              <select value={savingMode} onChange={e => setSavingMode(e.target.value)}>
+                <option value="round_500">Arrondir à 500 XOF</option>
+                <option value="round_1000">Arrondir à 1 000 XOF</option>
+                <option value="percent_5">5% de chaque envoi</option>
+                <option value="percent_10">10% de chaque envoi</option>
+                <option value="fixed_monthly">Montant fixe mensuel</option>
               </select>
             </div>
             <div className="ap-input-group">
               <label>Objectif d'épargne (XOF)</label>
-              <input type="number" placeholder="Ex: 500 000" />
+              <input type="number" value={savingTarget} onChange={e => setSavingTarget(Number(e.target.value))} placeholder="Ex: 500 000" />
             </div>
             <div className="ap-input-group">
               <label>Verrouillage (optionnel)</label>
-              <select>
-                <option>Disponible à tout moment</option>
-                <option>Verrouillé 3 mois (+0.5%)</option>
-                <option>Verrouillé 6 mois (+1%)</option>
-                <option>Verrouillé 1 an (+2%)</option>
+              <select value={savingLock} onChange={e => setSavingLock(e.target.value)}>
+                <option value="none">Disponible à tout moment</option>
+                <option value="3m">Verrouillé 3 mois (+0.5%)</option>
+                <option value="6m">Verrouillé 6 mois (+1%)</option>
+                <option value="1y">Verrouillé 1 an (+2%)</option>
               </select>
             </div>
-            <button className="ap-btn-primary" onClick={() => alert('Épargne automatique configurée !')}>ACTIVER L'ÉPARGNE AUTO →</button>
+            <button className="ap-btn-primary" onClick={async () => {
+              if (!userId) return alert('Connectez-vous pour configurer l\'épargne')
+              if (savings?.id) {
+                await updateSavingsGoal(savings.id, { mode: savingMode, target_amount: savingTarget, lock_period: savingLock })
+              } else {
+                const g = await createSavingsGoal({ userId, mode: savingMode, targetAmount: savingTarget, lockPeriod: savingLock })
+                if (g) setSavings(g)
+              }
+              alert('Épargne automatique configurée !')
+            }}>ACTIVER L'ÉPARGNE AUTO →</button>
           </div>
 
           <div className="ap-card">
@@ -1317,9 +1324,19 @@ export default function AbawiPay() {
             <div className="ap-card-sub">Disponible à tout moment — sans pénalité</div>
             <div className="ap-input-group">
               <label>Montant à retirer</label>
-              <input type="number" placeholder="Max 12 500 XOF disponibles" />
+              <input type="number" value={withdrawAmt} onChange={e => setWithdrawAmt(e.target.value)} placeholder={`Max ${(savings?.current_amount || 0).toLocaleString('fr-FR')} XOF disponibles`} />
             </div>
-            <button className="ap-btn-secondary" onClick={() => alert('Retrait en cours de traitement…')}>RETIRER →</button>
+            <button className="ap-btn-secondary" onClick={async () => {
+              if (!userId) return alert('Connectez-vous pour retirer')
+              const amt = Number(withdrawAmt)
+              if (!amt || amt > (savings?.current_amount || 0)) return alert('Montant invalide ou insuffisant')
+              if (savings?.id) {
+                await updateSavingsGoal(savings.id, { current_amount: savings.current_amount - amt })
+                setSavings({ ...savings, current_amount: savings.current_amount - amt })
+              }
+              setWithdrawAmt('')
+              alert('Retrait enregistré !')
+            }}>RETIRER →</button>
           </div>
         </div>
       )}
@@ -1348,18 +1365,26 @@ export default function AbawiPay() {
           </div>
 
           <div className="ap-card" style={{ padding:'14px 16px' }}>
-            {filteredTx.map(tx => (
+            {payDataLoading && <div style={{padding:12,color:'var(--ap-grey)',fontSize:13}}>Chargement...</div>}
+            {!payDataLoading && txList.length === 0 && (
+              <div style={{padding:12,color:'var(--ap-grey)',fontSize:13}}>Aucune transaction enregistrée.</div>
+            )}
+            {txList.filter(t => txFilter === 'all' || t.type === txFilter).map(tx => (
               <div key={tx.id} className="ap-tx-item">
-                <div className="ap-tx-icon">{tx.icon}</div>
+                <div className="ap-tx-icon">
+                  {tx.type === 'receive' ? '💰' : tx.type === 'send' ? '📤' : tx.type === 'marchand' ? '🛒' : tx.type === 'intl' ? '🌍' : '📱'}
+                </div>
                 <div className="ap-tx-info">
-                  <div className="ap-tx-name">{tx.name}</div>
+                  <div className="ap-tx-name">{tx.description || tx.type}</div>
                   <div className="ap-tx-meta">
-                    {tx.meta} <Pill label={tx.pill} color={tx.pillColor} />
+                    {tx.network || 'Abawi Pay'} · {new Date(tx.created_at).toLocaleDateString('fr-FR')} <Pill label={tx.status} color={tx.status === 'completed' ? 'green' : tx.status === 'pending' ? 'yellow' : 'red'} />
                   </div>
                 </div>
                 <div className="ap-tx-right">
-                  <div className={`ap-tx-amount ${tx.amount.startsWith('+') ? 'pos' : 'neg'}`}>{tx.amount}</div>
-                  <div className="ap-tx-fee">{tx.fee}</div>
+                  <div className={`ap-tx-amount ${tx.type === 'receive' ? 'pos' : 'neg'}`}>
+                    {tx.type === 'receive' ? '+' : '-'}{Number(tx.amount).toLocaleString('fr-FR')} XOF
+                  </div>
+                  <div className="ap-tx-fee">{tx.fee > 0 ? `${Number(tx.fee).toLocaleString('fr-FR')} XOF frais` : '0 XOF frais'}</div>
                 </div>
               </div>
             ))}
@@ -1372,10 +1397,10 @@ export default function AbawiPay() {
         <div className="ap-section">
           <div className="ap-stat-grid">
             {[
-              { label:'Volume (Avr.)', val:'520 k', delta:'▲ +18% vs mars', color:'var(--ap-green)' },
-              { label:'Transactions',  val:'47',    delta:'▲ +12%',          color:'var(--ap-green)' },
-              { label:'Frais économisés', val:'8 200', delta:'vs Wave/OM',   color:'var(--ap-yellow)' },
-              { label:'Épargne totale',val:'12 500', delta:'▲ +3,5%',        color:'var(--ap-green)' },
+              { label:'Volume envoyé', val:`${(totalSent/1000).toFixed(0)} k`, delta:'XOF total', color:'var(--ap-green)' },
+              { label:'Transactions',  val:`${completedCount}`, delta:'terminées', color:'var(--ap-green)' },
+              { label:'Frais payés', val:`${totalFees.toLocaleString('fr-FR')}`, delta:'XOF', color:'var(--ap-yellow)' },
+              { label:'Reçu total', val:`${(totalReceived/1000).toFixed(0)} k`, delta:'XOF', color:'var(--ap-green)' },
             ].map(s => (
               <div key={s.label} className="ap-stat-card">
                 <div className="ap-stat-label">{s.label}</div>

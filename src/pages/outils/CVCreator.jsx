@@ -3,18 +3,26 @@ import { useThemedStyles } from '../../hooks/useThemedStyles';
 import './CVCreator.css'
 
 import { useCV } from '../../hooks/useCV';
-import { aiImprove, extractFromFile, proposeVariants } from '../../lib/cv';
+import { aiImprove, extractFromFile, proposeVariants, adaptCVToOffer, extractOfferText } from '../../lib/cv';
 import PersonalInfo from '../../components/cv-creator/PersonalInfo';
 import Experience from '../../components/cv-creator/Experience';
 import Education from '../../components/cv-creator/Education';
 import Skills from '../../components/cv-creator/Skills';
 import Languages from '../../components/cv-creator/Languages';
 import CVPreview from '../../components/cv-creator/CVPreview';
-import PaymentFlow from '../../components/PaymentFlow'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
+import SEO from '../../components/SEO'
 import FileContextUpload from '../../components/FileContextUpload'
+import { useAuth } from '../../context/AuthContext'
+import { useToolGuard } from '../../hooks/useToolGuard'
+import ToolUpsellModal, { ToolGuardBadge } from '../../components/ToolUpsellModal'
 
 // Appel IA centralisé via le proxy Netlify (sécurisé) avec fallback direct
+
+const CV_SAVE_KEY = 'abawi-cv-save-30j'
+function exportCVWord() { alert('Export Word non implémenté') }
+function exportCVPDF() { alert('Export PDF non implémenté') }
 
 export default function CVCreator() {
   const {
@@ -29,13 +37,19 @@ export default function CVCreator() {
     handleSave30Days,
   } = useCV();
 
-  const [payment, setPayment] = useState(false);
   const [improving, setImproving] = useState(false);
+
+  const { membre } = useAuth()
+  const guard = useToolGuard('cv', 'cv')
   const [extracting, setExtracting] = useState(false);
   const [aiVariants, setAiVariants] = useState([]);
   const [selectedVariant, setSelectedVariant] = useState(-1);
   const [proposing, setProposing] = useState(false);
   const [saveNotice, setSaveNotice] = useState('');
+  const [offerText, setOfferText] = useState('');
+  const [offerFile, setOfferFile] = useState('');
+  const [adapting, setAdapting] = useState(false);
+  const [adaptedCv, setAdaptedCv] = useState(null);
   const previewRef = useRef();
   const photoInputRef = useRef();
   const { themed } = useThemedStyles();
@@ -68,23 +82,58 @@ export default function CVCreator() {
     if (aiVariants[idx]?.resume) setInfo(p => ({ ...p, resume: aiVariants[idx].resume }));
   }
 
-  function handleDownload() {
+  async function handleAdaptToOffer() {
+    if (!offerText && !offerFile) return;
+    setAdapting(true);
+    setAdaptedCv(null);
+    const rawOffer = offerFile || offerText;
+    const cleanedOffer = await extractOfferText(rawOffer);
+    const adapted = await adaptCVToOffer({ info, exps, formations, skills, langues }, cleanedOffer);
+    if (adapted) {
+      setAdaptedCv(adapted);
+      setOfferText(cleanedOffer);
+    }
+    setAdapting(false);
+  }
+
+  function applyAdaptedCv() {
+    if (!adaptedCv) return;
+    setInfo(p => ({ ...p, ...adaptedCv.info }));
+    if (adaptedCv.exps?.length) setExps(adaptedCv.exps);
+    if (adaptedCv.skills?.length) setSkills(adaptedCv.skills);
+    if (adaptedCv.langues?.length) setLangues(adaptedCv.langues);
+    setAdaptedCv(null);
+    setOfferText('');
+    setOfferFile('');
+  }
+
+  async function handleDownload() {
+    const debitResult = await guard.checkAndDebit()
+    if (!debitResult.ok) return
+    await guard.recordUsage()
     sessionStorage.setItem('abawi-cv-data', JSON.stringify({ info, photo, exps, formations, skills, langues, theme }));
-    setPayment(true);
+    exportCVWord();
+    exportCVPDF();
   }
 
   return (
     <main className="cv-page">
-      {payment && (
-        <PaymentFlow
-          product={{ id: 'cv-pro', titre: 'CV Professionnel ABAWI', prix: 990 }}
-          onClose={() => setPayment(false)}
-          onSuccess={() => { exportCVWord(); exportCVPDF(); setPayment(false) }}
-        />
-      )}
-
-      <h1 className="cv-page-title">📄 Créateur de CV Pro</h1>
-      <p className="cv-page-sub">Importez un CV existant ou remplissez le formulaire. L'IA optimise. Aperçu gratuit — export PDF à 990 FCFA.</p>
+      <SEO
+        title="Créateur de CV Pro — Optimisé ATS, 8 thèmes, export PDF/Word"
+        description="CV professionnel optimisé ATS avec 8 thèmes premium. Import fichier, variantes IA, aperçu gratuit. Export PDF et Word. Adapté au marché du travail sénégalais et africain."
+        keywords="CV Sénégal, créateur CV, CV ATS, CV professionnel, export PDF, thème CV, recrutement Afrique"
+        image="/og-tools/cv.jpg"
+      />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 className="cv-page-title">📄 Créateur de CV Pro</h1>
+          <p className="cv-page-sub">Importez un CV existant ou remplissez le formulaire. L'IA optimise. Aperçu gratuit — 2 exports/jour gratuits, puis 2 crédits.</p>
+          <div style={{ marginTop: 6 }}>
+            <ToolGuardBadge guard={guard} />
+          </div>
+        </div>
+        <TokenCounter />
+      </div>
 
       <ToolInfoPanel
         toolName="Créateur de CV Pro"
@@ -138,6 +187,47 @@ export default function CVCreator() {
         )}
       </div>
 
+      {/* ── ADAPTER À UNE OFFRE ── */}
+      <div style={themed({ marginBottom: 24, padding: '20px 24px', borderRadius: 14, background: 'rgba(16,185,129,0.04)', border: '1px solid rgba(16,185,129,0.2)' })}>
+        <div style={themed({ fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, fontSize: '0.95rem' })}>🎯 Adapter mon CV à une offre</div>
+        <p style={themed({ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: '0 0 14px' })}>
+          Collez le texte de l'offre ou importez un fichier (PDF, image, Word). L'IA adapte votre CV aux compétences et au ton recherchés.
+        </p>
+        <FileContextUpload
+          onExtracted={(text) => setOfferFile(text)}
+          label="Importer l'offre (PDF, image, Word, TXT)"
+          hint="L'IA extrait le texte de l'offre automatiquement"
+        />
+        <textarea
+          className="cv-textarea"
+          style={{ marginTop: 10, minHeight: 80 }}
+          placeholder="Ou collez ici le texte de l'offre d'emploi…"
+          value={offerText}
+          onChange={(e) => setOfferText(e.target.value)}
+        />
+        <button
+          className="cv-ai-btn"
+          style={{ marginTop: 10 }}
+          onClick={handleAdaptToOffer}
+          disabled={adapting || (!offerText && !offerFile)}
+        >
+          {adapting ? '⏳ Adaptation en cours…' : '✨ Adapter mon CV à cette offre'}
+        </button>
+        {adaptedCv && (
+          <div style={themed({ marginTop: 16, padding: 16, borderRadius: 12, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)' })}>
+            <div style={themed({ fontWeight: 700, color: '#10B981', fontSize: '0.9rem', marginBottom: 8 })}>✅ CV adapté prêt</div>
+            <div style={themed({ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: 12 })}>
+              Titre : <strong>{adaptedCv.info?.titre}</strong><br/>
+              Compétences ajoutées : {adaptedCv.skills?.map(s => s.name || s).join(', ')}
+            </div>
+            <div style={themed({ display: 'flex', gap: 10 })}>
+              <button className="cv-action-btn cv-action-btn--gold" onClick={applyAdaptedCv}>Appliquer les modifications</button>
+              <button className="cv-action-btn" onClick={() => setAdaptedCv(null)}>Ignorer</button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="cv-layout">
         <div className="cv-form">
           <PersonalInfo info={info} setInfo={setInfo} photo={photo} setPhoto={setPhoto} photoInputRef={photoInputRef} />
@@ -161,12 +251,27 @@ export default function CVCreator() {
         </div>
 
         <CVPreview info={info} photo={photo} exps={exps} formations={formations} skills={skills} langues={langues} theme={theme} setTheme={setTheme} previewRef={previewRef} />
-        <div className="cv-actions">
-          <button className="cv-action-btn" onClick={() => { handleSave30Days(); setSaveNotice('✅ CV sauvegardé pour 30 jours'); setTimeout(() => setSaveNotice(''), 3000); }}>💾 Sauvegarder 30j</button>
-          <button className="cv-action-btn cv-action-btn--gold" onClick={handleDownload}>⬇️ Exporter PDF & Word (990 F)</button>
+        <h2 className="cv-section-title">Finaliser</h2>
+        <div className="cv-block cv-actions">
+          <button className="cv-action-btn" onClick={() => { handleSave30Days(); setSaveNotice('✅ CV sauvegardé pour 30 jours'); setTimeout(() => setSaveNotice(''), 3000); }}>
+            💾 Sauvegarder 30 jours
+          </button>
+          <button className="cv-action-btn cv-action-btn--gold" onClick={handleDownload}>
+            ⬇️ Exporter PDF & Word
+          </button>
         </div>
-        {saveNotice && <div style={themed({ fontSize: '0.78rem', color: 'var(--green)', textAlign: 'center', marginTop: 8 })}>{saveNotice}</div>}
+        {saveNotice && <div className="cv-save-notice">{saveNotice}</div>}
       </div>
+
+      <ToolUpsellModal
+        isOpen={guard.upsellOpen}
+        config={guard.upsellConfig}
+        onClose={guard.closeUpsell}
+        onUseCredit={async () => {
+          const r = await guard.checkAndDebit()
+          if (r.ok) { guard.closeUpsell(); handleDownload() }
+        }}
+      />
     </main>
   )
 }

@@ -259,3 +259,13 @@
   .pod-tabs { gap: 6px; }
   .pod-tab { padding: 8px 16px; font-size: 0.85rem; }
 }
+
+@media (max-width: 640px) {
+  .pod-hero { padding: 40px 0 28px; }
+  .pod-page { padding: 0 16px 60px; }
+}
+@media (max-width: 480px) {
+  .pod-hero { padding: 26px 0 18px; }
+  .pod-hero-title { font-size: clamp(1.3rem, 5vw, 1.8rem); }
+  .pod-hero-sub { font-size: 0.88rem; }
+}

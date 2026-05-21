@@ -1017,8 +1017,8 @@
 [data-mode="light"] .ap-premium-banner *,
 [data-mode="light"] .ap-epargne-card,
 [data-mode="light"] .ap-epargne-card *,
-[data-mode="light"] .ap-card-option,
-[data-mode="light"] .ap-card-option *,
+[data-mode="light"] .ap-card-option-visual,
+[data-mode="light"] .ap-card-option-visual *,
 html.light .ap-balance-card,
 html.light .ap-balance-card *,
 html.light .ap-card-visual,
@@ -1027,8 +1027,8 @@ html.light .ap-premium-banner,
 html.light .ap-premium-banner *,
 html.light .ap-epargne-card,
 html.light .ap-epargne-card *,
-html.light .ap-card-option,
-html.light .ap-card-option * {
+html.light .ap-card-option-visual,
+html.light .ap-card-option-visual * {
   color: rgba(255, 255, 255, 0.88) !important;
 }
 /* Exceptions : couleurs sémantiques préservées */

@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { waLink } from '../data/products'
+import SEO from '../components/SEO'
 import './Store.css'
 
 // ─── Category definitions ──────────────────────────────────────────────────
@@ -139,6 +140,10 @@ function GridCard({ product, onNavigate }) {
         <img
           src={imgSrc}
           alt={title}
+          width={280}
+          height={200}
+          loading="lazy"
+          decoding="async"
           onError={e => { e.currentTarget.src = PRODUCT_IMAGES.default }}
         />
         {stockInfo && (
@@ -180,12 +185,13 @@ function GridCard({ product, onNavigate }) {
         </div>
 
         <div className="st-card-actions">
-          <button
+          <Link
             className="st-card-cta"
-            onClick={e => { e.stopPropagation(); onNavigate() }}
+            to={`/store/${product.id}`}
+            onClick={e => e.stopPropagation()}
           >
             Commander →
-          </button>
+          </Link>
           <a
             className="st-card-wa"
             href={waHref}
@@ -193,6 +199,7 @@ function GridCard({ product, onNavigate }) {
             rel="noopener noreferrer"
             aria-label="WhatsApp"
             onClick={e => e.stopPropagation()}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44 }}
           >
             📱
           </a>
@@ -217,6 +224,10 @@ function ListCard({ product, onNavigate }) {
         className="st-list-img"
         src={imgSrc}
         alt={title}
+        width={120}
+        height={90}
+        loading="lazy"
+        decoding="async"
         onError={e => { e.currentTarget.src = PRODUCT_IMAGES.default }}
       />
       <div className="st-list-body">
@@ -234,12 +245,13 @@ function ListCard({ product, onNavigate }) {
           )}
         </div>
         <div className="st-list-actions">
-          <button
+          <Link
             className="st-list-cta"
-            onClick={e => { e.stopPropagation(); onNavigate() }}
+            to={`/store/${product.id}`}
+            onClick={e => e.stopPropagation()}
           >
             Voir →
-          </button>
+          </Link>
           <a
             className="st-card-wa"
             href={waHref}
@@ -247,7 +259,7 @@ function ListCard({ product, onNavigate }) {
             rel="noopener noreferrer"
             aria-label="WhatsApp"
             onClick={e => e.stopPropagation()}
-            style={{ width: 30, height: 30, minWidth: 30, fontSize: '0.8rem' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 44, height: 44 }}
           >
             📱
           </a>
@@ -307,7 +319,7 @@ function Store() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { loadProducts() }, [loadProducts])
+  useEffect(() => { Promise.resolve().then(() => loadProducts()) }, [loadProducts])
 
   // ── Derived: filtered + sorted list ─────────────────────────────────────
   const displayed = (() => {
@@ -350,6 +362,12 @@ function Store() {
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <main className="st-page">
+      <SEO
+        title="Store IT — Matériel informatique au Sénégal"
+        description="PC portables, bureaux, imprimantes, écrans, claviers, souris, disques durs, RAM et accessoires informatiques au Sénégal. Livraison Dakar, conseil personnalisé."
+        keywords="PC Sénégal, ordinateur Dakar, imprimante, écran, clavier, souris, disque dur, RAM, matériel informatique, upgrade PC"
+        image="/slider/01-Black-Desk-Setup_-minimal_modern.webp"
+      />
 
       {/* Hero */}
       <section className="st-hero">

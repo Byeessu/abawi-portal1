@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import SEO from '../../components/SEO'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import ToolHero from '../../components/ToolHero'
 import { useTheme } from '../../context/ThemeContext'
+import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 
 const SURVEY_TYPES = [
   { id: 'survey', name: 'Sondage', icon: '📊', color: 'var(--accent)' },
@@ -31,12 +34,8 @@ const TEMPLATES = [
 
 export default function MaxAvisElite() {
   const { darkMode } = useTheme()
-  const [surveys, setSurveys] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return JSON.parse(localStorage.getItem('maxavis_surveys') || '[]')
-    }
-    return []
-  })
+  const { membre } = useAuth()
+  const [surveys, setSurveys] = useState([])
   const [currentSurvey, setCurrentSurvey] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
@@ -47,9 +46,11 @@ export default function MaxAvisElite() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
 
+  // ── Supabase: chargement initial ──
   useEffect(() => {
-    localStorage.setItem('maxavis_surveys', JSON.stringify(surveys))
-  }, [surveys])
+    supabase.from('maxavis_surveys').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setSurveys(data.map(s => ({ ...s, responses: s.responses || [] }))) })
+  }, [])
 
   const filteredSurveys = useMemo(() => {
     return surveys.filter(s => {
@@ -103,14 +104,24 @@ export default function MaxAvisElite() {
     setShowCreateModal(true)
   }
 
-  const saveSurvey = () => {
+  const saveSurvey = async () => {
     if (!currentSurvey.title) return alert('Veuillez donner un titre')
-    
+    const payload = {
+      membre_id: membre?.id || 'anon',
+      titre: currentSurvey.title,
+      description: currentSurvey.description || '',
+      type: currentSurvey.type || 'survey',
+      questions: currentSurvey.questions || [],
+      settings: currentSurvey.settings || {},
+      status: currentSurvey.status || 'draft',
+    }
     const existing = surveys.find(s => s.id === currentSurvey.id)
     if (existing) {
-      setSurveys(surveys.map(s => s.id === currentSurvey.id ? { ...currentSurvey, updatedAt: new Date().toISOString() } : s))
+      const { data: updated } = await supabase.from('maxavis_surveys').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', currentSurvey.id).select().single()
+      if (updated) setSurveys(p => p.map(s => s.id === currentSurvey.id ? { ...updated, responses: s.responses || [] } : s))
     } else {
-      setSurveys([...surveys, { ...currentSurvey, updatedAt: new Date().toISOString() }])
+      const { data: created } = await supabase.from('maxavis_surveys').insert(payload).select().single()
+      if (created) setSurveys(p => [{ ...created, responses: [] }, ...p])
     }
     setShowCreateModal(false)
     setCurrentSurvey(null)
@@ -184,19 +195,22 @@ export default function MaxAvisElite() {
     })
   }
 
-  const publishSurvey = (survey) => {
-    setSurveys(surveys.map(s => s.id === survey.id ? { ...s, status: 'active', publishedAt: new Date().toISOString() } : s))
+  const publishSurvey = async (survey) => {
+    await supabase.from('maxavis_surveys').update({ status: 'active', published_at: new Date().toISOString() }).eq('id', survey.id)
+    setSurveys(p => p.map(s => s.id === survey.id ? { ...s, status: 'active', published_at: new Date().toISOString() } : s))
     setShowShareModal(true)
     setCurrentSurvey({ ...survey, status: 'active' })
   }
 
-  const closeSurvey = (survey) => {
-    setSurveys(surveys.map(s => s.id === survey.id ? { ...s, status: 'closed', closedAt: new Date().toISOString() } : s))
+  const closeSurvey = async (survey) => {
+    await supabase.from('maxavis_surveys').update({ status: 'closed', closed_at: new Date().toISOString() }).eq('id', survey.id)
+    setSurveys(p => p.map(s => s.id === survey.id ? { ...s, status: 'closed' } : s))
   }
 
-  const deleteSurvey = (survey) => {
+  const deleteSurvey = async (survey) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce sondage ?')) {
-      setSurveys(surveys.filter(s => s.id !== survey.id))
+      await supabase.from('maxavis_surveys').delete().eq('id', survey.id)
+      setSurveys(p => p.filter(s => s.id !== survey.id))
     }
   }
 
@@ -308,7 +322,7 @@ export default function MaxAvisElite() {
     }
     
     .maxavis-content {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 24px;
     }
@@ -873,37 +887,17 @@ export default function MaxAvisElite() {
       />
       <style>{MAXAVIS_STYLES}</style>
 
-      {/* Header */}
-      <div className="maxavis-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div className="maxavis-logo">📊</div>
-            <div>
-              <h1 className="maxavis-title">MaxAvis Elite</h1>
-              <p className="maxavis-subtitle">Sondages, pétitions et études de grande puissance — Recensez des millions de voix</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="maxavis-stats">
-          <div className="maxavis-stat">
-            <div className="maxavis-stat-value">{stats.total}</div>
-            <div className="maxavis-stat-label">Projets créés</div>
-          </div>
-          <div className="maxavis-stat">
-            <div className="maxavis-stat-value">{stats.active}</div>
-            <div className="maxavis-stat-label">Actifs</div>
-          </div>
-          <div className="maxavis-stat">
-            <div className="maxavis-stat-value">{stats.totalResponses.toLocaleString()}</div>
-            <div className="maxavis-stat-label">Réponses totales</div>
-          </div>
-          <div className="maxavis-stat">
-            <div className="maxavis-stat-value">{stats.totalSignatures.toLocaleString()}</div>
-            <div className="maxavis-stat-label">Signatures</div>
-          </div>
-        </div>
-      </div>
+      <ToolHero
+        icon="📊"
+        badge="Sondages · Pétitions · Analytics"
+        title="MaxAvis"
+        titleAccent="Elite"
+        subtitle="Créez des sondages, pétitions et études de grande puissance — analysez des millions de voix en temps réel"
+        accentColor="#6366F1"
+        accentFrom="#1e1b4b"
+        accentTo="#4338ca"
+        stats={[['📊', 'Sondages illimités'], ['🗳️', 'Pétitions & votes'], ['📈', 'Analytics temps réel'], ['📄', 'Export PDF/CSV']]}
+      />
 
       <div className="maxavis-content">
         {/* Tabs */}

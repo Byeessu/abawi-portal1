@@ -1,8 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
-import html2canvas from 'html2canvas'
+import SEO from '../../components/SEO'
+import { useAuth } from '../../context/AuthContext'
+import ToolInfoPanel from '../../components/ToolInfoPanel'
+import { useToolAccess } from '../../hooks/useToolAccess'
 import { cleanIAText } from '../../lib/cleanText'
 import { groqChatCompletion } from '../../lib/groqClient'
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages'
+import TokenCounter from '../../components/TokenCounter'
 
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
@@ -62,6 +66,9 @@ const VISUAL_THEMES = {
 }
 
 export default function InfographiePro() {
+  const { membre } = useAuth()
+  const tool = useToolAccess('studio', 'infographie')
+  const [showPayment, setShowPayment] = useState(false)
   const previewRef = useRef(null)
   const [formatId, setFormatId] = useState(CANVAS_FORMATS[0].id)
   const fmt = CANVAS_FORMATS.find((f) => f.id === formatId) || CANVAS_FORMATS[0]
@@ -171,10 +178,12 @@ export default function InfographiePro() {
   }
 
   async function exportPNG() {
+    if (!tool.allowed) { setShowPayment(true); return }
     if (!previewRef.current) return
     setPngLoading(true)
     setAiError('')
     try {
+      const { default: html2canvas } = await import('html2canvas')
       const canvas = await html2canvas(previewRef.current, {
         scale: 2,
         useCORS: true,
@@ -184,9 +193,13 @@ export default function InfographiePro() {
       })
       await new Promise((resolve, reject) => {
         canvas.toBlob(
-          (blob) => {
+          async (blob) => {
             if (blob) {
               download(blob, `infographie-${fmt.w}x${fmt.h}-${Date.now()}.png`)
+              if (!tool.unlimited) {
+                const res = await tool.debit()
+                if (!res.ok) { setShowPayment(true) }
+              }
               resolve()
             } else reject(new Error('blob'))
           },
@@ -202,6 +215,7 @@ export default function InfographiePro() {
   }
 
   async function generateWithAI() {
+    if (!tool.allowed) { setShowPayment(true); return }
     setAiError('')
     if (!aiBrief.trim()) return
     setAiLoading(true)
@@ -210,7 +224,7 @@ export default function InfographiePro() {
 Mode: ${mode}
 Brief: ${aiBrief}
 Retourne UNIQUEMENT un JSON valide (sans markdown):
-{"title":"...","subtitle":"...","headerText":"...","footerText":"...","items":[{"label":"...","value":"...","color":"#RRGGBB"}]}`
+{"title":"...","subtitle":"...","headerText":"...","footerText":"...","items":[{"label":"...","value":"...","color":"#RRGGBB"}]}]`
       const data = await groqChatCompletion(
         {
           model: GROQ_MODEL,
@@ -242,6 +256,10 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
           })),
         )
       }
+      if (!tool.unlimited) {
+        const res = await tool.debit()
+        if (!res.ok) { setShowPayment(true) }
+      }
     } catch (e) {
       setAiError(toUserFriendlyAIError(e, 'Impossible de générer la structure. Vérifiez le brief ou réessayez.'))
     } finally {
@@ -254,6 +272,40 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
 
   return (
     <main style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 22px 80px' }}>
+      <SEO title="Infographie Pro — Créateur de visuels professionnels" description="Créez des infographies et visuels professionnels. Templates premium, export haute définition." image="/og-tools/infographie-pro.jpg" />
+      <style>{`
+        @media (max-width: 700px) {
+          .ip-workspace-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
+      <ToolInfoPanel
+        toolName="Infographie Pro IA"
+        icon="🎨"
+        description="Créez des visuels professionnels (posts, stories, banners) avec l'IA et exportez en PNG haute résolution"
+        benefits={[
+          'Générez le contenu de votre infographie en décrivant simplement votre sujet à l\'IA',
+          'Choisissez parmi 4 formats (carré, story 9:16, paysage, portrait) prêts pour tous les réseaux',
+          'Appliquez des thèmes visuels professionnels (Abysse, Studio clair, Or prestige, Signal cyan)',
+          'Exportez en PNG HD directement depuis votre navigateur sans aucun logiciel',
+          'Ajoutez votre logo, en-tête et pied de page pour un rendu à votre image',
+        ]}
+        howToUse={[
+          'Choisissez votre format (post Instagram, story, banner LinkedIn…)',
+          'Sélectionnez un thème visuel qui correspond à votre charte graphique',
+          'Décrivez votre contenu dans le champ IA ou saisissez-le manuellement',
+          'Ajustez les éléments (titre, sous-titre, données, logo) via les champs',
+          'Cliquez sur « Export PNG » pour télécharger votre infographie',
+        ]}
+        tips={[
+          'Pour un résultat optimal, utilisez des phrases courtes et percutantes dans les titres',
+          'Le thème « Or prestige » est idéal pour les contenus luxe et événements haut de gamme',
+          'Combinez plusieurs exports pour créer une série cohérente de publications',
+        ]}
+      />
+
       <section
         style={{
           border: '1px solid #1A2332',
@@ -263,16 +315,16 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
         }}
       >
         <div style={{ color: '#67E8F9', fontWeight: 800, fontSize: '0.76rem' }}>OUTILS ABAWI / INFOGRAPHIE PRO IA</div>
-        <h1 style={{ color: '#F0F2F5', marginTop: 10 }}>Infographie Pro IA</h1>
-        <p style={{ color: '#8B95A5', maxWidth: 920 }}>
+        <h1 style={{ color: 'var(--text-primary)', marginTop: 10 }}>Infographie Pro IA</h1>
+        <p style={{ color: 'var(--text-muted)', maxWidth: 920 }}>
           Aperçu « type Canva » avec formats fixes, thèmes, export PNG HD depuis le rendu, plus JSON / Markdown / HTML.
           Pour un éditeur complet (calques, millions d’assets), il faudrait un moteur dédié (Polotno, Fabric, service
           externe) — ici on vise des visuels pro rapides et exportables.
         </p>
       </section>
 
-      <section style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.15fr)', gap: 14 }}>
-        <div style={{ border: '1px solid #1A2332', borderRadius: 14, padding: 14, background: '#0D1117' }}>
+      <section className="ip-workspace-grid" style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.15fr)', gap: 14 }}>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 14, background: 'var(--bg-card)' }}>
           <Label text="Format canvas (export PNG)" />
           <select value={formatId} onChange={(e) => setFormatId(e.target.value)} style={field}>
             {CANVAS_FORMATS.map((f) => (
@@ -361,9 +413,9 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
           </div>
         </div>
 
-        <div style={{ border: '1px solid #1A2332', borderRadius: 14, padding: 14, background: '#0D1117', maxHeight: 720, overflow: 'auto' }}>
+        <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 14, background: 'var(--bg-card)', maxHeight: 720, overflow: 'auto' }}>
           {items.map((it) => (
-            <div key={it.id} style={{ border: '1px solid #1A2332', borderRadius: 10, padding: 10, marginBottom: 8 }}>
+            <div key={it.id} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 10, marginBottom: 8 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}>
                 <input value={it.label} onChange={(e) => updateItem(it.id, 'label', e.target.value)} style={field} />
                 <input value={it.value} onChange={(e) => updateItem(it.id, 'value', e.target.value)} style={field} />
@@ -371,7 +423,7 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
                   type="color"
                   value={it.color}
                   onChange={(e) => updateItem(it.id, 'color', e.target.value)}
-                  style={{ width: 44, borderRadius: 8, border: '1px solid #1A2332', background: '#070B0F' }}
+                  style={{ width: 44, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)' }}
                 />
               </div>
               <button type="button" onClick={() => removeItem(it.id)} style={{ ...btn('#DC2626'), marginTop: 8 }}>
@@ -383,7 +435,7 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
       </section>
 
       <section style={{ marginTop: 18 }}>
-        <div style={{ color: '#94A3B8', fontSize: '0.82rem', marginBottom: 10 }}>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: 10 }}>
           Aperçu rendu (échelle {Math.round(displayScale * 100)} % — export PNG à {fmt.w}×{fmt.h} px)
         </div>
         <div
@@ -417,6 +469,7 @@ Retourne UNIQUEMENT un JSON valide (sans markdown):
               <img
                 src={logoUrl}
                 alt=""
+                aria-hidden="true"
                 crossOrigin="anonymous"
                 style={{ height: Math.max(36, fmt.h * 0.06), width: 'auto', objectFit: 'contain', alignSelf: 'flex-start' }}
               />
@@ -478,10 +531,10 @@ function escapeHtml(value) {
 }
 
 function Label({ text }) {
-  return <label style={{ display: 'block', color: '#8B95A5', fontSize: '0.78rem', marginTop: 8, marginBottom: 5 }}>{text}</label>
+  return <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 8, marginBottom: 5 }}>{text}</label>
 }
 
-const field = { width: '100%', borderRadius: 9, border: '1px solid #1A2332', background: '#070B0F', color: '#F0F2F5', padding: '9px 10px' }
+const field = { width: '100%', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '9px 10px' }
 const btn = (color) => ({
   borderRadius: 9,
   border: 'none',

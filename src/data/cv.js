@@ -1,12 +1,20 @@
 export const THEMES = [
-  { id: 'classique', name: 'Classique', accent: '#1a1a2e', font: 'Georgia, serif' },
+  { id: 'classique', name: 'Classique', accent: '#1a1a2e', font: 'Georgia, serif', dark: true },
   { id: 'moderne', name: 'Moderne', accent: '#2563EB', font: 'Outfit, sans-serif' },
   { id: 'creatif', name: 'Créatif', accent: '#7C3AED', font: 'Outfit, sans-serif' },
-  { id: 'executif', name: 'Exécutif', accent: '#1a1a2e', font: 'Georgia, serif' },
+  { id: 'executif', name: 'Exécutif', accent: '#1a1a2e', font: 'Georgia, serif', dark: true },
   { id: 'tech', name: 'Tech', accent: '#059669', font: 'monospace' },
-  { id: 'minimaliste', name: 'Minimaliste', accent: '#374151', font: 'Outfit, sans-serif' },
+  { id: 'minimaliste', name: 'Minimaliste', accent: '#374151', font: 'Outfit, sans-serif', dark: true },
   { id: 'abawi', name: 'ABAWI', accent: '#18A84A', font: 'Syne, sans-serif' },
   { id: 'senegal', name: 'Sénégal', accent: '#00853F', font: 'Outfit, sans-serif' },
+  { id: 'gold', name: 'Gold Luxe', accent: '#B45309', font: 'Playfair Display, serif' },
+  { id: 'midnight', name: 'Midnight', accent: '#4C1D95', font: 'Outfit, sans-serif', dark: true },
+  { id: 'coral', name: 'Coral', accent: '#EA580C', font: 'Outfit, sans-serif' },
+  { id: 'ocean', name: 'Océan', accent: '#0369A1', font: 'Outfit, sans-serif' },
+  { id: 'forest', name: 'Forest', accent: '#065F46', font: 'Outfit, sans-serif' },
+  { id: 'rose', name: 'Rose', accent: '#BE185D', font: 'Outfit, sans-serif' },
+  { id: 'carbon', name: 'Carbon', accent: '#111827', font: 'monospace', dark: true },
+  { id: 'sunset', name: 'Sunset', accent: '#C2410C', font: 'Outfit, sans-serif' },
 ];
 
 export const NIVEAUX_LANGUE = [

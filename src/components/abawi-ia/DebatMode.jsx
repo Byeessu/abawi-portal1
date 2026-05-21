@@ -1,10 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { toUserFriendlyAIError } from '../../lib/aiErrorMessages';
 import { buildSystemPrompt } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
+import { useAuth } from '../../context/AuthContext'
+import { useFreeToolQuota } from '../../hooks/useFreeToolQuota'
+import FreeToolPaywall from '../../components/FreeToolPaywall'
 
-export default function DebatMode() {
+export default function DebatMode({ language = 'fr' } = {}) {
+  const { membre } = useAuth()
+  const quota = useFreeToolQuota('abawi_ia', {
+    anonymousLimit: 5, memberLimit: 10, membre, creditType: 'abawi_ia',
+  })
+  const [showPaywall, setShowPaywall] = useState(false)
+
   const [sujet, setSujet] = useState('');
   const [position, setPosition] = useState('pour');
   const [messages, setMessages] = useState([]);
@@ -14,15 +23,31 @@ export default function DebatMode() {
   const sysRef = useRef(null);
   const bottomRef = useRef(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // NOTE: pas de scroll auto — fenêtre stable.
+
+  async function checkAccessThen() {
+    if (quota.quotaAvailable) {
+      quota.recordUse()
+      return true
+    }
+    if (quota.canUseCredits) {
+      const result = await quota.debitCredits()
+      if (result.ok) return true
+    }
+    setShowPaywall(true)
+    return false
+  }
 
   async function start() {
+    if (!sujet.trim()) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setStarted(true);
     setLoading(true);
     const posOppose = position === 'pour' ? 'contre' : 'pour';
     sysRef.current = {
       role: 'system',
-      content: buildSystemPrompt({
+      content: buildSystemPrompt({ language,
         role: "débatteur expert ABAWI, polyvalent et rigoureux",
         includeStyle: false,
         extra: `RÔLE DÉBAT : Le sujet est : "${sujet}". Tu défends la position ${posOppose.toUpperCase()} pendant que l'utilisateur défend ${position.toUpperCase()}.
@@ -41,8 +66,9 @@ FORMAT : 3 à 4 phrases maximum, **gras** pour les arguments clés, ton incisif 
 
   async function send() {
     if (!input.trim()) return;
-    const msg = { role: 'user', content: input };
-    const newMsgs = [...messages, msg];
+    const ok = await checkAccessThen()
+    if (!ok) return
+    const newMsgs = [...messages, { role: 'user', content: input.trim() }];
     setMessages(newMsgs);
     setInput('');
     setLoading(true);
@@ -97,6 +123,19 @@ FORMAT : 3 à 4 phrases maximum, **gras** pour les arguments clés, ton incisif 
           style={{ flex: 1, padding: '12px 16px', borderRadius: '10px', background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '0.88rem', outline: 'none', fontFamily: 'Outfit,sans-serif' }} />
         <button onClick={send} disabled={!input.trim() || loading} style={{ padding: '12px 18px', borderRadius: '10px', background: 'linear-gradient(135deg, #EF4444, #DC2626)', border: 'none', color: '#fff', cursor: 'pointer' }}>→</button>
       </div>
+
+      {showPaywall && (
+        <FreeToolPaywall
+          toolName="Débat IA"
+          usedToday={quota.usedToday}
+          limit={quota.limit}
+          membre={membre}
+          creditCost={quota.creditCost}
+          soldeCredits={quota.soldeCredits}
+          upgradeAction="generate"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
     </div>
   );
 }

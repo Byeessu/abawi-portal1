@@ -4,41 +4,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
+    <!-- Resource hints — performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://nqpfmnsecjhqxuvfkqhi.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://api.groq.com" crossorigin />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="https://plausible.io" />
+    <link rel="dns-prefetch" href="https://browser.sentry-cdn.com" />
+
+    <!-- Hreflang — multilingual SEO -->
+    <link rel="alternate" hreflang="fr" href="https://abawi.app/" />
+    <link rel="alternate" hreflang="en" href="https://abawi.app/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://abawi.app/" />
+
     <!-- Primary meta -->
     <title>ABAWI — Guides Premium, Outils IA et Académie Business pour l'Afrique</title>
     <meta name="description" content="Portail premium africain : guides business, outils IA (CV, business plan, finance, juridique), académie Bac, actualités économiques. Créez vos documents professionnels en 5 minutes." />
     <meta name="keywords" content="ABAWI, business plan Afrique, CV Sénégal, outils IA, OHADA, SYSCOHADA, académie Bac, guides business, fintech, entrepreneuriat africain, UEMOA, BCEAO" />
     <meta name="author" content="ABAWI SN" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
-    <link rel="canonical" href="https://abawi-portal.netlify.app/" />
+    <link rel="canonical" href="https://abawi.app/" />
 
-    <!-- Icons / PWA -->
-    <link rel="icon" type="image/png" href="/favicon-symbol.png" />
-    <link rel="apple-touch-icon" href="/abawi-symbol.png" />
+    <!-- Icons / PWA — logo vert ABAWI (favicon-abawi-192.png 192×192 requis par Google) -->
+    <link rel="shortcut icon" type="image/png" sizes="48x48"   href="/favicon-32x32.png" />
+    <link rel="icon"          type="image/png" sizes="16x16"   href="/favicon-16x16.png" />
+    <link rel="icon"          type="image/png" sizes="32x32"   href="/favicon-32x32.png" />
+    <link rel="icon"          type="image/png" sizes="96x96"   href="/favicon-96x96.png" />
+    <link rel="icon"          type="image/png" sizes="192x192" href="/favicon-abawi-192.png" />
+    <link rel="icon"          type="image/png" sizes="512x512" href="/favicon-abawi-512.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/favicon-abawi-192.png" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#F0B429" />
+    <meta name="theme-color" content="#4CAF50" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ABAWI" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="application-name" content="ABAWI Portal" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="color-scheme" content="dark light" />
 
     <!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ABAWI" />
     <meta property="og:title" content="ABAWI — Guides Premium, Outils IA et Académie Business pour l'Afrique" />
     <meta property="og:description" content="Portail premium africain : guides business, outils IA (CV, business plan, finance, juridique), académie Bac, actualités économiques." />
-    <meta property="og:url" content="https://abawi-portal.netlify.app/" />
-    <meta property="og:image" content="https://abawi-portal.netlify.app/abawi-logo.png" />
+    <meta property="og:url" content="https://abawi.app/" />
+    <meta property="og:image" content="https://abawi.app/abawi-og-banner.jpg" />
+    <meta property="og:image:secure_url" content="https://abawi.app/abawi-og-banner.jpg" />
+    <meta property="og:image:alt" content="ABAWI — Portail premium africain de guides business, outils IA et académie" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="fr_SN" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@abawi_sn" />
+    <meta name="twitter:creator" content="@abawi_sn" />
     <meta name="twitter:title" content="ABAWI — Excellence Africaine" />
     <meta name="twitter:description" content="Guides, outils IA et académie business pour l'Afrique de l'Ouest." />
-    <meta name="twitter:image" content="https://abawi-portal.netlify.app/abawi-logo.png" />
+    <meta name="twitter:image" content="https://abawi.app/abawi-og-banner.jpg" />
 
     <!-- JSON-LD structured data -->
     <script type="application/ld+json">
@@ -46,8 +73,8 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "ABAWI SN",
-      "url": "https://abawi-portal.netlify.app/",
-      "logo": "https://abawi-portal.netlify.app/abawi-logo.png",
+      "url": "https://abawi.app/",
+      "logo": "https://abawi.app/favicon-abawi-512.png",
       "description": "Portail premium africain de guides business, outils IA, académie Bac et actualités économiques.",
       "address": {
         "@type": "PostalAddress",
@@ -74,97 +101,74 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "ABAWI",
-      "url": "https://abawi-portal.netlify.app/",
+      "url": "https://abawi.app/",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://abawi-portal.netlify.app/?q={search_term_string}",
+        "target": "https://abawi.app/?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     }
     </script>
 
-    <!-- Performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://api.groq.com" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- LCP: preload premier slide hero (AVIF, fetchpriority=high) -->
+    <link rel="preload" as="image" href="/slider/pexels-mikhail-nilov-6893835.avif" type="image/avif" fetchpriority="high" />
+    <!-- Preload logo navbar (above-the-fold, loading=eager) -->
+    <link rel="preload" as="image" href="/nav-logo-abawi.png" type="image/png" fetchpriority="high" />
+
+    <!-- Fonts — chargement asynchrone pour ne pas bloquer le LCP.
+         La police système (Outfit,system-ui) est définie dans le critical CSS,
+         donc aucun FOUC visible : le texte s'affiche directement en fallback. -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap&subset=latin" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap&subset=latin" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap&subset=latin" /></noscript>
+
+    <!-- Swiper CSS est bundlé par Vite dans /assets/vendor-swiper-*.css — pas besoin de CDN -->
+
+    <!-- Préchargement pages probables après accueil -->
+    <link rel="prefetch" href="/outils" as="document" />
+    <link rel="prefetch" href="/news" as="document" />
+    <link rel="prefetch" href="/digital" as="document" />
+
+    <!-- Critical inline CSS — rendu immédiat sans blocage (above-the-fold) -->
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+      body{font-family:'Outfit',system-ui,-apple-system,sans-serif;background:#111;color:#f4f4f5;min-height:100vh;overflow-x:hidden}
+      #root{min-height:100vh;position:relative}
+      /* ── Anti-FOUC : cache le HTML SEO statique injecté dans #root avant que
+         React ne monte. Appliqué avant le premier paint (style inline dans <head>).
+         Les crawlers lisent quand même le DOM — seul l'affichage visuel est masqué. */
+      #prerender{
+        position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+        overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+        pointer-events:none;
+      }
+      /* Barre de chargement animée — visible tant que #root ne contient que
+         du contenu non-React (prerender uniquement, pas d'éléments React) */
+      #root:not(:has(> :not(#prerender,noscript)))::before{
+        content:'';display:block;width:100%;height:4px;
+        background:linear-gradient(90deg,#10B981 0%,#059669 50%,#10B981 100%);
+        background-size:200% 100%;
+        animation:abs-load 1.4s ease-in-out infinite;
+        position:fixed;top:0;left:0;z-index:9999;
+      }
+      /* Fallback :empty pour navigateurs sans :has() */
+      #root:empty::before{
+        content:'';display:block;width:100%;height:4px;
+        background:linear-gradient(90deg,#10B981 0%,#059669 50%,#10B981 100%);
+        background-size:200% 100%;
+        animation:abs-load 1.4s ease-in-out infinite;
+        position:fixed;top:0;left:0;z-index:9999;
+      }
+      @keyframes abs-load{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      /* Prevent layout shift for navbar */
+      .nav-root{height:60px}
+      img{max-width:100%;height:auto}
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // ── SW KILLSWITCH / AUTO-UPDATE ──────────────────────────────────────
-      // Force le remplacement de tout ancien service worker obsolète sans
-      // intervention manuelle de l'utilisateur. Solution déployée suite aux
-      // incidents de cache agressif bloquant /.netlify/functions/*.
-      (function () {
-        if (!('serviceWorker' in navigator)) return
-        var EXPECTED_VERSION = 'abawi-abavie-v7'
-        var RELOAD_FLAG = 'abawi_sw_reloaded_v7'
-
-        function getActiveSWVersion(reg) {
-          return new Promise(function (resolve) {
-            var sw = reg.active
-            if (!sw) return resolve(null)
-            var ch = new MessageChannel()
-            var timer = setTimeout(function () { resolve(null) }, 1500)
-            ch.port1.onmessage = function (e) {
-              clearTimeout(timer)
-              resolve(e.data && e.data.version)
-            }
-            try { sw.postMessage({ type: 'ABAVIE_GET_VERSION' }, [ch.port2]) } catch { resolve(null) }
-          })
-        }
-
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js')
-            .then(function (reg) {
-              console.log('[SW] Registered:', reg.scope)
-              // Vérifie la version et nettoie les anciens caches
-              getActiveSWVersion(reg).then(function (v) {
-                if (v && v !== EXPECTED_VERSION) {
-                  console.log('[SW] Version obsolète:', v, '→ nettoyage + reload')
-                  if ('caches' in window) {
-                    caches.keys().then(function (keys) {
-                      Promise.all(keys.map(function (k) { return caches.delete(k) }))
-                        .then(function () { reg.update() })
-                    })
-                  }
-                  // Demande activation immédiate du nouveau SW
-                  if (reg.waiting) reg.waiting.postMessage({ type: 'ABAVIE_SKIP_WAITING' })
-                  // Reload unique pour charger nouveaux bundles + SW
-                  if (!sessionStorage.getItem(RELOAD_FLAG)) {
-                    sessionStorage.setItem(RELOAD_FLAG, '1')
-                    setTimeout(function () { window.location.reload() }, 500)
-                  }
-                }
-              })
-              // Écoute l'activation d'un nouveau SW en attente
-              reg.addEventListener('updatefound', function () {
-                var nw = reg.installing
-                if (!nw) return
-                nw.addEventListener('statechange', function () {
-                  if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                    nw.postMessage({ type: 'ABAVIE_SKIP_WAITING' })
-                  }
-                })
-              })
-            })
-            .catch(function (err) { console.log('[SW] Error:', err) })
-
-          // Quand un nouveau SW prend le contrôle, on recharge une seule fois
-          var refreshing = false
-          navigator.serviceWorker.addEventListener('controllerchange', function () {
-            if (refreshing) return
-            refreshing = true
-            if (!sessionStorage.getItem(RELOAD_FLAG)) {
-              sessionStorage.setItem(RELOAD_FLAG, '1')
-              window.location.reload()
-            }
-          })
-        })
-      })()
-    </script>
+    <script src="/sw-loader.js" defer></script>
   </body>
 </html>

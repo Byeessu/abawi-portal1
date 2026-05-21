@@ -35,8 +35,23 @@ export default function InstallBanner() {
       boxShadow: '0 20px 48px var(--shadow)',
       display: 'flex', flexDirection: 'column', gap: 14,
     }}>
+      <style>{`@keyframes abawiBadgeSpin { to { transform: rotate(360deg); } }`}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <img src="/icons/icon-72.svg" alt="ABAWI" style={{ width: 48, borderRadius: 12 }} />
+        <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+          <div style={{
+            position: 'absolute', inset: -2, borderRadius: '50%',
+            background: 'conic-gradient(from 0deg,#18A84A 0deg,#F0B429 120deg,#6366F1 240deg,#18A84A 360deg)',
+            animation: 'abawiBadgeSpin 5s linear infinite',
+            filter: 'blur(0.8px)',
+          }} />
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', overflow: 'hidden' }}>
+            <img src="/favicon-abawi-64.webp" alt="ABAWI" loading="lazy" decoding="async" style={{
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center',
+              transform: 'scale(1.30)',
+            }} />
+          </div>
+        </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, color: 'var(--text-primary)', marginBottom: 2, fontFamily: 'Outfit, sans-serif' }}>
             Installer l'app ABAWI

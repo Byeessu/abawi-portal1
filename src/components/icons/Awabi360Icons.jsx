@@ -3,7 +3,6 @@
 // Remplacent les emojis par des logos vectoriels modernes
 // ═══════════════════════════════════════════════════════════════
 
-import React from 'react';
 
 // Style commun pour tous les icones
 const iconStyle = {

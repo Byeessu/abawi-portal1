@@ -2,15 +2,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import MessageInput from './MessageInput';
-import { AbavieLogoSVG } from './AbavieLogoSVG';
+import { AbTalkLogoSVG } from '../clair/AbTalkLogoSVG';
 import { AbavieCall } from '../../lib/abavieWebRTC';
 import { runBotCommand, sendBotReply } from '../../lib/abavieBots';
-import { cacheMessages, getCachedMessages, queuePendingMessage, flushPending, cacheMedia, getCachedMedia, unindexMedia } from '../../lib/abavieIndexedDB';
+import { cacheMessages, getCachedMessages, queuePendingMessage, cacheMedia, getCachedMedia, unindexMedia } from '../../lib/abavieIndexedDB';
 import IncomingCall from './IncomingCall';
 import ForwardModal from './ForwardModal';
 import PollMessage from './PollMessage';
 import GroupInfo from './GroupInfo';
 import MeetingRoom from './MeetingRoom';
+import JitsiMeeting from './JitsiMeeting';
 import VoiceMessagePlayer from './VoiceMessagePlayer';
 import LocationMessage from './LocationMessage';
 import GiftPanel from './GiftPanel';
@@ -58,7 +59,7 @@ const CONTEXT_MENU_ITEMS = [
   { id: 'info', label: 'ℹ️ Infos', icon: 'ℹ️' },
 ];
 
-export default function ChatWindow({ conversation, visible, onBack, onOpenExternal }) {
+export default function ChatWindow({ conversation, visible, onBack, onOpenExternal, jumpTo }) {
   const { membre } = useAuth();
   const [messages, setMessages] = useState([]);
   const [mediaSrc, setMediaSrc] = useState({});
@@ -96,7 +97,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
 
   // Disappearing messages timer (per conversation)
   const [disappearingTimer, setDisappearingTimer] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('abavie_disappearing') || '{}') } catch { return {} }
+    try { return JSON.parse(localStorage.getItem('abtalk_disappearing') || '{}') } catch { return {} }
   });
 
   // Scheduled send
@@ -111,6 +112,8 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
   // Meeting room
   const [showMeetingRoom, setShowMeetingRoom] = useState(false);
   const [meetingRoomId, setMeetingRoomId] = useState(null);
+  const [showJitsi, setShowJitsi] = useState(false);
+  const [jitsiRoomId, setJitsiRoomId] = useState(null);
 
   useEffect(() => {
     if (!conversation || !membre) return;
@@ -142,6 +145,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
         })
       .subscribe();
     return () => supabase.removeChannel(channel);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversation, membre]);
 
   async function loadPolls() {
@@ -156,6 +160,19 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typingUsers]);
+
+  // Scroll vers un message ciblé (depuis la recherche globale)
+  useEffect(() => {
+    if (!jumpTo?.msgId) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById('msg-' + jumpTo.msgId);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('abv-msg-row--highlight');
+      setTimeout(() => el.classList.remove('abv-msg-row--highlight'), 2200);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [jumpTo]);
 
   // Resolve cached media URLs
   useEffect(() => {
@@ -183,7 +200,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
 
   async function cacheMediaForConversation() {
     if (!conversation?.id || !messages.length) return;
-    const { abavieSettings } = await import('../../lib/abavieSettings');
+    const { abTalkSettings: abavieSettings } = await import('../../lib/abTalkSettings');
     const autoImg = abavieSettings.get('auto_download_images');
     const autoVid = abavieSettings.get('auto_download_videos');
     const autoAud = abavieSettings.get('auto_download_audio');
@@ -390,7 +407,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
     const next = timers[(idx + 1) % timers.length];
     const nextMap = { ...disappearingTimer, [conversation.id]: next };
     setDisappearingTimer(nextMap);
-    localStorage.setItem('abavie_disappearing', JSON.stringify(nextMap));
+    localStorage.setItem('abtalk_disappearing', JSON.stringify(nextMap));
   }
 
   // ── WebRTC call handlers ────────────────────────────────────
@@ -458,9 +475,9 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
     const lastMsg = messages[messages.length - 1];
     if (!lastMsg || lastMsg.sender_id === membre?.id) return;
     if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification('Abavie', {
+      new Notification('AbTalk', {
         body: lastMsg.content?.slice(0, 100) || 'Nouveau message',
-        icon: '/logo-icon.svg',
+        icon: '/favicon.svg',
         tag: `abavie-msg-${lastMsg.id}`,
       });
     }
@@ -479,6 +496,7 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
     setShowReactionsFor(null);
   }, [messages, membre]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleContextAction = useCallback(async (action, msg) => {
     setContextMenu(null);
     switch (action) {
@@ -552,10 +570,10 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
     return (
       <main className={`abv-chat${visible ? ' abv-chat--visible' : ''}`}>
         <div className="abv-chat-empty">
-          <div className="abv-chat-empty-logo">
-            <AbavieLogoSVG size={44} color="var(--accent)" />
+          <div style={{ margin: '0 auto 20px' }}>
+            <AbTalkLogoSVG size={80} />
           </div>
-          <h3>Bienvenue sur Abavie</h3>
+          <h3>Bienvenue sur AbTalk</h3>
           <p>Sélectionnez une conversation ou démarrez-en une nouvelle pour commencer à échanger.</p>
           <div className="abv-features-grid">
             <div className="abv-feature-card"><span className="abv-feature-icon">🔐</span><span>Chiffrement E2E</span></div>
@@ -622,6 +640,13 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
             setShowMeetingRoom(true);
           }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button className="abv-icon-btn" title="Visioconférence (Google Meet)" onClick={() => {
+            const roomId = `abawi-meet-${conversation.id}-${Date.now()}`;
+            setJitsiRoomId(roomId);
+            setShowJitsi(true);
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M9 9l3 3-3 3"/><path d="M13 15h4"/></svg>
           </button>
           {isGroup && (
             <button className="abv-icon-btn" title="Infos groupe" onClick={() => setShowGroupInfo(true)}>
@@ -994,6 +1019,18 @@ export default function ChatWindow({ conversation, visible, onBack, onOpenExtern
           onClose={() => {
             setShowMeetingRoom(false);
             setMeetingRoomId(null);
+          }}
+        />
+      )}
+
+      {/* Jitsi Visioconférence */}
+      {showJitsi && jitsiRoomId && (
+        <JitsiMeeting
+          roomId={jitsiRoomId}
+          displayName={membre?.nom || membre?.prenom || membre?.email}
+          onClose={() => {
+            setShowJitsi(false);
+            setJitsiRoomId(null);
           }}
         />
       )}

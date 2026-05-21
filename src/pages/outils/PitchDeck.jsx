@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { callGroq } from '../../lib/groqClient';
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave';
 import { exportToPDF } from '../../lib/generatePDF';
 import SEO from '../../components/SEO';
 import ToolInfoPanel from '../../components/ToolInfoPanel';
+import TokenCounter from '../../components/TokenCounter';
 import FileContextUpload from '../../components/FileContextUpload';
+import './CVCreator.css';
 
 const PITCH_THEMES = [
   { grad: 'linear-gradient(135deg, #0F172A, #1E3A5F)', accent: '#38BDF8', icon: '🚀' },
@@ -85,43 +87,38 @@ export default function PitchDeck() {
   function patch(k, v) { setForm((f) => ({ ...f, [k]: v })); }
 
   const generate = async () => {
-    const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY;
-    if (!GROQ_KEY) { alert('VITE_GROQ_API_KEY manquant'); return; }
     setErr(''); setLoading(true);
     try {
-      const ctx2 = uploadedContext ? `\n\nDocuments fournis:\n${uploadedContext.slice(0, 6000)}\n` : '';
-      const raw = await callGroq(`Tu es un associé senior dans un fonds VC tier-1 (Sequoia, Y Combinator, Africa-focused). Génère EXACTEMENT 10 slides de pitch deck investisseur professionnel en français pour "${form.projet || 'une startup innovante'}" dans le secteur "${form.secteur || 'digital / tech'}" opérant au "${form.pays || 'Sénégal / Afrique\' de l\'Ouest'}".
+      const ctx2 = uploadedContext ? `\n\nDocuments fournis:\n${uploadedContext.slice(0, 12000)}\n` : '';
+      const prompt = `Pitch deck investisseur 10 slides pour "${form.projet || 'une startup innovante'}" secteur "${form.secteur || 'digital / tech'}" pays "${form.pays || 'Sénégal / Afrique de l\'Ouest'}".
+Données: marché=${form.marche || 'à définir'}, valeur=${form.valeur || 'à définir'}, traction=${form.traction || 'phase initiale'}, besoin=${form.besoin || 'financement'} montant=${form.montant || 'à préciser'}, equipe=${form.equipe || 'fondateurs experts'}${ctx2}.
 
-DONNÉES DU PORTEUR:
-- Marché visé: ${form.marche || 'à contextualiser selon le secteur'}
-- Proposition de valeur: ${form.valeur || 'à formuler'}
-- Traction / preuves: ${form.traction || 'phase initiale'}
-- Besoin: ${form.besoin || 'financement & partenariats'} — Montant: ${form.montant || 'à préciser'}
-- Équipe: ${form.equipe || 'fondateurs passionnés et experts'}
-${ctx2}
+Slides: 1.Couverture 2.Problème 3.Solution 4.Marché(TAM/SAM/SOM FCFA) 5.Produit 6.Modèle économique 7.Traction 8.Equipe 9.Roadmap 10.Ask.
+Contexte Afrique de l'Ouest. Chiffres cohérents. Ton VC.
 
-ORDRE DES 10 SLIDES (STRICT, NE PAS MODIFIER):
-1. COUVERTURE — tagline impactante ≤12 mots, secteur, pays, mission 1 phrase
-2. LE PROBLÈME — 4 points douloureux mesurables, données marché africain
-3. NOTRE SOLUTION — réponse précise, différentiel vs. concurrents, pourquoi maintenant
-4. TAILLE DU MARCHÉ — TAM/SAM/SOM chiffrés réalistes (BCEAO, IFC, World Bank)
-5. PRODUIT & EXPÉRIENCE — fonctionnalités clés, UX, tech différenciatrice
-6. MODÈLE ÉCONOMIQUE — sources revenus, pricing, unit economics, LTV/CAC
-7. TRACTION & MÉTRIQUES — chiffres clients, revenus, partenaires, KPIs prouvés
-8. ÉQUIPE & GOUVERNANCE — fondateurs, advisors, pourquoi eux, track record
-9. ROADMAP & JALONS — milestones N+6/N+12/N+24 mois, go-to-market
-10. L'APPEL À L'INVESTISSEUR — montant, use of funds %, valorisation, retour attendu
+Reponds UNIQUEMENT avec le tableau json valide. Pas de markdown. Commence par [ et termine par ].
+Format: [{"title":"texte","subtitle":"texte","bullets":["b1","b2","b3","b4"],"highlight":"KPI"}]`;
 
-Règles:
-- Données et chiffres contextualisés Afrique de l'Ouest / UEMOA
-- Chiffres cohérents entre slides et réalistes pour le marché
-- Ton VC-grade, sans généralités
-- highlight = le KPI / chiffre le plus percutant de chaque slide
+      function safeJSON(text) {
+        try {
+          let s = String(text || '').trim()
+          s = s.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').replace(/```/g, '')
+          const m = s.match(/(\[[\s\S]*\])/s)
+          const candidate = m ? m[0] : s
+          return JSON.parse(candidate)
+        } catch { return null }
+      }
 
-Réponds UNIQUEMENT avec un tableau JSON valide de 10 objets:
-[{"title":"≤55 car","subtitle":"sous-titre chiffré ≤90 car","bullets":["point précis chiffré","point 2","point 3","point 4"],"highlight":"stat / KPI clé"}]`, 5000);
-      const match = raw.match(/\[[\s\S]*\]/);
-      const parsed = match ? JSON.parse(match[0]) : [];
+      let raw = await callGroq(prompt, { maxTokens: 4000, temperature: 0.3 });
+      let parsed = safeJSON(raw);
+
+      // Retry once if parsing failed (often invalid prompt or markdown wrapper)
+      if (!parsed) {
+        const retryPrompt = prompt + '\n\nIMPORTANT : ta réponse doit être UNIQUEMENT un tableau json valide, sans texte avant ou après.';
+        raw = await callGroq(retryPrompt, { maxTokens: 4000, temperature: 0.2 });
+        parsed = safeJSON(raw);
+      }
+
       if (!Array.isArray(parsed) || !parsed.length) { setErr('Réponse IA illisible — réessayez.'); return; }
       const enriched = parsed.slice(0, 10).map((s, i) => ({
         title: String(s?.title || `Slide ${i+1}`),
@@ -132,7 +129,12 @@ Réponds UNIQUEMENT avec un tableau JSON valide de 10 objets:
       }));
       setSlides(enriched); setActiveSlide(0); setShowAll(false);
     } catch(e) {
-      setErr('Erreur: ' + (e?.message || 'réessayez'));
+      const msg = String(e?.message || '');
+      if (msg.includes('INVALID_PROMPT') || msg.includes('HTTP_400')) {
+        setErr('Le modèle a rejeté le prompt. Réessayez avec des données plus courtes.');
+      } else {
+        setErr('Erreur: ' + (e?.message || 'réessayez'));
+      }
     } finally {
       setLoading(false);
     }
@@ -142,9 +144,154 @@ Réponds UNIQUEMENT avec un tableau JSON valide de 10 objets:
   const fileSlug = `pitch-deck-${form.projet?.toLowerCase().replace(/\s+/g, '-') || 'abawi'}`;
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px', color: 'var(--text-primary)' }}>
-      <SEO title="Pitch Deck Pro IA" description="Générez un pitch deck investisseur de niveau VC avec IA." />
-      <ToolInfoPanel toolName="Pitch Deck" icon="🎯" description="Générez un pitch deck investisseur de niveau VC" benefits={[]} howToUse={[]} tips={[]} />
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '24px 16px', color: 'var(--text-primary)' }}>
+      <SEO title="Pitch Deck Pro IA" description="Générez un pitch deck investisseur de niveau VC avec IA." image="/og-tools/pitch.jpg"/>
+
+      {/* ── Pitch Deck Hero ──────────────────────────────── */}
+      <style>{`
+        @keyframes pdOrbit1{from{transform:rotate(0deg) translateX(72px) rotate(0deg)}to{transform:rotate(-360deg) translateX(72px) rotate(360deg)}}
+        @keyframes pdOrbit2{from{transform:rotate(0deg) translateX(118px) rotate(0deg)}to{transform:rotate(360deg) translateX(118px) rotate(-360deg)}}
+        @keyframes pdOrbit3{from{transform:rotate(0deg) translateX(162px) rotate(0deg)}to{transform:rotate(-360deg) translateX(162px) rotate(360deg)}}
+        @keyframes pdCardFloat{0%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-10px) rotate(1deg)}100%{transform:translateY(0) rotate(-2deg)}}
+        @keyframes pdCardFloat2{0%{transform:translateY(0) rotate(3deg)}50%{transform:translateY(-8px) rotate(-1deg)}100%{transform:translateY(0) rotate(3deg)}}
+        @keyframes pdCardFloat3{0%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-6px) rotate(-2deg)}100%{transform:translateY(0) rotate(-5deg)}}
+        @keyframes pdPulse{0%,100%{box-shadow:0 0 0 6px rgba(124,58,237,0.25),0 0 0 18px rgba(124,58,237,0.1)}50%{box-shadow:0 0 0 12px rgba(124,58,237,0.3),0 0 0 28px rgba(124,58,237,0.06)}}
+        @keyframes pdPing{0%{transform:scale(1);opacity:.65}100%{transform:scale(1.9);opacity:0}}
+        @keyframes pdShimmer{0%{background-position:-250% center}100%{background-position:250% center}}
+        @keyframes pdFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pdSpin{to{transform:rotate(360deg)}}
+        @keyframes pdRingGlow{0%,100%{opacity:.25}50%{opacity:.6}}
+        @keyframes pdBarGrow{from{width:0}to{width:var(--bar-w,60%)}}
+        .pd-orb1{animation:pdOrbit1 12s linear infinite}
+        .pd-orb1-d1{animation:pdOrbit1 12s -4s linear infinite}
+        .pd-orb1-d2{animation:pdOrbit1 12s -8s linear infinite}
+        .pd-orb2{animation:pdOrbit2 20s linear infinite}
+        .pd-orb2-d1{animation:pdOrbit2 20s -5s linear infinite}
+        .pd-orb2-d2{animation:pdOrbit2 20s -10s linear infinite}
+        .pd-orb2-d3{animation:pdOrbit2 20s -15s linear infinite}
+        .pd-orb3{animation:pdOrbit3 30s linear infinite}
+        .pd-orb3-d1{animation:pdOrbit3 30s -10s linear infinite}
+        .pd-orb3-d2{animation:pdOrbit3 30s -20s linear infinite}
+        .pd-center{animation:pdPulse 3.2s ease-in-out infinite}
+        .pd-ping{animation:pdPing 2.2s ease-out infinite}
+        .pd-shimmer{background:linear-gradient(90deg,#fff 0%,#c4b5fd 35%,#818cf8 55%,#f0b429 75%,#fff 100%);background-size:260% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:pdShimmer 5s linear infinite}
+        .pd-fade0{animation:pdFadeUp .5s ease both}
+        .pd-fade1{animation:pdFadeUp .5s .12s ease both}
+        .pd-fade2{animation:pdFadeUp .5s .24s ease both}
+        .pd-fade3{animation:pdFadeUp .5s .36s ease both}
+        .pd-ring{animation:pdRingGlow 3.5s ease-in-out infinite}
+        .pd-card1{animation:pdCardFloat 5s ease-in-out infinite}
+        .pd-card2{animation:pdCardFloat2 5.5s -1.5s ease-in-out infinite}
+        .pd-card3{animation:pdCardFloat3 6s -3s ease-in-out infinite}
+      `}</style>
+
+      <div style={{ background:'linear-gradient(135deg,#06030f 0%,#120b2e 35%,#1e1060 65%,#2e1065 100%)', borderRadius:24, marginBottom:28, position:'relative', overflow:'hidden', minHeight:280, boxShadow:'0 24px 80px rgba(109,40,217,0.32),inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+
+        {/* Grid */}
+        <div style={{ position:'absolute', inset:0, backgroundImage:'linear-gradient(rgba(139,92,246,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.07) 1px,transparent 1px)', backgroundSize:'42px 42px', WebkitMaskImage:'radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)', maskImage:'radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 100%)' }} />
+
+        {/* Glow blobs */}
+        <div style={{ position:'absolute', top:-90, left:'20%', width:440, height:440, background:'radial-gradient(circle,rgba(109,40,217,0.35) 0%,transparent 65%)', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', bottom:-60, right:'5%', width:320, height:320, background:'radial-gradient(circle,rgba(240,180,41,0.09) 0%,transparent 65%)', pointerEvents:'none' }} />
+        <div style={{ position:'absolute', top:'30%', left:'-5%', width:240, height:240, background:'radial-gradient(circle,rgba(99,102,241,0.2) 0%,transparent 65%)', pointerEvents:'none' }} />
+
+        {/* ── Left content */}
+        <div style={{ position:'relative', zIndex:2, padding:'clamp(26px,4vw,46px) clamp(22px,4vw,50px)', maxWidth:500, paddingBottom:'clamp(60px,7vw,78px)' }}>
+          <div className="pd-fade0" style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'5px 14px', background:'rgba(139,92,246,0.18)', border:'1px solid rgba(139,92,246,0.45)', borderRadius:20, marginBottom:16 }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'#a78bfa', boxShadow:'0 0 8px #a78bfa', display:'inline-block' }} />
+            <span style={{ fontSize:'0.68rem', fontWeight:800, color:'#c4b5fd', letterSpacing:'1.6px', textTransform:'uppercase' }}>Pitch Deck · VC Grade</span>
+          </div>
+
+          <h1 className="pd-shimmer pd-fade1" style={{ margin:'0 0 14px', fontSize:'clamp(1.7rem,3vw,2.7rem)', fontWeight:900, lineHeight:1.12, letterSpacing:'-0.5px' }}>
+            Pitch Deck Pro
+          </h1>
+
+          <p className="pd-fade2" style={{ color:'rgba(255,255,255,0.65)', fontSize:'clamp(0.82rem,1.1vw,0.97rem)', lineHeight:1.7, margin:'0 0 22px', maxWidth:420 }}>
+            10 slides VC-grade · Données Africa-first · Valorisation & DCF · Prêt à pitcher devant des investisseurs
+          </p>
+
+          <div className="pd-fade3" style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {[{t:'10 Slides VC',c:'#818cf8'},{t:'Africa-first',c:'#10b981'},{t:'Valorisation',c:'#f0b429'},{t:'CAC / LTV',c:'#38bdf8'},{t:'Export PDF',c:'#c4b5fd'}].map(({t,c})=>(
+              <span key={t} style={{ padding:'5px 12px', borderRadius:20, fontSize:'0.72rem', fontWeight:700, color:c, background:`${c}18`, border:`1px solid ${c}38`, whiteSpace:'nowrap' }}>{t}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Orbital diagram */}
+        <div style={{ position:'absolute', right:'clamp(-20px,3vw,60px)', top:'50%', transform:'translateY(-52%)', width:260, height:260, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>
+          {/* Rings */}
+          <div className="pd-ring" style={{ position:'absolute', width:144, height:144, borderRadius:'50%', border:'1px dashed rgba(139,92,246,0.45)' }} />
+          <div className="pd-ring" style={{ position:'absolute', width:236, height:236, borderRadius:'50%', border:'1px dashed rgba(99,102,241,0.28)', animationDelay:'-1.2s' }} />
+          <div className="pd-ring" style={{ position:'absolute', width:324, height:324, borderRadius:'50%', border:'1px dashed rgba(99,102,241,0.14)', animationDelay:'-2.4s' }} />
+
+          {/* Center */}
+          <div className="pd-center" style={{ width:62, height:62, borderRadius:'50%', background:'linear-gradient(135deg,#4c1d95,#7c3aed)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.75rem', position:'relative', zIndex:4 }}>
+            <div className="pd-ping" style={{ position:'absolute', inset:-4, borderRadius:'50%', border:'2px solid rgba(139,92,246,0.6)' }} />
+            🎯
+          </div>
+
+          {/* Orbit 1 — 3 VC icons */}
+          {[{cls:'pd-orb1',i:'💡'},{cls:'pd-orb1-d1',i:'💰'},{cls:'pd-orb1-d2',i:'🚀'}].map(({cls,i})=>(
+            <div key={cls} className={cls} style={{ position:'absolute', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(15,8,32,0.9)', border:'1px solid rgba(139,92,246,0.6)', boxShadow:'0 2px 14px rgba(109,40,217,0.5)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.9rem' }}>{i}</div>
+            </div>
+          ))}
+
+          {/* Orbit 2 — 4 metric badges */}
+          {[{cls:'pd-orb2',t:'TAM',c:'#10b981'},{cls:'pd-orb2-d1',t:'Series A',c:'#818cf8'},{cls:'pd-orb2-d2',t:'ARR',c:'#f0b429'},{cls:'pd-orb2-d3',t:'Exit',c:'#38bdf8'}].map(({cls,t,c})=>(
+            <div key={cls} className={cls} style={{ position:'absolute', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ padding:'3px 9px', borderRadius:20, background:`${c}22`, border:`1px solid ${c}55`, fontSize:'0.62rem', fontWeight:800, color:c, whiteSpace:'nowrap' }}>{t}</div>
+            </div>
+          ))}
+
+          {/* Orbit 3 — 3 mini cards */}
+          {[{cls:'pd-orb3',a:'Seed',b:'500K–2M$'},{cls:'pd-orb3-d1',a:'Traction',b:'MoM +18%'},{cls:'pd-orb3-d2',a:'Valuation',b:'Pre-money'}].map(({cls,a,b})=>(
+            <div key={cls} className={cls} style={{ position:'absolute', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <div style={{ padding:'4px 9px', borderRadius:8, background:'rgba(10,5,25,0.9)', border:'1px solid rgba(139,92,246,0.28)', backdropFilter:'blur(6px)', fontSize:'0.58rem', lineHeight:1.45, whiteSpace:'nowrap', textAlign:'center' }}>
+                <div style={{ fontWeight:700, color:'#c4b5fd' }}>{a}</div>
+                <div style={{ color:'rgba(255,255,255,0.4)' }}>{b}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Bottom stat bar */}
+        <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:2, display:'flex', borderTop:'1px solid rgba(255,255,255,0.07)', background:'rgba(8,4,20,0.65)', backdropFilter:'blur(8px)' }}>
+          {[{n:'10',l:'Slides VC-grade'},{n:'12',l:'Thèmes graphiques'},{n:'100%',l:'Africa-first'},{n:'PDF',l:'Export premium'}].map(({n,l},i)=>(
+            <div key={i} style={{ flex:1, padding:'11px 8px', borderRight:i<3?'1px solid rgba(255,255,255,0.07)':'none', textAlign:'center' }}>
+              <div style={{ fontSize:'1.1rem', fontWeight:900, color:'#c4b5fd', lineHeight:1 }}>{n}</div>
+              <div style={{ fontSize:'0.6rem', color:'rgba(255,255,255,0.4)', marginTop:3, fontWeight:500 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <TokenCounter />
+      </div>
+      <ToolInfoPanel
+        toolName="Pitch Deck Pro"
+        icon="🎯"
+        description="Générez un pitch deck investisseur de niveau VC en quelques minutes"
+        benefits={[
+          'Pitch deck structuré en 10 slides standard VC : problème, solution, marché, traction, équipe, finances',
+          '10 thèmes graphiques professionnels avec accents colorés distincts',
+          'Données adaptées au marché africain (FCFA, UEMOA, Afrique de l\'Ouest)',
+          'Navigation entre slides avec aperçu en temps réel',
+          'Export PDF haute qualité prêt à présenter en réunion investisseur',
+        ]}
+        howToUse={[
+          'Renseignez votre projet : nom, secteur, pays, proposition de valeur',
+          'Ajoutez vos données de marché, traction et besoin de financement',
+          'Optionnel : importez un business plan ou étude de marché pour enrichir les slides',
+          'Cliquez "Générer mon Pitch Deck" — 10 slides VC créées en quelques secondes',
+          'Naviguez entre les slides, choisissez un thème graphique et exportez en PDF',
+        ]}
+        tips={[
+          'Plus votre traction est précise (chiffres réels), plus le pitch sera crédible',
+          'Utilisez "Voir tout" pour exporter toutes les slides d\'un coup en PDF',
+          'Chaque slide a un thème coloré différent — sélectionnez via les miniatures',
+        ]}
+      />
 
       <div className="cv-form">
         <span className="cv-section-title">🚀 Votre projet</span>
@@ -183,7 +330,18 @@ Réponds UNIQUEMENT avec un tableau JSON valide de 10 objets:
             </>
           )}
         </div>
-        {err && <p style={{ color:'#f87171', fontSize:'0.85rem', margin:0 }}>{err}</p>}
+        {err && <p style={{ color:'#f87171', fontSize:'0.85rem', margin:0 }}>⚠️ {err}</p>}
+        {loading && (
+          <div style={{ marginTop:12, padding:'14px 18px', borderRadius:12, background:'rgba(109,40,217,0.08)', border:'1px solid rgba(139,92,246,0.3)', display:'flex', alignItems:'center', gap:14 }}>
+            <div style={{ width:20, height:20, border:'2px solid rgba(139,92,246,0.3)', borderTopColor:'#a78bfa', borderRadius:'50%', animation:'pdSpin 0.7s linear infinite', flexShrink:0 }} />
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:'0.82rem', color:'#c4b5fd', fontWeight:600, marginBottom:5 }}>Génération des 10 slides VC…</div>
+              <div style={{ height:3, background:'rgba(139,92,246,0.15)', borderRadius:2, overflow:'hidden' }}>
+                <div style={{ height:'100%', background:'linear-gradient(90deg,#7c3aed,#a78bfa,#f0b429)', backgroundSize:'200% 100%', animation:'pdShimmer 1.5s linear infinite', borderRadius:2 }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         {slides.length > 0 && !showAll && (
           <div style={{ marginTop:20 }}>

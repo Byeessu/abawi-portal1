@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { exportExcel } from '../../lib/generatePDF'
 import '../../styles/ThemeUniversal.css'
+import ToolInfoPanel from '../../components/ToolInfoPanel'
 
 const STORAGE_KEY = 'abawi_comptable_pro_v1'
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7) }
@@ -204,15 +205,15 @@ function AccountSearch({ plan, value, onChange, placeholder }) {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)} />
       {open && filtered.length > 0 && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: '#0D1117', border: `1px solid ${C}44`, borderRadius: '8px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, background: 'var(--bg-card)', border: `1px solid ${C}44`, borderRadius: '8px', maxHeight: '200px', overflowY: 'auto', boxShadow: '0 8px 24px rgba(0,0,0,0.6)' }}>
           {filtered.map(c => (
             <div key={c.num} onMouseDown={() => { onChange(c.num, c.lib); setQ(`${c.num} — ${c.lib}`); setOpen(false) }}
-              style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center', borderBottom: '1px solid #1A2332', fontSize: '0.78rem' }}
+              style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', gap: 10, alignItems: 'center', borderBottom: '1px solid var(--border)', fontSize: '0.78rem' }}
               onMouseEnter={e => e.currentTarget.style.background = '#18A84A18'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <span style={{ color: '#F0B429', fontWeight: 700, minWidth: 50 }}>{c.num}</span>
-              <span style={{ color: '#F0F2F5' }}>{c.lib}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#4A5568', background: '#1A2332', borderRadius: 4, padding: '2px 6px' }}>
+              <span style={{ color: 'var(--gold)', fontWeight: 700, minWidth: 50 }}>{c.num}</span>
+              <span style={{ color: 'var(--text-primary)' }}>{c.lib}</span>
+              <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', borderRadius: 4, padding: '2px 6px' }}>
                 {c.type === 'A' ? 'Actif' : c.type === 'P' ? 'Passif' : c.type === 'C' ? 'Charge' : c.type === 'R' ? 'Produit' : c.type === 'AC' ? 'Contra' : ''}
               </span>
             </div>
@@ -432,6 +433,31 @@ export default function GestionComptablePro({ onBack }) {
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 0 80px' }}>
+
+      <ToolInfoPanel
+        toolName="Gestion Comptable Pro"
+        icon="📒"
+        description="Comptabilité SYSCOHADA complète : plan comptable, journal, grand livre, balance et états financiers"
+        benefits={[
+          'Plan comptable SYSCOHADA intégré avec 80+ comptes pré-configurés et recherche intelligente',
+          'Saisie des écritures comptables avec contrôle de la partie double automatique',
+          'Grand livre par compte, balance générale et états financiers générés instantanément',
+          'Gestion multi-exercices pour suivre l\'évolution sur plusieurs années',
+          'Export Excel pour votre expert-comptable ou audit fiscal',
+        ]}
+        howToUse={[
+          'Créez votre exercice comptable (année, devise) depuis le tableau de bord',
+          'Saisissez chaque écriture avec date, libellé et les lignes débit/crédit',
+          'Consultez le grand livre pour vérifier chaque compte individuellement',
+          'Générez la balance pour préparer vos états de synthèse SYSCOHADA',
+          'Exportez en Excel pour transmission à votre comptable ou administration fiscale',
+        ]}
+        tips={[
+          'Utilisez la recherche de compte par numéro ou libellé pour saisir plus vite',
+          'Vérifiez régulièrement la balance : débit total = crédit total impérativement',
+          'Créez un exercice de test pour vous familiariser avant de saisir vos vraies données',
+        ]}
+      />
 
       {/* Header Pro */}
       <div style={{ background:'linear-gradient(135deg,rgba(24,168,74,0.12),rgba(0,0,0,0))', border:`1px solid ${C}30`, borderRadius:16, padding:'20px 28px', marginBottom:24, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>

@@ -70,7 +70,7 @@ export default function BienvenuePlayer({ autoPlay = false, compact = false }) {
       source.connect(gain); gain.connect(ctx.destination)
       gainRef.current = gain
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
 
     a.addEventListener('loadedmetadata', () => { setDuration(a.duration); setAudioError('') })
     a.addEventListener('timeupdate', () => setCurrent(a.currentTime))

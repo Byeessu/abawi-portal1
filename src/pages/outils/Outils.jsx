@@ -5,11 +5,48 @@ import SEO from '../../components/SEO'
 import GradientOrbs from '../../components/premium/GradientOrbs'
 import SectionReveal from '../../components/premium/SectionReveal'
 
-import { TOOLS_ESSENTIELS, TOOLS_ELITE } from '../../data/tools';
-import EliteCard from '../../components/EliteCard';
+import { TOOLS_ESSENTIELS, TOOLS_ELITE, CREDIT_COSTS_DISPLAY, TOOL_ACCENT } from '../../data/tools'
+import EliteCard from '../../components/EliteCard'
 
-function formatP(n) {
-  return n === 0 ? 'GRATUIT' : n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA';
+// Plans à mettre en avant (Starter / Pro / Elite)
+const PACKS_SPOTLIGHT = [
+  { id: 'starter', nom: 'Starter',  prix: 4990,  credits: 100,  couleur: '#3B82F6', desc: 'Pour démarrer' },
+  { id: 'pro',     nom: 'Pro',      prix: 9990,  credits: 300,  couleur: '#F0B429', desc: 'Le plus populaire', popular: true },
+  { id: 'elite',   nom: 'Elite',    prix: 19990, credits: 1000, couleur: '#8B5CF6', desc: 'Illimité ou presque' },
+]
+
+function fmtFCFA(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' FCFA'
+}
+
+// Badge informatif : quota gratuit ou coût crédits (pas de prix affiché sur la grille)
+function ToolBadge({ tool }) {
+  // Outil public / 100% gratuit sans quota
+  if (tool.free && !tool.quota) {
+    return <span className="outils-card-prix outils-card-prix--free">GRATUIT</span>
+  }
+  // Outil freemium avec quota
+  if (tool.quota) {
+    const anon = tool.quota.anonymous
+    return (
+      <span className="outils-card-prix-wrap">
+        <span className="outils-card-credits">{anon} gratuites/jour</span>
+        <span className="outils-card-prix-alt">compte = {tool.quota.member}</span>
+      </span>
+    )
+  }
+  // Outil payant (crédits uniquement, pas de prix FCFA)
+  const credits = tool.creditKey ? CREDIT_COSTS_DISPLAY[tool.creditKey] : null
+  if (credits) {
+    return (
+      <span className="outils-card-prix-wrap">
+        <span className="outils-card-credits">{credits} crédits</span>
+        <span className="outils-card-prix-alt">{tool.access === 'outils-elite' ? 'ABA WI+' : 'à la demande'}</span>
+      </span>
+    )
+  }
+  // Fallback (ne devrait pas arriver)
+  return <span className="outils-card-prix">{fmtFCFA(tool.prix)}</span>
 }
 
 export default function Outils() {
@@ -20,6 +57,8 @@ export default function Outils() {
         description="Plus de 20 outils IA professionnels pour l'Afrique : CV optimisé ATS, business plan exhaustif, analyse financière OHADA, documents juridiques, RH, immobilier, consultant, photo d'identité, éditeur pro."
         keywords="outils IA Afrique, CV Sénégal, business plan OHADA, SYSCOHADA, analyse financière, juridique OHADA, pitch deck, photo identité, éditeur pro, Dakar, UEMOA"
       />
+
+      {/* Hero */}
       <section className="outils-hero" style={{ position: 'relative' }}>
         <GradientOrbs variant="gold" intensity={0.45} count={3} />
         <div style={{ position: 'relative', zIndex: 1 }}>
@@ -33,34 +72,68 @@ export default function Outils() {
         </div>
       </section>
 
-      {/* Section Essentiels */}
+      {/* ── Pack Spotlight ── */}
+      <section className="outils-packs">
+        <SectionReveal delay={0}>
+          <div className="outils-packs__header">
+            <span className="outils-packs__label">💎 ABAWI+</span>
+            <p className="outils-packs__sub">
+              Avec un pack crédits, tous les outils deviennent accessibles à la demande — plus besoin de payer à chaque utilisation.
+            </p>
+          </div>
+          <div className="outils-packs__grid">
+            {PACKS_SPOTLIGHT.map(pack => (
+              <Link key={pack.id} to="/plans" className={`outils-pack-card${pack.popular ? ' outils-pack-card--popular' : ''}`} style={{ '--pack-color': pack.couleur }}>
+                {pack.popular && <span className="outils-pack-badge">⭐ Populaire</span>}
+                <div className="outils-pack-nom">{pack.nom}</div>
+                <div className="outils-pack-credits">
+                  <span className="outils-pack-credits__num">{pack.credits.toLocaleString('fr-FR')}</span>
+                  <span className="outils-pack-credits__unit">crédits / mois</span>
+                </div>
+                <div className="outils-pack-prix">{fmtFCFA(pack.prix)}<span className="outils-pack-prix__per">/mois</span></div>
+                <div className="outils-pack-desc">{pack.desc}</div>
+              </Link>
+            ))}
+          </div>
+          <div className="outils-packs__cta">
+            <Link to="/plans" className="outils-packs__link">Voir tous les plans et packs de crédits →</Link>
+          </div>
+        </SectionReveal>
+      </section>
+
+      {/* ── Outils Essentiels ── */}
       <section style={{ marginBottom: '3rem' }}>
         <SectionReveal as="h2" className="outils-section-title">
           <span>📄</span> Outils Essentiels
         </SectionReveal>
         <div className="outils-grid">
-          {TOOLS_ESSENTIELS.map((t) => (
-            <Link key={t.id} to={t.path} className={`outils-card ${t.free ? 'outils-card--free' : ''}`}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="outils-card-icon">
-                  <ToolIcon name={t.iconKey} size={42} />
-                </span>
-                {t.badge && (
-                  <span style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: 1, padding: '2px 8px', borderRadius: 100, background: 'linear-gradient(90deg,#c9a84c,#f0c040)', color: '#0a0a0a' }}>
-                    {t.badge}
+          {TOOLS_ESSENTIELS.map((t) => {
+            const [t1, t2] = TOOL_ACCENT[t.id] ?? ['#334155', '#475569']
+            return (
+              <Link key={t.id} to={t.path} className="outils-card" style={{ '--t1': t1, '--t2': t2 }}>
+                <div className="outils-card__hd">
+                  <span className="outils-card-icon">
+                    <ToolIcon name={t.iconKey} size={40} />
                   </span>
-                )}
-              </div>
-              <h3 className="outils-card-title">{t.title}</h3>
-              <p className="outils-card-desc">{t.desc}</p>
-              <span className={`outils-card-prix ${t.free ? 'outils-card-prix--free' : ''}`}>{formatP(t.prix)}</span>
-              <span className="outils-card-cta">Utiliser →</span>
-            </Link>
-          ))}
+                  <div className="outils-card__hd-text">
+                    <h3 className="outils-card-title">{t.title}</h3>
+                    {t.badge && <span className="outils-card__badge">{t.badge}</span>}
+                  </div>
+                </div>
+                <div className="outils-card__body">
+                  <p className="outils-card-desc">{t.desc}</p>
+                  <div className="outils-card__footer">
+                    <ToolBadge tool={t} />
+                    <span className="outils-card-cta">Utiliser →</span>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </section>
 
-      {/* Section Élite */}
+      {/* ── Outils Élite ── */}
       <SectionReveal as="section" className="outils-elite-section" direction="up" distance={32}>
         <div className="outils-elite-section__header">
           <h2 className="outils-section-title outils-section-title--gold">

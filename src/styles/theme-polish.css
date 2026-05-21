@@ -533,3 +533,25 @@ html.light .slider-seam-blend {
     display: none !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   17. TEXTES BLANCS EN CLASSES CSS — mode clair UNIQUEMENT (sans thème sombre)
+   Ciblage précis pour éviter d'affecter Galaxy/Deep/etc.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Titres de section — uniquement les classes connues, pas de wildcard */
+html.light:not([data-theme="galaxy"]):not([data-theme="deep"]):not([data-theme="premium"]) .section-title,
+html.light:not([data-theme="galaxy"]):not([data-theme="deep"]):not([data-theme="premium"]) .page-title,
+html.light:not([data-theme="galaxy"]):not([data-theme="deep"]):not([data-theme="premium"]) .hero-title {
+  color: var(--text-primary);
+}
+
+/* tool-header — pages d'outils Elite */
+html.light .tool-header h1,
+html.light .tool-header h2,
+html.light .tool-header p:not(.tool-hero-subtitle),
+html.light [class*="tool-header"] h1,
+html.light [class*="tool-header"] h2 {
+  color: var(--text-primary);
+}
+

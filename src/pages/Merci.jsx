@@ -66,6 +66,10 @@ function Merci() {
   const [params] = useSearchParams()
   const titre = params.get('titre') || 'votre produit'
   const type = params.get('type') || 'default'
+  const packType = params.get('pack_type')
+  const packName = params.get('pack_name')
+  const productIdsRaw = params.get('product_ids')
+  const productIds = productIdsRaw ? JSON.parse(decodeURIComponent(productIdsRaw)) : []
   const { membre, refreshMembre } = useAuth()
 
   useEffect(() => {
@@ -76,6 +80,24 @@ function Merci() {
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps -- TODO: review hook dependencies
   }, [])
+
+  // Record pack purchase in user_packs
+  useEffect(() => {
+    if (type === 'pack' && membre?.id && packType) {
+      const productId = params.get('product')
+      supabase.from('user_packs').upsert({
+        user_id: membre.id,
+        pack_id: productId,
+        pack_type: packType,
+        pack_name: packName || titre,
+        status: 'active',
+        product_ids: productIds,
+      }, { onConflict: 'user_id,pack_id' }).then(({ error }) => {
+        if (error) console.error('[Merci] user_packs insert error:', error)
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [membre?.id, type, packType])
 
   useEffect(() => {
     if (type === 'abonnement' && membre?.email) {
@@ -90,7 +112,7 @@ function Merci() {
             localStorage.setItem('abawi_membre', JSON.stringify(data))
           }
         // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-        } catch {}
+        } catch { /* ignore */ }
         await refreshMembre()
       }, 2000)
       return () => clearTimeout(timer)

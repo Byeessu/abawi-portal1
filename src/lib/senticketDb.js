@@ -29,7 +29,7 @@ export async function fetchEvents() {
       places: t.places,
       vendus: t.vendus,
     })),
-    image: '',
+    image: e.image || '',
   }))
 }
 

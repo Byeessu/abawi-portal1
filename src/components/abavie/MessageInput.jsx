@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { abavieSettings } from '../../lib/abavieSettings';
+import { abTalkSettings as abavieSettings } from '../../lib/abTalkSettings';
 
 const EMOJIS = ['😀','😂','🥰','😎','🤔','👍','❤️','🔥','🎉','👏','😮','😢','🙏','🚀','💡','⚡','🎵','📎','🤝','✅'];
 
@@ -20,7 +20,7 @@ export default function MessageInput({ onSend, replyTo, editMessage, onCancelRep
   // Pre-fill text when editing
   useEffect(() => {
     if (editMessage?.content) {
-      setText(editMessage.content);
+      Promise.resolve().then(() => setText(editMessage.content));
       textareaRef.current?.focus();
     }
   }, [editMessage]);
@@ -31,6 +31,17 @@ export default function MessageInput({ onSend, replyTo, editMessage, onCancelRep
       textareaRef.current.focus();
     }
   }, [replyTo]);
+
+  // Insert template from Business Mode
+  useEffect(() => {
+    const handler = (e) => {
+      const tpl = e.detail;
+      setText(prev => (prev ? prev + ' ' + tpl : tpl));
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    };
+    window.addEventListener('abtalk-insert-template', handler);
+    return () => window.removeEventListener('abtalk-insert-template', handler);
+  }, []);
 
   async function uploadFile(file) {
     setUploading(true);

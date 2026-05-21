@@ -7,6 +7,7 @@ import { resolveFirstPlayable } from '../lib/mediaResolver'
 import { requestElevenLabsTTS } from '../lib/elevenlabsClient'
 import { groqChatCompletion } from '../lib/groqClient'
 import { toUserFriendlyAIError } from '../lib/aiErrorMessages'
+import { canDownload } from '../lib/freeContentQuota'
 import './PDFAudioReader.css'
 import { CoverImage } from './CoverImage'
 import VoiceSelector from './VoiceSelector'
@@ -82,6 +83,7 @@ export default function PDFAudioReader({ type = 'guide', titre, categorie, brand
     : `/files/summaries/${slug}.mp3`
 
   const selectedVoiceName = ELEVENLABS_VOICES.find(v => v.id === selectedVoice)?.name || 'Charlotte'
+  const allowFeature = canDownload(auth?.membre, auth?.isAdmin)
 
   if (!onClose) return null
 
@@ -106,7 +108,7 @@ export default function PDFAudioReader({ type = 'guide', titre, categorie, brand
         return
       }
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
 
     // 2. Generate on-the-fly
     if (!GROQ_KEY) {
@@ -155,7 +157,19 @@ export default function PDFAudioReader({ type = 'guide', titre, categorie, brand
           </div>
 
           <div className="par-content">
-            {status === 'idle' && (
+            {!allowFeature && (
+              <div className="par-start" style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔒</div>
+                <p style={{ fontWeight: 700, marginBottom: 8 }}>Fonction réservée aux membres ABAWI+</p>
+                <p style={{ fontSize: '0.85rem', color: '#8B95A5', marginBottom: 16 }}>
+                  Les résumés audio intelligents sont inclus dans ABAWI+. Les utilisateurs gratuits peuvent consulter le contenu directement.
+                </p>
+                <Link to="/plans" className="par-gen-btn" onClick={onClose}>
+                  Découvrir ABAWI+
+                </Link>
+              </div>
+            )}
+            {allowFeature && status === 'idle' && (
               <div className="par-start">
                 <p>{type === 'fascicule' ? 'Écoutez l\'introduction audio de ce fascicule — 1 minute.' : 'Écoutez le résumé audio de ce guide — 1 à 2 minutes.'}</p>
 

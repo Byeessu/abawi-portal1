@@ -1,4 +1,5 @@
 import './MentionsLegales.css'
+import SEO from '../components/SEO'
 
 function PolitiqueCookies() {
   const clearAllCookies = () => {
@@ -16,9 +17,14 @@ function PolitiqueCookies() {
 
   return (
     <main className="ml-page">
+      <SEO
+        title="Politique Cookies — ABAWI"
+        description="Politique cookies d'ABAWI : gestion des cookies, préférences et consentement. Contrôlez vos données de navigation."
+        noindex={false}
+      />
       <h1 className="ml-title">Politique cookies</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: 24 }}>
-        Dernière mise à jour : avril 2026
+        Dernière mise à jour : mai 2026
       </p>
 
       <section className="ml-section">

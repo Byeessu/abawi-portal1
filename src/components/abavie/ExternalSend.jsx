@@ -26,7 +26,7 @@ export default function ExternalSend({ body: initialBody = "", onClose }) {
     try {
       const fn = ch === "email" ? "abavie-send-email" : ch === "sms" ? "abavie-send-sms" : "abavie-send-whatsapp";
       const { error } = await supabase.functions.invoke(fn, {
-        body: { to: to.trim(), subject: subj.trim(), body: body.trim(), from: membre?.nom || "Abavie" }
+        body: { to: to.trim(), subject: subj.trim(), body: body.trim(), from: membre?.nom || "AbTalk" }
       });
       if (error) throw new Error(error.message);
       setSent(true);

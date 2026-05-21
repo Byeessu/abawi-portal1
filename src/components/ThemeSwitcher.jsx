@@ -8,7 +8,7 @@ export default function ThemeSwitcher() {
   const btnRef = useRef(null)
   const menuRef = useRef(null)
   const MODE_KEYS = new Set(['dark', 'light'])
-  const ORDER = ['galaxy', 'ia', 'gold', 'antarctique', 'luxe', 'cristal', 'platine', 'diamant', 'aero', 'nature', 'urbain', 'forest', 'ultime', 'deep', 'intellect', 'ice', 'premium']
+  const ORDER = ['pure', 'universe', 'galaxy', 'ia', 'gold', 'antarctique', 'luxe', 'cristal', 'platine', 'diamant', 'aero', 'nature', 'urbain', 'forest', 'ultime', 'deep', 'intellect', 'ice', 'premium']
   const paletteList = ORDER.filter((k) => themes[k] && !MODE_KEYS.has(k))
     .concat(Object.keys(themes).filter((k) => !ORDER.includes(k) && !MODE_KEYS.has(k)))
 
@@ -42,6 +42,14 @@ export default function ThemeSwitcher() {
 
   function handleSetTheme(key) {
     setTheme(key)
+    // Thèmes clairs : forcer le mode light
+    const lightThemes = new Set(['ice', 'aero'])
+    if (lightThemes.has(key)) {
+      setMode('light')
+    } else if (lightThemes.has(themeKey)) {
+      // On quitte un thème clair → repasser en mode sombre par défaut
+      setMode('dark')
+    }
     setOpen(false)
   }
 

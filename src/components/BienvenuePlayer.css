@@ -62,3 +62,25 @@
 .bv-loading-fill { height: 100%; width: 40%; background: var(--gold); border-radius: 2px; animation: bv-load 1.2s ease-in-out infinite; }
 @keyframes bv-load { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
 .bv-progress { cursor: pointer; }
+
+/* ── Mode clair : contraste BienvenuePlayer ─── */
+html.light .bv-ch {
+  background: color-mix(in srgb, var(--bg-card, #fff) 80%, var(--border, #e2e4ea));
+  color: var(--text-secondary, #555770);
+  border-color: var(--border, #e2e4ea);
+}
+html.light .bv-ch--active {
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-card, #fff));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  font-weight: 700;
+}
+html.light .bv-ctrl-play,
+html.light .bv-compact-play {
+  color: #fff;
+}
+html.light .bv-player-badge {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg-card, #fff));
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+}

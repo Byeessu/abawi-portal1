@@ -27,7 +27,7 @@ const TOOLS = [
   { id: 'maxavis', titre: 'MaxAvis Elite', desc: 'Sondages, pétitions et études de grande puissance. Millions de réponses, analytics temps réel, rapports IA.', path: '/outils/maxavis', prix: 9900, iconKey: 'maxavis' },
   { id: 'smart-office', titre: 'Smart Office Pro', desc: 'Éditeur intelligent IA', path: '/outils/smart-office', prix: 6900, iconKey: 'smart-office' },
   { id: 'exegetika', titre: 'Abawi Exégètika', desc: 'Analyse exégétique totale', path: '/outils/exegetika', prix: 7900, iconKey: 'exegetika' },
-  { id: 'sante', titre: 'ABAWI Santé+', desc: 'Hôpitaux, pharmacies, urgences SN', path: '/outils/sante', prix: 0, iconKey: 'sante' },
+  { id: 'sante', titre: 'Abavie', desc: 'Hôpitaux, pharmacies, urgences SN', path: '/outils/sante', prix: 0, iconKey: 'abavie' },
   { id: 'autoroute', titre: 'ABAWI AutoRoute', desc: 'Trafic, code route, auto-écoles', path: '/outils/autoroute', prix: 0, iconKey: 'autoroute' },
 ]
 

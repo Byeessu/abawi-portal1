@@ -1,4 +1,3 @@
-import { cleanIAText } from './cleanText';
 import { groqChatCompletion, getProviderInfo } from './groqClient';
 
 export async function callGroq(messages, maxTokens = 2000, jsonMode = false) {

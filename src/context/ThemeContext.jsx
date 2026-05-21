@@ -46,6 +46,8 @@ const THEMES = {
     border: '#3A2E00', text_primary: '#FFF8E0', text_secondary: '#C9A84C', text_muted: '#5A4A20',
     accent: '#F0C040', accent2: '#FFF0A0', accent3: '#E08020',
     nav_bg: 'rgba(10,8,0,0.95)', gradient_hero: 'linear-gradient(135deg,#0A0800 0%,#201800 100%)',
+    // Light mode: use deep gold/amber so the accent stays visibly gold on white backgrounds
+    light_accent: '#B8860B', light_accent2: '#C97020',
   },
   antarctique: {
     name: 'Arctique', emoji: '🧊',
@@ -74,6 +76,8 @@ const THEMES = {
     border: '#202428', text_primary: '#E8EAEC', text_secondary: '#8090A0', text_muted: '#404850',
     accent: '#C0C8D0', accent2: '#80D8C0', accent3: '#A080E0',
     nav_bg: 'rgba(8,9,10,0.95)', gradient_hero: 'linear-gradient(135deg,#08090A 0%,#101418 100%)',
+    // Light mode: silver/slate visible on white
+    light_accent: '#5A6878', light_accent2: '#2A9080',
   },
   diamant: {
     name: 'Diamant', emoji: '💠',
@@ -145,6 +149,20 @@ const THEMES = {
     accent: '#D040A0', accent2: '#F090D0', accent3: '#9040D0',
     nav_bg: 'rgba(5,3,5,0.97)', gradient_hero: 'linear-gradient(135deg,#050305 0%,#100A10 100%)',
   },
+  pure: {
+    name: 'Pure', emoji: '◾',
+    bg_primary: '#000000', bg_secondary: '#0A0A0A', bg_card: '#141414', bg_card_hover: '#1C1C1E',
+    border: '#2C2C2E', text_primary: '#F5F5F7', text_secondary: '#6E6E73', text_muted: '#3A3A3C',
+    accent: '#007AFF', accent2: '#34C759', accent3: '#5E5CE6',
+    nav_bg: 'rgba(0,0,0,0.80)', gradient_hero: 'linear-gradient(135deg,#000000 0%,#0A0A0A 100%)',
+  },
+  universe: {
+    name: 'Universe', emoji: '🌠',
+    bg_primary: '#000000', bg_secondary: '#0A0A0A', bg_card: '#111111', bg_card_hover: '#161616',
+    border: '#1C1C1E', text_primary: '#FFFFFF', text_secondary: '#98989D', text_muted: '#3A3A3C',
+    accent: '#FFFFFF', accent2: '#E0E0E0', accent3: 'rgba(255,255,255,0.08)',
+    nav_bg: 'rgba(0,0,0,0.94)', gradient_hero: 'linear-gradient(135deg,#000000 0%,#0A0A14 100%)',
+  },
 }
 
 const ThemeContext = createContext(null)
@@ -191,22 +209,67 @@ export function ThemeProvider({ children }) {
     const t = THEMES[key] || THEMES.dark
     const m = MODES[mode] || MODES.dark
     const root = document.documentElement
-    // Mode controls structure/readability colors (light/dark)
-    root.style.setProperty('--bg-primary', m.bg_primary)
-    root.style.setProperty('--bg-secondary', m.bg_secondary)
-    root.style.setProperty('--bg-card', m.bg_card)
-    root.style.setProperty('--bg-card-hover', m.bg_card_hover)
-    root.style.setProperty('--border', m.border)
-    root.style.setProperty('--text-primary', m.text_primary)
-    root.style.setProperty('--text-secondary', m.text_secondary)
-    root.style.setProperty('--text-muted', m.text_muted)
-    // Theme controls accent personality colors
-    root.style.setProperty('--accent', t.accent)
-    root.style.setProperty('--accent-rgb', hexToRgb(t.accent))
-    root.style.setProperty('--gold', t.accent)
-    root.style.setProperty('--gold-glow', t.accent + '26')
-    root.style.setProperty('--gold-border', t.accent + '40')
-    root.style.setProperty('--accent2', t.accent2)
+
+    // In dark mode, custom palette themes use their OWN structural colors (bg, text, nav).
+    // Light themes (ice, aero) and base themes (dark, light) always use MODES colors.
+    // In light mode: always use MODES.light for readability.
+    const isCustomPalette = key !== 'dark' && key !== 'light'
+    const bgLum = (() => {
+      const hex = (t.bg_primary || '#000000').replace('#', '')
+      const r = parseInt(hex.slice(0, 2), 16) || 0
+      const g = parseInt(hex.slice(2, 4), 16) || 0
+      const b = parseInt(hex.slice(4, 6), 16) || 0
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    })()
+    const usePaletteBg = mode === 'dark' && isCustomPalette && bgLum < 0.35
+
+    const structural = usePaletteBg ? t : m
+
+    root.style.setProperty('--bg-primary',    structural.bg_primary)
+    root.style.setProperty('--bg-secondary',   structural.bg_secondary)
+    root.style.setProperty('--bg-card',        structural.bg_card)
+    root.style.setProperty('--bg-card-hover',  structural.bg_card_hover)
+    root.style.setProperty('--border',         structural.border)
+    root.style.setProperty('--text-primary',   structural.text_primary)
+    root.style.setProperty('--text-secondary', structural.text_secondary)
+    root.style.setProperty('--text-muted',     structural.text_muted)
+    root.style.setProperty('--nav-bg',         structural.nav_bg)
+    root.style.setProperty('--gradient-hero',  structural.gradient_hero)
+
+    // Theme controls accent personality colors.
+    // In light mode, truly near-white accents (#FFFFFF, lum > 0.88) become dark to stay readable.
+    // Themes can define light_accent / light_accent2 to override the automatic fallback.
+    function accentLum(hex) {
+      if (!hex || !hex.startsWith('#')) return 0.5
+      const h = hex.replace('#', '')
+      const r = parseInt(h.slice(0, 2), 16) || 0
+      const g = parseInt(h.slice(2, 4), 16) || 0
+      const b = parseInt(h.slice(4, 6), 16) || 0
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    }
+    const accent = mode === 'light'
+      ? (t.light_accent || (accentLum(t.accent) > 0.88 ? '#1C1C1E' : t.accent))
+      : t.accent
+    const accent2 = mode === 'light'
+      ? (t.light_accent2 || (accentLum(t.accent2 || '') > 0.88 ? '#4B5563' : (t.accent2 || t.accent)))
+      : (t.accent2 || t.accent)
+
+    root.style.setProperty('--accent', accent)
+    root.style.setProperty('--accent-rgb', hexToRgb(accent))
+    root.style.setProperty('--gold', accent)
+    root.style.setProperty('--gold-glow', accent + '26')
+    root.style.setProperty('--gold-border', accent + '40')
+    // --text-on-accent : texte sur bouton coloré.
+    // En mode clair, l'accent peut être sombre → texte blanc.
+    // En mode sombre, l'accent est souvent vif → texte sombre.
+    const textOnAccent = (() => {
+      const h = accent.replace('#','')
+      const r = parseInt(h.slice(0,2),16)||0, g = parseInt(h.slice(2,4),16)||0, b = parseInt(h.slice(4,6),16)||0
+      return ((0.299*r+0.587*g+0.114*b)/255) > 0.55 ? '#070B0F' : '#FFFFFF'
+    })()
+    root.style.setProperty('--text-on-accent', textOnAccent)
+    root.style.setProperty('--text-on-gold', textOnAccent)
+    root.style.setProperty('--accent2', accent2)
     root.style.setProperty('--accent3', t.accent3)
     // Additional semantic colors for tags/components
     root.style.setProperty('--red', t.accent2 === '#EF4444' ? t.accent2 : '#EF4444')
@@ -215,8 +278,6 @@ export function ThemeProvider({ children }) {
     root.style.setProperty('--purple', '#8B5CF6')
     root.style.setProperty('--pink', '#EC4899')
     root.style.setProperty('--lime', '#84CC16')
-    root.style.setProperty('--nav-bg', m.nav_bg)
-    root.style.setProperty('--gradient-hero', m.gradient_hero)
     // data-theme attribute for CSS selectors
     root.setAttribute('data-theme', key)
     root.setAttribute('data-mode', mode)
@@ -264,6 +325,8 @@ export function useTheme() {
 }
 
 // Alias pour compatibilité
+// eslint-disable-next-line react-refresh/only-export-components
 export const useThemeContext = useTheme
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { useThemedStyles } from '../lib/theme';

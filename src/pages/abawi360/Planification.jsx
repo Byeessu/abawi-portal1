@@ -3,8 +3,6 @@ import { useAuth } from '../../context/AuthContext'
 import { run360Crud } from '../../lib/abawi360CrudClient'
 import './Abawi360Tools.css'
 import SyncStatus from '../../components/SyncStatus'
-import { Link } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
 
 const STATUTS_PROJET = { planifie: { label: 'Planifié', color: '#8B95A5' }, en_cours: { label: 'En cours', color: '#3B82F6' }, en_pause: { label: 'En pause', color: '#F0B429' }, termine: { label: 'Terminé', color: '#18A84A' }, annule: { label: 'Annulé', color: '#EF4444' } }
@@ -106,7 +104,7 @@ export default function Planification() {
   const tabStyle = (t) => ({ padding: '8px 18px', borderRadius: '8px', background: tab === t ? 'var(--t360-accent-purple)' : 'var(--t360-bg-tag)', border: `1px solid ${tab === t ? 'var(--t360-accent-purple)' : 'var(--t360-border)'}`, color: tab === t ? 'var(--t360-text-inverse)' : 'var(--t360-text-secondary)', cursor: 'pointer', fontWeight: tab === t ? 700 : 400, fontSize: '0.82rem' })
 
   return (
-    <div className="tools360-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px 80px' }}>
+    <div className="tools360-page" style={{ maxWidth: '1400px', margin: '0 auto', padding: '40px 24px 80px' }}>
       <div className="tools360-header">
         <div>
           <h1 className="tools360-title">📅 Planification</h1>

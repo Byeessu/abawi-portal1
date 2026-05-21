@@ -44,3 +44,26 @@ code_complet.txt
 
 # Local Netlify folder
 .netlify
+
+# Mobile build folders (Capacitor — web deploy only)
+android
+ios
+
+# Test & temp folders
+tmp
+e2e
+abawi-bot
+.versavoiceai
+
+# Editor / AI assistant folders
+.claude
+.cursor
+.grok
+.github
+.windsurf
+
+# Deploy exclusions (reduce upload count, not needed for runtime)
+.netlify/
+public/og-content/
+public/files/
+netlify/plugins/

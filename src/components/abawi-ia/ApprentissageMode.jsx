@@ -2,8 +2,17 @@ import { useState } from 'react';
 import { callGroq, cleanIATextLight } from '../../lib/abawi-ia';
 import { buildSystemPrompt, buildJsonModePrefix } from '../../lib/abawi-persona';
 import IAResponseDisplay from '../IAResponseDisplay';
+import { useAuth } from '../../context/AuthContext'
+import { useFreeToolQuota } from '../../hooks/useFreeToolQuota'
+import FreeToolPaywall from '../../components/FreeToolPaywall'
 
-export default function ApprentissageMode() {
+export default function ApprentissageMode({ language = 'fr' } = {}) {
+  const { membre } = useAuth()
+  const quota = useFreeToolQuota('abawi_ia', {
+    anonymousLimit: 5, memberLimit: 10, membre, creditType: 'abawi_ia',
+  })
+  const [showPaywall, setShowPaywall] = useState(false)
+
   const [topic, setTopic] = useState('');
   const [niveau, setNiveau] = useState('débutant');
   const [parcours, setParcours] = useState(null);
@@ -12,8 +21,23 @@ export default function ApprentissageMode() {
   const [stepContent, setStepContent] = useState({});
   const [stepLoading, setStepLoading] = useState(false);
 
+  async function checkAccessThen() {
+    if (quota.quotaAvailable) {
+      quota.recordUse()
+      return true
+    }
+    if (quota.canUseCredits) {
+      const result = await quota.debitCredits()
+      if (result.ok) return true
+    }
+    setShowPaywall(true)
+    return false
+  }
+
   async function generateParcours() {
     if (!topic.trim()) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setLoading(true);
     try {
       const raw = await callGroq([
@@ -35,13 +59,15 @@ JSON: {"titre": "...", "description": "...", "etapes": [{"titre": "...", "object
   }
 
   async function loadStep(idx) {
-    if (stepContent[idx]) { setCurrentStep(idx); return; }
-    setCurrentStep(idx);
+    if (!parcours?.etapes?.[idx]) return;
+    const ok = await checkAccessThen()
+    if (!ok) return
     setStepLoading(true);
+    setCurrentStep(idx);
     const step = parcours.etapes[idx];
     try {
       const content = cleanIATextLight(await callGroq([
-        { role: 'system', content: buildSystemPrompt({
+        { role: 'system', content: buildSystemPrompt({ language,
           role: 'pédagogue senior ABAWI, vulgarisateur d\'excellence',
           extra: 'FORMAT PÉDAGOGIQUE : Markdown structuré, ## sections principales, ### sous-sections, **gras** pour les termes clés, - pour les listes, paragraphes séparés par des lignes vides. Inclus des exemples concrets africains et des analogies parlantes.',
         }) },
@@ -121,6 +147,19 @@ JSON: {"titre": "...", "description": "...", "etapes": [{"titre": "...", "object
           <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '20px' }}>Cliquez "Apprendre" pour accéder au contenu de cette étape.</div>
         )}
       </div>
+
+      {showPaywall && (
+        <FreeToolPaywall
+          toolName="Apprentissage Guidé"
+          usedToday={quota.usedToday}
+          limit={quota.limit}
+          membre={membre}
+          creditCost={quota.creditCost}
+          soldeCredits={quota.soldeCredits}
+          upgradeAction="generate"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
     </div>
   );
 }

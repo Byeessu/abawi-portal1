@@ -49,7 +49,7 @@ export default function CookieConsent() {
         JSON.stringify({ version: CONSENT_VERSION, savedAt: Date.now(), preferences })
       )
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    } catch {}
+    } catch { /* ignore */ }
     setVisible(false)
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   getAllHistory,
   getHistory,
@@ -45,12 +45,7 @@ export default function HistoryManager() {
   const [viewMode, setViewMode] = useState('list') // 'list' | 'detail'
   const [detailItem, setDetailItem] = useState(null)
 
-  useEffect(() => {
-    cleanupExpiredHistory()
-    loadHistory()
-  }, [filter])
-
-  function loadHistory() {
+  const loadHistory = useCallback(() => {
     setLoading(true)
     let data
     if (filter.tool === 'all') {
@@ -66,9 +61,14 @@ export default function HistoryManager() {
         until: filter.until
       })
     }
-    setHistory(data)
-    setLoading(false)
-  }
+    Promise.resolve().then(() => setHistory(data))
+    Promise.resolve().then(() => setLoading(false))
+  }, [filter])
+
+  useEffect(() => {
+    cleanupExpiredHistory()
+    Promise.resolve().then(() => loadHistory())
+  }, [filter, loadHistory])
 
   function handleDelete(entryId, tool) {
     if (confirm('Supprimer cette entrée définitivement ?')) {
@@ -98,12 +98,12 @@ export default function HistoryManager() {
 
   function handleDeleteAll() {
     if (filter.tool === 'all') {
-      if (confirm('Supprimer tout l\'historique de TOUS les outils ? Cette action est irréversible.')) {
+      if (confirm("Supprimer tout l'historique de TOUS les outils ? Cette action est irréversible.")) {
         Object.values(HISTORY_TOOLS).forEach(tool => deleteAllHistory(tool))
         loadHistory()
       }
     } else {
-      if (confirm(`Supprimer tout l\'historique de ${TOOL_NAMES[filter.tool]} ?`)) {
+      if (confirm(`Supprimer tout l'historique de ${TOOL_NAMES[filter.tool]} ?`)) {
         deleteAllHistory(filter.tool)
         loadHistory()
       }
@@ -166,7 +166,7 @@ export default function HistoryManager() {
 
   if (viewMode === 'detail' && detailItem) {
     return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: 20 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: 20 }}>
         <div style={{ marginBottom: 20 }}>
           <button
             onClick={() => { setViewMode('list'); setDetailItem(null) }}
@@ -257,7 +257,7 @@ export default function HistoryManager() {
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: 20 }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <h1 style={{ margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
           📚 Historique des Activités

@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { exportToPDF } from '../../lib/generatePDF'
 import { cleanIATextLight } from '../../lib/cleanText'
 import { useAuth } from '../../context/AuthContext'
-import { hasAllInclusiveAccess } from '../../lib/permissions'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave'
 import { useToolAccess } from '../../hooks/useToolAccess'
 import { callGroq as groqClientCall } from '../../lib/groqClient'
 import SEO from '../../components/SEO'
-import GradientOrbs from '../../components/premium/GradientOrbs'
+import ToolHero from '../../components/ToolHero'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
+import TokenCounter from '../../components/TokenCounter'
 import DocumentProfileManager from '../../components/DocumentProfileManager'
 import FileContextUpload from '../../components/FileContextUpload'
 import DocOutputPanel from '../../components/DocOutputPanel'
@@ -206,6 +206,7 @@ export default function JuridiqueElite() {
   const [generationTab, setGenerationTab] = useState('standard')
   const [uploadedContext, setUploadedContext] = useState('')
   const [showPayment, setShowPayment] = useState(false)
+  const [paid, setPaid] = useState(false)
   const workspace = useWorkspace(`juridique-elite-${docType}`)
 
   // Auto-save brouillon 30 jours (remplace l'ancienne session éphémère)
@@ -240,7 +241,7 @@ export default function JuridiqueElite() {
     setStep('form')
     setError('')
     // eslint-disable-next-line no-empty -- Empty catch is intentional — failure is non-fatal here
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ docType: id, formData: {}, docContent: '', generationTab })) } catch {}
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ docType: id, formData: {}, docContent: '', generationTab })) } catch { /* ignore */ }
   }
 
   async function genererDocument() {
@@ -296,73 +297,40 @@ export default function JuridiqueElite() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        @media (max-width: 860px) {
+          .jur-main-grid { grid-template-columns: 1fr !important; }
+          .jur-sidebar-sticky { position: static !important; max-height: none !important; }
+          .jur-doc-types { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; }
+          .jur-doc-types button { flex: 1 1 calc(50% - 6px); min-width: 140px; }
+        }
+        @media (max-width: 540px) {
+          .jur-field-grid { grid-template-columns: 1fr !important; }
+          .jur-doc-types button { flex: 1 1 100%; }
+        }
+      `}</style>
       <SEO
         title="Juridique Élite — 12 documents OHADA conformes"
         description="Statuts SARL/SA, contrats CDI/CDD, baux résidentiel/commercial, NDA, mise en demeure, cession de parts, PV AG. Conforme droit OHADA et Code du travail sénégalais. Export PDF."
         keywords="OHADA, statuts SARL, statuts SA, contrat CDI Sénégal, contrat CDD, bail commercial OHADA, NDA, mise en demeure, cession parts, PV AG, droit des affaires"
         type="article"
+       image="/og-tools/juridique.jpg"/>
+      <ToolHero
+        icon="⚖️"
+        badge="OHADA · Droit des affaires"
+        title="Juridique"
+        titleAccent="Élite"
+        subtitle="12 documents juridiques conformes OHADA : statuts SARL/SA, contrats, baux, NDA, mise en demeure, cession de parts"
+        accentColor="#F59E0B"
+        accentFrom="#1c1408"
+        accentTo="#92400e"
+        stats={[['📋', '12 documents'], ['⚖️', 'Droit OHADA'], ['🇸🇳', 'Code travail SN'], ['📄', 'Export PDF pro']]}
       />
-      {/* Header Premium */}
-      <div style={{
-        position: 'relative',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 60%, #1c1408 100%)',
-        borderBottom: '1px solid rgba(201,168,76,0.35)',
-        padding: 'clamp(28px, 4vw, 48px) 2rem',
-        overflow: 'hidden',
-        boxShadow: '0 12px 40px rgba(201,168,76,0.18)',
-      }}>
-        <GradientOrbs variant="gold" intensity={0.5} count={3} />
-
-        <div style={{ position: 'absolute', top: 12, right: 28, fontSize: '5rem', opacity: 0.07, transform: 'rotate(-14deg)', pointerEvents: 'none' }}>📜</div>
-        <div style={{ position: 'absolute', bottom: 8, right: '18%', fontSize: '3.6rem', opacity: 0.06, transform: 'rotate(8deg)', pointerEvents: 'none' }}>⚖️</div>
-
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 16px', borderRadius: 100, background: 'rgba(201,168,76,0.18)', border: '1px solid rgba(201,168,76,0.45)', color: '#F0C040', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '2px', marginBottom: 18, backdropFilter: 'blur(8px)' }}>
-            ⚖️ JURIDIQUE · ÉLITE OHADA
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '0.5rem' }}>
-            <div style={{
-              width: 64, height: 64,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              borderRadius: 18,
-              background: 'linear-gradient(135deg, rgba(201,168,76,0.25), rgba(240,192,64,0.1))',
-              border: '1px solid rgba(201,168,76,0.5)',
-              fontSize: '2rem',
-              boxShadow: '0 8px 24px rgba(201,168,76,0.35)',
-              flexShrink: 0,
-            }}>⚖️</div>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 'clamp(1.7rem, 3vw, 2.4rem)', fontWeight: 900, background: 'linear-gradient(90deg, #c9a84c, #f0c040 50%, #fff5d6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.3px', lineHeight: 1.1 }}>
-                ABAWI Juridique Élite
-              </h1>
-              <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
-                Documents juridiques OHADA · Conformes droit sénégalais · Rédaction IA
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.2rem', flexWrap: 'wrap' }}>
-            {[
-              { icon: '📋', text: '12 types de documents' },
-              { icon: '🌍', text: 'Droit OHADA + Sénégal' },
-              { icon: '📄', text: 'Export PDF professionnel' },
-              { icon: '🤖', text: 'Rédaction IA juridique' },
-            ].map((tag) => (
-              <span key={tag.text} style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                background: 'rgba(201,168,76,0.12)',
-                border: '1px solid rgba(201,168,76,0.4)',
-                borderRadius: 100, padding: '5px 12px',
-                fontSize: '0.78rem', color: 'var(--gold)', fontWeight: 600,
-                backdropFilter: 'blur(6px)',
-              }}>
-                <span>{tag.icon}</span>{tag.text}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
 
       <div style={{ maxWidth: 'min(1440px, 96vw)', margin: '0 auto', padding: 'clamp(16px, 2.5vw, 32px) clamp(16px, 2.5vw, 40px)' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+          <TokenCounter />
+        </div>
         <ToolInfoPanel
           toolName="Juridique Élite"
           icon="⚖️"
@@ -389,14 +357,14 @@ export default function JuridiqueElite() {
           ]}
         />
       </div>
-      <div style={{ maxWidth: 'min(1440px, 96vw)', margin: '0 auto', padding: '0 clamp(16px, 2.5vw, 40px) 2rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '2rem' }}>
+      <div className="jur-main-grid" style={{ maxWidth: 'min(1440px, 96vw)', margin: '0 auto', padding: '0 clamp(16px, 2.5vw, 40px) 2rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '2rem' }}>
         {/* Sidebar — type de document */}
         <div>
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: '1rem' }}>
+          <div className="jur-sidebar-sticky" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: '1rem' }}>
             <div style={{ padding: '1rem', borderBottom: '1px solid #222', background: 'var(--bg-secondary)' }}>
               <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Type de document</p>
             </div>
-            <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            <div className="jur-doc-types" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               {DOC_TYPES.map(doc => (
                 <button
                   key={doc.id}

@@ -21,6 +21,7 @@ export default function GlobalSearch({ visible, onClose, onJumpToMessage }) {
       inputRef.current?.focus();
       loadConversations();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   async function loadConversations() {
