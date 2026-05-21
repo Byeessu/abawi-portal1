@@ -5,26 +5,7 @@ function PolitiqueConfidentialite() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
-        {/* ── Sidebar ── */}
-        <aside className="ml-sidebar">
-          <p className="ml-sidebar-title">Sur cette page</p>
-          <nav className="ml-sidebar-nav">
-            <a href="#resp">1. Responsable</a>
-            <a href="#data">2. Données collectées</a>
-            <a href="#finalites">3. Finalités</a>
-            <a href="#base">4. Base légale</a>
-            <a href="#destinataires">5. Destinataires</a>
-            <a href="#conservation">6. Conservation</a>
-            <a href="#droits">7. Vos droits</a>
-            <a href="#securite">8. Sécurité</a>
-            <a href="#mineurs">9. Mineurs</a>
-            <a href="#modif">10. Modifications</a>
-          </nav>
-        </aside>
-
-        {/* ── Content ── */}
-        <div className="ml-content">
-      <SEO
+        <SEO
         title="Politique de Confidentialité — ABAWI"
         description="Politique de confidentialité d'ABAWI : collecte, utilisation et protection de vos données personnelles. Conforme à la loi sénégalaise et au RGPD."
         noindex={false}
@@ -153,8 +134,7 @@ function PolitiqueConfidentialite() {
       <p className="ml-footer">
         ABAWI SN — Dakar, Sénégal. Contact DPO : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a>
       </p>
-        </div>{/* ml-content */}
-      </div>{/* ml-inner */}
+      </div>
     </main>
   )
 }

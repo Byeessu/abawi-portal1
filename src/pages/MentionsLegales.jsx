@@ -4,23 +4,6 @@ function MentionsLegales() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
-
-        {/* ── Sidebar ── */}
-        <aside className="ml-sidebar">
-          <p className="ml-sidebar-title">Sur cette page</p>
-          <nav className="ml-sidebar-nav">
-            <a href="#editeur">Éditeur du site</a>
-            <a href="#hebergement">Hébergement</a>
-            <a href="#paiements">Paiements</a>
-            <a href="#conditions">Conditions d'utilisation</a>
-            <a href="#remboursement">Remboursement</a>
-            <a href="#donnees">Protection des données</a>
-            <a href="#cookies">Cookies</a>
-          </nav>
-        </aside>
-
-        {/* ── Content ── */}
-        <div className="ml-content">
         <h1 className="ml-title">Mentions légales</h1>
         <p className="ml-subtitle">Dernière mise à jour : mai 2026 — ABAWI SN, Dakar, Sénégal</p>
 
@@ -77,8 +60,7 @@ function MentionsLegales() {
         </section>
 
         <p className="ml-footer">ABAWI SN · VDN Liberté 6 Extension, Dakar, Sénégal · contact@abawi.sn</p>
-        </div>{/* ml-content */}
-      </div>{/* ml-inner */}
+      </div>
     </main>
   )
 }

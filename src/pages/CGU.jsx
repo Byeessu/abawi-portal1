@@ -5,28 +5,7 @@ function CGU() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
-        {/* ── Sidebar ── */}
-        <aside className="ml-sidebar">
-          <p className="ml-sidebar-title">Sur cette page</p>
-          <nav className="ml-sidebar-nav">
-            <a href="#objet">1. Objet</a>
-            <a href="#compte">2. Compte membre</a>
-            <a href="#produits">3. Produits & services</a>
-            <a href="#prix">4. Prix et paiement</a>
-            <a href="#remboursement">5. Remboursement</a>
-            <a href="#pi">6. Propriété intellectuelle</a>
-            <a href="#ia">7. Outils IA</a>
-            <a href="#dispo">8. Disponibilité</a>
-            <a href="#resp">9. Responsabilité</a>
-            <a href="#donnees">10. Données personnelles</a>
-            <a href="#modif">11. Modifications</a>
-            <a href="#droit">12. Droit applicable</a>
-          </nav>
-        </aside>
-
-        {/* ── Content ── */}
-        <div className="ml-content">
-      <SEO
+        <SEO
         title="Conditions Générales d'Utilisation — ABAWI"
         description="Conditions générales d'utilisation du portail ABAWI. Règles d'accès, propriété intellectuelle, responsabilités et modalités de service."
         noindex={false}
@@ -169,8 +148,7 @@ function CGU() {
       </section>
 
       <p className="ml-footer">ABAWI SN — Dakar, Sénégal. Contact : <a href="mailto:contact@abawi.sn">contact@abawi.sn</a></p>
-        </div>{/* ml-content */}
-      </div>{/* ml-inner */}
+      </div>
     </main>
   )
 }

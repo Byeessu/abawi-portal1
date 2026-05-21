@@ -18,22 +18,7 @@ function PolitiqueCookies() {
   return (
     <main className="ml-page">
       <div className="ml-inner">
-        {/* ── Sidebar ── */}
-        <aside className="ml-sidebar">
-          <p className="ml-sidebar-title">Sur cette page</p>
-          <nav className="ml-sidebar-nav">
-            <a href="#definition">Qu'est-ce qu'un cookie ?</a>
-            <a href="#types">Types de cookies</a>
-            <a href="#conservation">Durée de conservation</a>
-            <a href="#gestion">Gérer vos préférences</a>
-            <a href="#tiers">Cookies tiers</a>
-            <a href="#droits">Vos droits</a>
-          </nav>
-        </aside>
-
-        {/* ── Content ── */}
-        <div className="ml-content">
-      <SEO
+        <SEO
         title="Politique Cookies — ABAWI"
         description="Politique cookies d'ABAWI : gestion des cookies, préférences et consentement. Contrôlez vos données de navigation."
         noindex={false}
@@ -127,8 +112,7 @@ function PolitiqueCookies() {
       </section>
 
       <p className="ml-footer">ABAWI SN — Dakar, Sénégal.</p>
-        </div>{/* ml-content */}
-      </div>{/* ml-inner */}
+      </div>
     </main>
   )
 }
