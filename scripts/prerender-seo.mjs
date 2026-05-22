@@ -6,9 +6,12 @@
  * Usage: node scripts/prerender-seo.mjs
  * Les fichiers sont générés dans dist/
  */
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
+
+dotenv.config({ path: '.env.local' })
+dotenv.config({ path: '.env' })
 
 const DIST_DIR = path.resolve('dist')
 const OUT_DIR  = path.resolve('dist')

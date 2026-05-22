@@ -11,10 +11,13 @@
  *   /sitemap-abavie.xml    ← produits santé
  *   /.netlify/functions/sitemap-news ← articles Supabase (dynamique)
  */
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
+
+dotenv.config({ path: '.env.local' })
+dotenv.config({ path: '.env' })
 
 const DIST  = path.resolve('dist')
 const BASE  = 'https://abawi.app'
