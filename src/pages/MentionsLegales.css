@@ -9,13 +9,19 @@
   min-height: 100vh;
   box-sizing: border-box;
   background: var(--bg-primary);
-  padding: clamp(48px, 6vw, 80px) clamp(32px, 6vw, 100px) 100px;
+  /* top : compense la navbar fixe (60px) + marge lisible */
+  padding-top: calc(var(--navbar-total-h, 60px) + clamp(32px, 3vw, 56px));
+  /* horizontal : marge généreuse sur tous écrans */
+  padding-left: clamp(40px, 7vw, 120px);
+  padding-right: clamp(40px, 7vw, 120px);
+  padding-bottom: 100px;
 }
 
 /* ── Colonne de contenu centrée ── */
 .ml-inner {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 /* ── En-tête ── */
@@ -133,10 +139,20 @@
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .ml-page { padding: 36px 24px 60px; }
+  .ml-page {
+    padding-top: calc(var(--navbar-total-h, 60px) + 28px);
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 60px;
+  }
   .ml-section h2 { white-space: normal; }
 }
 @media (max-width: 480px) {
-  .ml-page { padding: 28px 18px 50px; }
+  .ml-page {
+    padding-top: calc(var(--navbar-total-h, 60px) + 20px);
+    padding-left: 18px;
+    padding-right: 18px;
+    padding-bottom: 50px;
+  }
   .ml-title { font-size: 1.6rem; }
 }
