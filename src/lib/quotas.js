@@ -1,5 +1,31 @@
 import { supabase } from './supabase'
 import { normalizePlan, isSystemAdmin } from './permissions'
+import { CREDIT_COSTS } from './credits'
+
+// ═══════════════════════════════════════════════════════════════
+// Quotas gratuits quotidiens hardcodés (fallback si pas de DB)
+// ═══════════════════════════════════════════════════════════════
+export const DAILY_FREE_LIMITS = {
+  // Outils gratuits
+  facture:       { limit_count: 1, window_type: 'day', action_type: 'block' },
+  pro_card_elite:{ limit_count: 2, window_type: 'day', action_type: 'block' },
+  qr_code_pro:   { limit_count: 1, window_type: 'day', action_type: 'block' },
+  format_converter:{ limit_count: 2, window_type: 'day', action_type: 'block' },
+  // Outils élite : 2 gratuits/jour puis coût normal
+  business_plan:   { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.business_plan },
+  pitch:           { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.pitch },
+  finance_elite:   { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.finance_elite },
+  juridique_elite: { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.juridique_elite },
+  comptable_elite: { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.comptable_elite },
+  rh_elite:        { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.rh_elite },
+  immobilier_elite:{ limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.immobilier_elite },
+  consultant_elite:{ limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.consultant_elite },
+  smart_office:    { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.smart_office },
+  infographie:     { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.infographie },
+  studio_photo:    { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.studio_photo },
+  audio_studio:    { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.audio_studio },
+  image_pro:       { limit_count: 2, window_type: 'day', action_type: 'premium_cost', cost_override: CREDIT_COSTS.image_pro },
+}
 
 // Cache mémoire côté client (durée de vie : 30s)
 const cache = new Map()
@@ -77,7 +103,12 @@ export async function checkQuota(email, toolKey, membre = null) {
     return { ok: true, reason: null, unlimited: true, used: 0, remaining: 999999, limit: 0 }
   }
 
-  const cfg = await getQuotaConfig(toolKey, planId)
+  let cfg = await getQuotaConfig(toolKey, planId)
+
+  // Fallback hardcodé si pas de config DB
+  if (!cfg && DAILY_FREE_LIMITS[toolKey]) {
+    cfg = DAILY_FREE_LIMITS[toolKey]
+  }
 
   // Pas de quota configuré = illimité (juste crédits gèrent)
   if (!cfg || cfg.limit_count === 0) {

@@ -14,3 +14,5 @@ Sitemap: https://abawi.app/sitemap-pages.xml
 Sitemap: https://abawi.app/sitemap-digital.xml
 Sitemap: https://abawi.app/sitemap-academy.xml
 Sitemap: https://abawi.app/sitemap-podcasts.xml
+Sitemap: https://abawi.app/sitemap-store.xml
+Sitemap: https://abawi.app/sitemap-abavie.xml

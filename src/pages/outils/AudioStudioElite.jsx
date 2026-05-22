@@ -195,6 +195,7 @@ export default function AudioStudioElite() {
   const [interimTranscript, setInterimTranscript] = useState('')
   const [transLang, setTransLang] = useState('fr-FR')
   const recogRef = useRef(null)
+  const keepTranscribingRef = useRef(false)
 
   /* ── Refs ── */
   const acRef = useRef(null)
@@ -1040,23 +1041,35 @@ export default function AudioStudioElite() {
   function startTranscription() {
     if (!window.SpeechRecognition && !window.webkitSpeechRecognition) { alert('Reconnaissance vocale non supportée.'); return }
     const R = window.SpeechRecognition || window.webkitSpeechRecognition
-    const r = new R(); r.lang = transLang; r.continuous = true; r.interimResults = true
-    r.onstart = () => setTranscribing(true)
-    r.onresult = e => {
-      let final = '', interim = ''
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        if (e.results[i].isFinal) final += e.results[i][0].transcript
-        else interim += e.results[i][0].transcript
+    keepTranscribingRef.current = true
+    function createRecognition() {
+      const r = new R(); r.lang = transLang; r.continuous = true; r.interimResults = true
+      r.onstart = () => setTranscribing(true)
+      r.onresult = e => {
+        let final = '', interim = ''
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) final += e.results[i][0].transcript
+          else interim += e.results[i][0].transcript
+        }
+        if (final) setTranscript(t => t + final + ' ')
+        setInterimTranscript(interim)
       }
-      if (final) setTranscript(t => t + final + ' ')
-      setInterimTranscript(interim)
+      r.onerror = e => { if (e.error === 'aborted') return; if (!keepTranscribingRef.current) setTranscribing(false) }
+      r.onend = () => {
+        if (keepTranscribingRef.current) {
+          // Auto-restart to bypass the ~1min browser limit
+          try { const nr = createRecognition(); recogRef.current = nr; nr.start() } catch(_) {}
+        } else {
+          setTranscribing(false)
+        }
+      }
+      return r
     }
-    r.onerror = () => setTranscribing(false)
-    r.onend = () => setTranscribing(false)
+    const r = createRecognition()
     recogRef.current = r
     r.start()
   }
-  function stopTranscription() { recogRef.current?.stop(); setTranscribing(false); setInterimTranscript('') }
+  function stopTranscription() { keepTranscribingRef.current = false; recogRef.current?.stop(); setTranscribing(false); setInterimTranscript('') }
   function copyTranscript() { navigator.clipboard.writeText(transcript).then(() => alert('Transcription copiée !')) }
   function clearTranscript() { setTranscript(''); setInterimTranscript('') }
 
@@ -1463,7 +1476,7 @@ export default function AudioStudioElite() {
                   <button onClick={clearTranscript} style={btnGhost} title="Effacer">🗑</button>
                 </div>
                 <button onClick={transcribeWhisper} disabled={whisperLoading || !audioBuffer} style={{ ...btnPrimary, width: '100%', justifyContent: 'center', marginBottom: 10, background: 'linear-gradient(135deg,#7C3AED,#A855F7)', opacity: audioBuffer ? 1 : 0.5 }} title="Groq Whisper-large-v3 — supérieur au Web Speech API, supporte Wolof, Pulaar, français africain">
-                  {whisperLoading ? '⏳ Whisper IA…' : '🤖 Whisper IA (Groq)'}
+                  {whisperLoading ? '⏳ Whisper…' : '🤖 Whisper'}
                 </button>
                 {transcript && (
                   <div style={{ background: 'var(--bg-primary)', borderRadius: 8, padding: 10, fontSize: '0.82rem', lineHeight: 1.5, maxHeight: 200, overflow: 'auto' }}>

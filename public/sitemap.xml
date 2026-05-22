@@ -17,6 +17,14 @@
     <lastmod>2026-05-22</lastmod>
   </sitemap>
   <sitemap>
+    <loc>https://abawi.app/sitemap-store.xml</loc>
+    <lastmod>2026-05-22</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://abawi.app/sitemap-abavie.xml</loc>
+    <lastmod>2026-05-22</lastmod>
+  </sitemap>
+  <sitemap>
     <loc>https://abawi.app/.netlify/functions/sitemap-news</loc>
     <lastmod>2026-05-22</lastmod>
   </sitemap>

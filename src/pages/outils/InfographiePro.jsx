@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import SEO from '../../components/SEO'
 import { useAuth } from '../../context/AuthContext'
 import ToolInfoPanel from '../../components/ToolInfoPanel'
@@ -11,536 +11,266 @@ import TokenCounter from '../../components/TokenCounter'
 const GROQ_KEY = import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROK_LLAMA_API_KEY || ''
 const GROQ_MODEL = import.meta.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile'
 
-const CANVAS_FORMATS = [
-  { id: 'square_1080', label: 'Post carré (1080×1080)', w: 1080, h: 1080 },
-  { id: 'story_916', label: 'Story 9:16 (1080×1920)', w: 1080, h: 1920 },
-  { id: 'landscape_169', label: 'Paysage 16:9 (1920×1080)', w: 1920, h: 1080 },
-  { id: 'portrait_45', label: 'Portrait 4:5 (1080×1350)', w: 1080, h: 1350 },
+const FORMATS=[
+  {id:'sq_1080',label:'Instagram Post 1080×1080',w:1080,h:1080},{id:'story_916',label:'Story 1080×1920',w:1080,h:1920},
+  {id:'land_169',label:'LinkedIn 16:9 1920×1080',w:1920,h:1080},{id:'port_45',label:'Portrait 4:5 1080×1350',w:1080,h:1350},
+  {id:'fb_cover',label:'Facebook Cover 1640×924',w:1640,h:924},{id:'tw_header',label:'Twitter Header 1500×500',w:1500,h:500},
+  {id:'pin_235',label:'Pinterest 1000×1500',w:1000,h:1500},{id:'yt_thumb',label:'YouTube Thumb 1280×720',w:1280,h:720},
+  {id:'a4_v',label:'A4 Portrait 1240×1754',w:1240,h:1754},{id:'a4_l',label:'A4 Paysage 1754×1240',w:1754,h:1240},
+  {id:'bn728',label:'Banner 728×90',w:728,h:90},{id:'bn300',label:'Banner 300×250',w:300,h:250},
+  {id:'sl43',label:'Slide 4:3 1600×1200',w:1600,h:1200},{id:'sl169',label:'Slide 16:9 1920×1080',w:1920,h:1080},
 ]
 
-const VISUAL_THEMES = {
-  abyss: {
-    name: 'Abysse',
-    pageBg: 'linear-gradient(160deg,#020617 0%,#0f172a 55%,#1e1b4b 100%)',
-    header: '#94a3b8',
-    title: '#f8fafc',
-    subtitle: '#cbd5e1',
-    footer: '#64748b',
-    body: '#e2e8f0',
-    cardBorder: (c) => `${c}55`,
-    cardInner: (c) => `${c}18`,
-  },
-  paper: {
-    name: 'Studio clair',
-    pageBg: 'linear-gradient(180deg,#f8fafc,#e2e8f0)',
-    header: '#64748b',
-    title: '#0f172a',
-    subtitle: '#475569',
-    footer: '#94a3b8',
-    body: '#334155',
-    cardBorder: (c) => `${c}aa`,
-    cardInner: (c) => `${c}30`,
-  },
-  gold: {
-    name: 'Or prestige',
-    pageBg: 'linear-gradient(145deg,#1c1917,#292524 45%,#422006)',
-    header: '#a8a29e',
-    title: '#fffbeb',
-    subtitle: '#fcd34d',
-    footer: '#78716c',
-    body: '#fef3c7',
-    cardBorder: () => 'rgba(245,158,11,0.45)',
-    cardInner: (c) => `${c}24`,
-  },
-  ocean: {
-    name: 'Signal cyan',
-    pageBg: 'linear-gradient(135deg,#042f2e,#0c4a6e,#172554)',
-    header: '#99f6e4',
-    title: '#ecfeff',
-    subtitle: '#a5f3fc',
-    footer: '#5eead4',
-    body: '#ccfbf1',
-    cardBorder: (c) => '#22d3ee55',
-    cardInner: (c) => `${c}1f`,
-  },
+const THEMES={
+  abyss:{name:'Abysse',bg:'linear-gradient(160deg,#020617,#0f172a,#1e1b4b)',text:'#f8fafc',muted:'#94a3b8',accent:'#22d3ee'},
+  paper:{name:'Studio Clair',bg:'linear-gradient(180deg,#f8fafc,#e2e8f0)',text:'#0f172a',muted:'#64748b',accent:'#2563eb'},
+  gold:{name:'Or Prestige',bg:'linear-gradient(145deg,#1c1917,#292524,#422006)',text:'#fffbeb',muted:'#a8a29e',accent:'#f59e0b'},
+  ocean:{name:'Signal Cyan',bg:'linear-gradient(135deg,#042f2e,#0c4a6e,#172554)',text:'#ecfeff',muted:'#5eead4',accent:'#22d3ee'},
+  magma:{name:'Magma',bg:'linear-gradient(135deg,#280505,#7f1d1d,#451a03)',text:'#fef2f2',muted:'#fca5a5',accent:'#f87171'},
+  forest:{name:'Forêt',bg:'linear-gradient(135deg,#022c22,#14532d,#064e3b)',text:'#ecfdf5',muted:'#6ee7b7',accent:'#34d399'},
+  berry:{name:'Baie',bg:'linear-gradient(135deg,#2e1065,#6b21a8,#4c1d95)',text:'#faf5ff',muted:'#d8b4fe',accent:'#a855f7'},
+  corporate:{name:'Corporate',bg:'#ffffff',text:'#111827',muted:'#6b7280',accent:'#1d4ed8'},
+  midnight:{name:'Minuit',bg:'#0a0a0a',text:'#fafafa',muted:'#737373',accent:'#eab308'},
+  sunset:{name:'Coucher',bg:'linear-gradient(135deg,#4c0519,#9f1239,#c2410c)',text:'#fff1f2',muted:'#fda4af',accent:'#fb7185'},
+  neon:{name:'Néon',bg:'#050505',text:'#e0e7ff',muted:'#818cf8',accent:'#6366f1'},
+  pastel:{name:'Pastel',bg:'linear-gradient(135deg,#fdf2f8,#e0e7ff,#ecfdf5)',text:'#4b5563',muted:'#9ca3af',accent:'#8b5cf6'},
 }
 
-export default function InfographiePro() {
-  const { membre } = useAuth()
-  const tool = useToolAccess('studio', 'infographie')
-  const [showPayment, setShowPayment] = useState(false)
-  const previewRef = useRef(null)
-  const [formatId, setFormatId] = useState(CANVAS_FORMATS[0].id)
-  const fmt = CANVAS_FORMATS.find((f) => f.id === formatId) || CANVAS_FORMATS[0]
-  const [themeKey, setThemeKey] = useState('abyss')
-  const theme = VISUAL_THEMES[themeKey] || VISUAL_THEMES.abyss
+const TYPES=[{t:'text',l:'Texte'},{t:'rect',l:'Rectangle'},{t:'circle',l:'Cercle'},{t:'line',l:'Ligne'},{t:'arrow',l:'Flèche'},{t:'star',l:'Étoile'},{t:'icon',l:'Icône'},{t:'image',l:'Image'},{t:'progress',l:'Barre'},{t:'badge',l:'Badge'},{t:'qr',l:'QR Code'},{t:'pie',l:'Camembert'},{t:'bar',l:'Barres'}]
+const FONTS=['Outfit, sans-serif','Inter, sans-serif','Syne, sans-serif','Georgia, serif','monospace']
 
-  const [title, setTitle] = useState('Tableau de synthèse stratégique')
-  const [subtitle, setSubtitle] = useState('Vision claire, actions mesurables, exécution rapide')
-  const [logoUrl, setLogoUrl] = useState('')
-  const [headerText, setHeaderText] = useState('ABAWI IA - Document professionnel')
-  const [footerText, setFooterText] = useState('Confidentiel - Généré avec ABAWI')
-  const [items, setItems] = useState([
-    { id: 1, label: 'Objectif', value: 'Croissance durable', color: '#22D3EE' },
-    { id: 2, label: 'Marché', value: 'PME Afrique francophone', color: '#60A5FA' },
-    { id: 3, label: 'Canal', value: 'Digital + Commercial terrain', color: '#A78BFA' },
-    { id: 4, label: 'KPI', value: 'Conversion, Rétention, MRR', color: '#34D399' },
+function uid(p='el'){return p+'_'+Math.random().toString(36).slice(2,8)}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function snap(n,g=10){return Math.round(n/g)*g}
+function dl(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),600)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function qrData(d,s=120){const c=document.createElement('canvas');c.width=c.height=s;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,s,s);x.fillStyle='#000';const cell=Math.floor(s/25);const h=d.split('').reduce((a,b)=>a+b.charCodeAt(0),0);for(let y=0;y<25;y++)for(let x1=0;x1<25;x1++){const bit=((h+x1*7+y*13)%17)>4;const f=(x1<7&&y<7)||(x1>17&&y<7)||(x1<7&&y>17);if(f){const fx=x1<7?x1:x1-18,fy=y<7?y:y-17;const inf=(fx>=2&&fx<=4&&fy>=2&&fy<=4)||(fx===0||fx===6||fy===0||fy===6)||(fx>=1&&fx<=5&&fy>=1&&fy<=5);x.fillStyle=inf?'#000':'#fff';x.fillRect(x1*cell,y*cell,cell,cell);x.fillStyle='#000'}else if(bit)x.fillRect(x1*cell,y*cell,cell,cell)}return c.toDataURL('image/png')}
+
+export default function InfographiePro(){
+  const {membre}=useAuth(); const tool=useToolAccess('infographie','infographie'); const [showPayment,setShowPayment]=useState(false)
+  const [formatId,setFormatId]=useState('sq_1080'); const fmt=FORMATS.find(f=>f.id===formatId)||FORMATS[0]
+  const [themeKey,setThemeKey]=useState('abyss'); const theme=THEMES[themeKey]||THEMES.abyss
+  const [els,setEls]=useState([
+    {id:uid(),t:'text',x:40,y:40,w:fmt.w-80,h:80,content:'TITRE',s:{fontSize:52,fontWeight:800,color:theme.text,fontFamily:'Outfit, sans-serif',textAlign:'center'},z:1,r:0},
+    {id:uid(),t:'text',x:40,y:130,w:fmt.w-80,h:40,content:'Sous-titre',s:{fontSize:24,color:theme.muted,fontFamily:'Outfit, sans-serif',textAlign:'center'},z:2,r:0},
+    {id:uid(),t:'rect',x:50,y:200,w:(fmt.w-120)/2,h:180,content:'',s:{fill:theme.accent,opacity:0.15,borderRadius:16},z:0,r:0},
+    {id:uid(),t:'text',x:70,y:220,w:(fmt.w-160)/2,h:140,content:'Pilier A\nDonnées clés',s:{fontSize:18,color:theme.text,fontFamily:'Outfit, sans-serif',textAlign:'left'},z:3,r:0},
+    {id:uid(),t:'rect',x:(fmt.w/2)+20,y:200,w:(fmt.w-120)/2,h:180,content:'',s:{fill:'#3b82f6',opacity:0.15,borderRadius:16},z:0,r:0},
+    {id:uid(),t:'text',x:(fmt.w/2)+40,y:220,w:(fmt.w-160)/2,h:140,content:'Pilier B\nKPI',s:{fontSize:18,color:theme.text,fontFamily:'Outfit, sans-serif',textAlign:'left'},z:3,r:0},
+    {id:uid(),t:'badge',x:40,y:fmt.h-70,w:180,h:40,content:'ABAWI',s:{fill:theme.accent,color:'#fff',fontSize:14,borderRadius:100},z:4,r:0},
   ])
-  const [mode, setMode] = useState('infographie')
-  const [aiBrief, setAiBrief] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState('')
-  const [pngLoading, setPngLoading] = useState(false)
+  const [selId,setSelId]=useState(null); const [hist,setHist]=useState([]); const [hIdx,setHIdx]=useState(-1)
+  const [grid,setGrid]=useState(true); const [gSize,setGSize]=useState(20); const [snapTo,setSnapTo]=useState(true)
+  const [tab,setTab]=useState('library'); const [aiBrief,setAiBrief]=useState(''); const [aiLoad,setAiLoad]=useState(false); const [aiErr,setAiErr]=useState(''); const [exp,setExp]=useState('')
+  const cv=useRef(null); const dg=useRef(null); const ds=useMemo(()=>Math.min(620/fmt.w,740/fmt.h,1),[fmt.w,fmt.h])
+  function push(n){const h=hist.slice(0,hIdx+1);h.push(JSON.stringify(n));if(h.length>40)h.shift();setHist(h);setHIdx(h.length-1)}
+  function upd(fn){const n=fn(els);setEls(n);push(n)}
+  function s(){return els.find(e=>e.id===selId)}
+  function undo(){if(hIdx>0){setHIdx(hIdx-1);setEls(JSON.parse(hist[hIdx-1]))}}
+  function redo(){if(hIdx<hist.length-1){setHIdx(hIdx+1);setEls(JSON.parse(hist[hIdx+1]))}}
 
-  const displayScale = useMemo(() => Math.min(460 / fmt.w, 520 / fmt.h, 1), [fmt.w, fmt.h])
-
-  const doc = useMemo(
-    () => ({
-      title,
-      subtitle,
-      logoUrl,
-      headerText,
-      footerText,
-      items,
-      formatId,
-      themeKey,
-      generatedAt: new Date().toISOString(),
-    }),
-    [title, subtitle, logoUrl, headerText, footerText, items, formatId, themeKey],
-  )
-
-  function updateItem(id, key, value) {
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, [key]: value } : it)))
-  }
-
-  function addItem() {
-    const nextId = (items.at(-1)?.id || 0) + 1
-    setItems((prev) => [...prev, { id: nextId, label: `Bloc ${nextId}`, value: 'Nouveau contenu', color: '#F59E0B' }])
-  }
-
-  function removeItem(id) {
-    setItems((prev) => prev.filter((it) => it.id !== id))
-  }
-
-  function exportJSON() {
-    const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' })
-    download(blob, `infographie-${Date.now()}.json`)
-  }
-
-  function exportMarkdown() {
-    const md = [
-      `# ${title}`,
-      '',
-      subtitle,
-      '',
-      `Header: ${headerText}`,
-      '',
-      ...items.map((it) => `- **${it.label}**: ${it.value}`),
-      '',
-      `Footer: ${footerText}`,
-    ].join('\n')
-    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
-    download(blob, `infographie-${Date.now()}.md`)
-  }
-
-  function exportHTML() {
-    const cardHtml = items
-      .map(
-        (it) =>
-          `<article style="border:1px solid ${it.color}66;border-radius:12px;padding:12px;background:${it.color}1A"><h3 style="margin:0 0 8px;color:${it.color}">${escapeHtml(it.label)}</h3><p style="margin:0;color:#dbe7f4">${escapeHtml(it.value)}</p></article>`,
-      )
-      .join('')
-    const html = `<!doctype html><html><head><meta charset="utf-8"/><title>${escapeHtml(title)}</title></head><body style="background:#070b0f;color:#f0f2f5;font-family:Arial,sans-serif;padding:20px"><header style="margin-bottom:14px;color:#9fb0c4">${escapeHtml(headerText)}</header><h1>${escapeHtml(title)}</h1><p style="color:#9fb0c4">${escapeHtml(subtitle)}</p><section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px">${cardHtml}</section><footer style="margin-top:18px;color:#8b95a5;font-size:12px">${escapeHtml(footerText)}</footer></body></html>`
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    download(blob, `infographie-${Date.now()}.html`)
-  }
-
-  function importJSON(e) {
-    const f = e.target.files?.[0]
-    if (!f) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const payload = JSON.parse(String(reader.result || '{}'))
-        setTitle(payload.title || '')
-        setSubtitle(payload.subtitle || '')
-        setLogoUrl(payload.logoUrl || '')
-        setHeaderText(payload.headerText || '')
-        setFooterText(payload.footerText || '')
-        setItems(Array.isArray(payload.items) && payload.items.length ? payload.items : [])
-        if (payload.formatId && CANVAS_FORMATS.some((x) => x.id === payload.formatId)) setFormatId(payload.formatId)
-        if (payload.themeKey && VISUAL_THEMES[payload.themeKey]) setThemeKey(payload.themeKey)
-      } catch {
-        // no-op
-      }
+  function add(t,ex={}){
+    const d={text:{x:40,y:40,w:300,h:60,content:'Texte',s:{fontSize:24,color:theme.text,fontFamily:'Outfit, sans-serif',textAlign:'left'},z:els.length+1,r:0},
+      rect:{x:40,y:40,w:200,h:120,content:'',s:{fill:theme.accent,opacity:0.2,borderRadius:12},z:els.length+1,r:0},
+      circle:{x:40,y:40,w:120,h:120,content:'',s:{fill:theme.accent,opacity:0.2},z:els.length+1,r:0},
+      line:{x:40,y:fmt.h/2,w:fmt.w-80,h:4,content:'',s:{fill:theme.accent,opacity:1},z:els.length+1,r:0},
+      arrow:{x:40,y:fmt.h/2,w:200,h:6,content:'',s:{fill:theme.accent,opacity:1},z:els.length+1,r:0},
+      star:{x:40,y:40,w:100,h:100,content:'',s:{fill:theme.accent,opacity:0.3},z:els.length+1,r:0},
+      icon:{x:40,y:40,w:80,h:80,content:'🚀',s:{fontSize:48,color:theme.accent,textAlign:'center'},z:els.length+1,r:0},
+      image:{x:40,y:40,w:240,h:160,content:'',s:{borderRadius:0,opacity:1},z:els.length+1,r:0},
+      progress:{x:40,y:40,w:300,h:28,content:'65',s:{fill:theme.accent,bg:'rgba(255,255,255,0.1)',borderRadius:14},z:els.length+1,r:0},
+      badge:{x:40,y:40,w:160,h:36,content:'BADGE',s:{fill:theme.accent,color:'#fff',fontSize:14,borderRadius:100},z:els.length+1,r:0},
+      qr:{x:40,y:40,w:120,h:120,content:'https://abawi.app',s:{bg:'#fff',borderRadius:8,padding:6},z:els.length+1,r:0},
+      pie:{x:40,y:40,w:180,h:180,content:'30,45,25',s:{colors:['#22d3ee','#3b82f6','#a855f7']},z:els.length+1,r:0},
+      bar:{x:40,y:40,w:260,h:180,content:'45,70,30,90',s:{colors:['#22d3ee','#3b82f6','#a855f7','#34d399']},z:els.length+1,r:0},
     }
-    reader.readAsText(f)
+    const el={id:uid(),t,...d[t],...ex}; upd(p=>[...p,el]); setSelId(el.id)
+  }
+  function del(){if(!selId)return;upd(p=>p.filter(e=>e.id!==selId));setSelId(null)}
+  function dup(){const e=s();if(!e)return;const c={...e,id:uid(),x:e.x+20,y:e.y+20,z:e.z+1};upd(p=>[...p,c]);setSelId(c.id)}
+  function front(){const e=s();if(!e)return;const m=Math.max(...els.map(z=>z.z));upd(p=>p.map(x=>x.id===e.id?{...x,z:m+1}:x))}
+  function back(){const e=s();if(!e)return;const m=Math.min(...els.map(z=>z.z));upd(p=>p.map(x=>x.id===e.id?{...x,z:m-1}:x))}
+
+  function onDown(ev,id,act='move'){ev.stopPropagation();setSelId(id);const el=els.find(x=>x.id===id);if(!el)return;const rect=cv.current.getBoundingClientRect();const sx=(ev.clientX-rect.left)/ds,sy=(ev.clientY-rect.top)/ds;dg.current={id,act,sx,sy,orig:el,rect};window.addEventListener('mousemove',onMove);window.addEventListener('mouseup',onUp)}
+  const onMove=useCallback((e)=>{if(!dg.current)return;const {id,act,sx,sy,orig,rect}=dg.current;const mx=(e.clientX-rect.left)/ds,my=(e.clientY-rect.top)/ds;const dx=mx-sx,dy=my-sy;upd(p=>p.map(el=>{if(el.id!==id)return el;if(act==='move'){let nx=orig.x+dx,ny=orig.y+dy;if(snapTo){nx=snap(nx,gSize);ny=snap(ny,gSize)}return{...el,x:clamp(nx,0,fmt.w-el.w),y:clamp(ny,0,fmt.h-el.h)}}if(act==='resize'){let nw=orig.w+dx,nh=orig.h+dy;if(snapTo){nw=snap(nw,gSize);nh=snap(nh,gSize)}return{...el,w:Math.max(20,nw),h:Math.max(20,nh)}}return el}))},[ds,fmt,gSize,snapTo])
+  const onUp=useCallback(()=>{dg.current=null;window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp)},[onMove])
+  function onClickCanvas(e){if(e.target===cv.current||e.target.dataset.bg)setSelId(null)}
+  function patch(v){if(!selId)return;upd(p=>p.map(e=>e.id===selId?{...e,...v}:e))}
+  function patchS(v){if(!selId)return;upd(p=>p.map(e=>e.id===selId?{...e,s:{...e.s,...v}}:e))}
+  function addImg(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>add('image',{content:r.result,w:280,h:180});r.readAsDataURL(f)}
+  function replaceImg(e){const f=e.target.files?.[0];if(!f||!selId)return;const el=s();if(!el||el.t!=='image')return;const r=new FileReader();r.onload=()=>patch({content:r.result});r.readAsDataURL(f)}
+
+  async function doExport(type){
+    if(!tool.allowed){setShowPayment(true);return}
+    setExp(type)
+    try{if(type==='svg'){exportSVG();setExp('');if(!tool.unlimited){const r=await tool.debit();if(!r.ok)setShowPayment(true)}return}
+      const {default:html2canvas}=await import('html2canvas')
+      const c=await html2canvas(cv.current,{scale:type==='pdf'?2:3,useCORS:true,allowTaint:true,backgroundColor:null,logging:false})
+      if(type==='png')c.toBlob(b=>b&&dl(b,`infographie-${Date.now()}.png`),'image/png',0.96)
+      if(type==='jpeg')c.toBlob(b=>b&&dl(b,`infographie-${Date.now()}.jpg`),'image/jpeg',0.93)
+      if(type==='webp')c.toBlob(b=>b&&dl(b,`infographie-${Date.now()}.webp`),'image/webp',0.9)
+      if(type==='pdf'){const {default:jsPDF}=await import('jspdf');const pdf=new jsPDF({orientation:fmt.w>fmt.h?'l':'p',unit:'px',format:[fmt.w,fmt.h]});pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,fmt.w,fmt.h);pdf.save(`infographie-${Date.now()}.pdf`)}
+      if(!tool.unlimited){const r=await tool.debit();if(!r.ok)setShowPayment(true)}
+    }catch(err){setAiErr('Export échoué : '+err.message)}
+    setExp('')
+  }
+  function exportSVG(){
+    const shapes=els.map(el=>{const s=el.s||{};const rot=`rotate(${el.r||0},${el.x+el.w/2},${el.y+el.h/2})`
+      if(el.t==='text')return`<text x="${el.x+el.w/2}" y="${el.y+el.h/2}" font-family="${s.fontFamily||'Outfit'}" font-size="${s.fontSize||24}" fill="${s.color||'#fff'}" text-anchor="middle" dominant-baseline="middle" transform="${rot}">${esc(el.content)}</text>`
+      if(el.t==='rect')return`<rect x="${el.x}" y="${el.y}" width="${el.w}" height="${el.h}" rx="${s.borderRadius||0}" fill="${s.fill||'#3b82f6'}" opacity="${s.opacity??1}" stroke="${s.borderColor||'none'}" stroke-width="${s.borderWidth||0}" transform="${rot}"/>`
+      if(el.t==='circle')return`<ellipse cx="${el.x+el.w/2}" cy="${el.y+el.h/2}" rx="${el.w/2}" ry="${el.h/2}" fill="${s.fill||'#3b82f6'}" opacity="${s.opacity??1}" transform="${rot}"/>`
+      if(el.t==='line')return`<line x1="${el.x}" y1="${el.y+el.h/2}" x2="${el.x+el.w}" y2="${el.y+el.h/2}" stroke="${s.fill||'#3b82f6'}" stroke-width="${el.h}" transform="${rot}"/>`
+      return ''}).join('')
+    const bg=theme.bg.startsWith('#')?theme.bg:'#0a0a0a'
+    dl(new Blob([`<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" width="${fmt.w}" height="${fmt.h}" viewBox="0 0 ${fmt.w} ${fmt.h}"><rect width="100%" height="100%" fill="${bg}"/>${shapes}</svg>`],{type:'image/svg+xml'}),`infographie-${Date.now()}.svg`)
   }
 
-  async function exportPNG() {
-    if (!tool.allowed) { setShowPayment(true); return }
-    if (!previewRef.current) return
-    setPngLoading(true)
-    setAiError('')
-    try {
-      const { default: html2canvas } = await import('html2canvas')
-      const canvas = await html2canvas(previewRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false,
-      })
-      await new Promise((resolve, reject) => {
-        canvas.toBlob(
-          async (blob) => {
-            if (blob) {
-              download(blob, `infographie-${fmt.w}x${fmt.h}-${Date.now()}.png`)
-              if (!tool.unlimited) {
-                const res = await tool.debit()
-                if (!res.ok) { setShowPayment(true) }
-              }
-              resolve()
-            } else reject(new Error('blob'))
-          },
-          'image/png',
-          0.95,
-        )
-      })
-    } catch {
-      setAiError("Export PNG échoué (souvent lié au logo distant sans CORS). Retirez l'URL du logo ou hébergez-le sur votre domaine.")
-    } finally {
-      setPngLoading(false)
+  async function genAI(){
+    if(!tool.allowed){setShowPayment(true);return}
+    if(!aiBrief.trim())return
+    setAiLoad(true);setAiErr('')
+    try{
+      const prompt=`Designer UI senior. Crée un layout infographie pour : "${aiBrief}". Format ${fmt.w}×${fmt.h}. Thème ${theme.name}. Retourne UNIQUEMENT JSON strict sans markdown : {"elements":[{"t":"text|rect|circle|icon|progress|badge","x":num,"y":num,"w":num,"h":num,"content":"...","s":{"fontSize":num,"color":"#hex","fill":"#hex","opacity":0-1,"borderRadius":num},"z":num}]}`
+      const data=await groqChatCompletion({model:GROQ_MODEL,max_tokens:1800,temperature:0.35,messages:[{role:'user',content:prompt}]},GROQ_KEY)
+      const raw=cleanIAText(data?.choices?.[0]?.message?.content||'')
+      const json=JSON.parse(raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```$/i,'').trim())
+      const ne=(json.elements||[]).map((el,i)=>({...el,id:uid(),z:i+1,r:el.r||0}))
+      setEls(ne);push(ne);setSelId(null)
+      if(!tool.unlimited){const r=await tool.debit();if(!r.ok)setShowPayment(true)}
+    }catch(e){setAiErr(toUserFriendlyAIError(e,'Impossible de générer. Reformulez le brief.'))}
+    setAiLoad(false)
+  }
+
+  useEffect(()=>{function k(e){if(e.key==='Delete'||e.key==='Backspace'){if(!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName))del()}if((e.metaKey||e.ctrlKey)&&e.key==='d'){e.preventDefault();dup()}if((e.metaKey||e.ctrlKey)&&e.key==='z'){e.preventDefault();e.shiftKey?redo():undo()}}window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k)},[selId,els,hist,hIdx])
+
+  function renderEl(el){
+    const s=el.s||{};const b={position:'absolute',left:el.x,top:el.y,width:el.w,height:el.h,zIndex:el.z,transform:`rotate(${el.r||0}deg)`,cursor:'move',userSelect:'none'}
+    const sl=selId===el.id;const o={outline:sl?`2px dashed ${theme.accent}`:'none',outlineOffset:-1}
+    const mr=(e)=>onDown(e,el.id,'move');const hr=(e)=>onDown(e,el.id,'resize')
+    switch(el.t){
+      case 'text':return<div key={el.id} onMouseDown={mr} style={{...b,...o,display:'flex',alignItems:s.textAlign==='center'?'center':'flex-start',justifyContent:s.textAlign==='center'?'center':'flex-start',padding:8}}><span style={{fontSize:s.fontSize||24,fontWeight:s.fontWeight||600,color:s.color||theme.text,fontFamily:s.fontFamily||'Outfit, sans-serif',textAlign:s.textAlign||'left',lineHeight:1.3,textShadow:s.textShadow||'none',whiteSpace:'pre-wrap',wordWrap:'break-word',maxWidth:'100%'}}>{el.content}</span>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'rect':return<div key={el.id} onMouseDown={mr} style={{...b,...o,background:s.fill||theme.accent,opacity:s.opacity??0.2,borderRadius:s.borderRadius||0,border:`${s.borderWidth||0}px solid ${s.borderColor||'transparent'}`}}>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'circle':return<div key={el.id} onMouseDown={mr} style={{...b,...o,background:s.fill||theme.accent,opacity:s.opacity??0.2,borderRadius:'50%',border:`${s.borderWidth||0}px solid ${s.borderColor||'transparent'}`}}>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'line':return<div key={el.id} onMouseDown={mr} style={{...b,...o,background:s.fill||theme.accent,opacity:s.opacity??1,borderRadius:99}}>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'arrow':return<div key={el.id} onMouseDown={mr} style={{...b,...o,display:'flex',alignItems:'center'}}><div style={{flex:1,height:Math.max(2,el.h*0.5),background:s.fill||theme.accent,opacity:s.opacity??1}}/><div style={{width:0,height:0,borderTop:`${el.h}px solid transparent`,borderBottom:`${el.h}px solid transparent`,borderLeft:`${el.h*1.4}px solid ${s.fill||theme.accent}`,opacity:s.opacity??1}}/>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'star':return<div key={el.id} onMouseDown={mr} style={{...b,...o,display:'flex',alignItems:'center',justifyContent:'center'}}><svg width={el.w} height={el.h} viewBox="0 0 24 24" fill={s.fill||theme.accent} opacity={s.opacity??0.5}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'icon':return<div key={el.id} onMouseDown={mr} style={{...b,...o,display:'flex',alignItems:'center',justifyContent:'center',fontSize:s.fontSize||48}}><span style={{opacity:s.opacity??1}}>{el.content}</span>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'image':return<div key={el.id} onMouseDown={mr} style={{...b,...o,overflow:'hidden',borderRadius:s.borderRadius||0,opacity:s.opacity??1}}>{el.content?<img src={el.content} alt="" style={{width:'100%',height:'100%',objectFit:s.objectFit||'cover',pointerEvents:'none'}}/>:<div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text-muted)'}}>Image</div>}{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'progress':{const v=clamp(parseInt(el.content)||0,0,100);return<div key={el.id} onMouseDown={mr} style={{...b,...o,background:s.bg||'rgba(255,255,255,0.1)',borderRadius:s.borderRadius||14,overflow:'hidden',display:'flex',alignItems:'center'}}><div style={{width:`${v}%`,height:'100%',background:s.fill||theme.accent,borderRadius:s.borderRadius||14,transition:'width 0.4s ease'}}/><span style={{position:'absolute',right:10,fontSize:Math.max(10,el.h*0.5),fontWeight:700,color:'#fff'}}>{v}%</span>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>}
+      case 'badge':return<div key={el.id} onMouseDown={mr} style={{...b,...o,background:s.fill||theme.accent,borderRadius:s.borderRadius||100,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 14px'}}><span style={{color:s.color||'#fff',fontSize:s.fontSize||14,fontWeight:700,whiteSpace:'nowrap'}}>{el.content}</span>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'qr':return<div key={el.id} onMouseDown={mr} style={{...b,...o,background:s.bg||'#fff',borderRadius:s.borderRadius||8,padding:s.padding||6,display:'flex',alignItems:'center',justifyContent:'center'}}><img src={qrData(el.content||'https://abawi.app',Math.min(el.w,el.h)-12)} alt="QR" style={{width:'100%',height:'100%',imageRendering:'pixelated'}}/>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>
+      case 'pie':{const vals=(el.content||'').split(',').map(v=>parseFloat(v)||0);const sum=vals.reduce((a,b)=>a+b,0)||1;let start=0;return<div key={el.id} onMouseDown={mr} style={{...b,...o}}><svg width={el.w} height={el.h} viewBox="0 0 100 100">{vals.map((v,i)=>{const pct=v/sum;const end=start+pct*360;const d=arcPath(50,50,45,start,end);const c=(s.colors||[])[i%((s.colors||[]).length||1)]||theme.accent;start=end;return<path key={i} d={d} fill={c} stroke={theme.bg.startsWith('#')?theme.bg:'#0a0a0a'} strokeWidth="2"/>})}</svg>{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>}
+      case 'bar':{const vals=(el.content||'').split(',').map(v=>parseFloat(v)||0);const max=Math.max(...vals,1);return<div key={el.id} onMouseDown={mr} style={{...b,...o,display:'flex',alignItems:'flex-end',justifyContent:'space-around',padding:6,gap:4}}>{vals.map((v,i)=>{const h=(v/max)*100;const c=(s.colors||[])[i%((s.colors||[]).length||1)]||theme.accent;return<div key={i} style={{flex:1,height:`${h}%`,background:c,borderRadius:6,minWidth:8,position:'relative'}}><span style={{position:'absolute',top:-16,left:'50%',transform:'translateX(-50%)',fontSize:10,fontWeight:700,color:theme.text}}>{v}</span></div>})}{sl&&<div onMouseDown={hr} style={{position:'absolute',right:-6,bottom:-6,width:12,height:12,background:theme.accent,borderRadius:2,cursor:'se-resize',zIndex:10}}/>}</div>}
+      default:return null
     }
   }
+  function arcPath(cx,cy,r,startAngle,endAngle){const rad=deg=>deg*Math.PI/180;const x1=cx+r*Math.cos(rad(startAngle)),y1=cy+r*Math.sin(rad(startAngle)),x2=cx+r*Math.cos(rad(endAngle)),y2=cy+r*Math.sin(rad(endAngle));const largeArc=endAngle-startAngle<=180?0:1;return`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+  function renderGrid(){if(!grid)return null;const cols=Math.ceil(fmt.w/gSize),rows=Math.ceil(fmt.h/gSize);return<svg style={{position:'absolute',inset:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:0,opacity:0.12}}>{Array.from({length:cols+1}).map((_,i)=><line key={'v'+i} x1={i*gSize} y1={0} x2={i*gSize} y2={fmt.h} stroke={theme.muted} strokeWidth={0.5}/>)}{Array.from({length:rows+1}).map((_,i)=><line key={'h'+i} x1={0} y1={i*gSize} x2={fmt.w} y2={i*gSize} stroke={theme.muted} strokeWidth={0.5}/>)}</svg>}
 
-  async function generateWithAI() {
-    if (!tool.allowed) { setShowPayment(true); return }
-    setAiError('')
-    if (!aiBrief.trim()) return
-    setAiLoading(true)
-    try {
-      const prompt = `Crée une structure de contenu visuel professionnel type affiche / carrousel social.
-Mode: ${mode}
-Brief: ${aiBrief}
-Retourne UNIQUEMENT un JSON valide (sans markdown):
-{"title":"...","subtitle":"...","headerText":"...","footerText":"...","items":[{"label":"...","value":"...","color":"#RRGGBB"}]}]`
-      const data = await groqChatCompletion(
-        {
-          model: GROQ_MODEL,
-          max_tokens: 900,
-          temperature: 0.5,
-          messages: [{ role: 'user', content: prompt }],
-        },
-        GROQ_KEY,
-      )
-      const raw = cleanIAText(data?.choices?.[0]?.message?.content || '')
-      const json = JSON.parse(
-        String(raw)
-          .replace(/^```json\s*/i, '')
-          .replace(/^```\s*/i, '')
-          .replace(/```$/i, '')
-          .trim(),
-      )
-      setTitle(json.title || title)
-      setSubtitle(json.subtitle || subtitle)
-      setHeaderText(json.headerText || headerText)
-      setFooterText(json.footerText || footerText)
-      if (Array.isArray(json.items) && json.items.length) {
-        setItems(
-          json.items.map((it, idx) => ({
-            id: idx + 1,
-            label: it.label || `Bloc ${idx + 1}`,
-            value: it.value || '',
-            color: it.color || '#22D3EE',
-          })),
-        )
-      }
-      if (!tool.unlimited) {
-        const res = await tool.debit()
-        if (!res.ok) { setShowPayment(true) }
-      }
-    } catch (e) {
-      setAiError(toUserFriendlyAIError(e, 'Impossible de générer la structure. Vérifiez le brief ou réessayez.'))
-    } finally {
-      setAiLoading(false)
-    }
-  }
-
-  const scaledW = Math.round(fmt.w * displayScale)
-  const scaledH = Math.round(fmt.h * displayScale)
-
-  return (
-    <main style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 22px 80px' }}>
-      <SEO title="Infographie Pro — Créateur de visuels professionnels" description="Créez des infographies et visuels professionnels. Templates premium, export haute définition." image="/og-tools/infographie-pro.jpg" />
-      <style>{`
-        @media (max-width: 700px) {
-          .ip-workspace-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-        <TokenCounter />
-      </div>
-      <ToolInfoPanel
-        toolName="Infographie Pro IA"
-        icon="🎨"
-        description="Créez des visuels professionnels (posts, stories, banners) avec l'IA et exportez en PNG haute résolution"
-        benefits={[
-          'Générez le contenu de votre infographie en décrivant simplement votre sujet à l\'IA',
-          'Choisissez parmi 4 formats (carré, story 9:16, paysage, portrait) prêts pour tous les réseaux',
-          'Appliquez des thèmes visuels professionnels (Abysse, Studio clair, Or prestige, Signal cyan)',
-          'Exportez en PNG HD directement depuis votre navigateur sans aucun logiciel',
-          'Ajoutez votre logo, en-tête et pied de page pour un rendu à votre image',
-        ]}
-        howToUse={[
-          'Choisissez votre format (post Instagram, story, banner LinkedIn…)',
-          'Sélectionnez un thème visuel qui correspond à votre charte graphique',
-          'Décrivez votre contenu dans le champ IA ou saisissez-le manuellement',
-          'Ajustez les éléments (titre, sous-titre, données, logo) via les champs',
-          'Cliquez sur « Export PNG » pour télécharger votre infographie',
-        ]}
-        tips={[
-          'Pour un résultat optimal, utilisez des phrases courtes et percutantes dans les titres',
-          'Le thème « Or prestige » est idéal pour les contenus luxe et événements haut de gamme',
-          'Combinez plusieurs exports pour créer une série cohérente de publications',
-        ]}
+  const e=s()
+  return(
+    <main style={{maxWidth:1400,margin:'0 auto',padding:'24px 18px 80px',fontFamily:'Outfit, sans-serif'}}>
+      <SEO title="Infographie Pro — Studio Visuel IA" description="Studio d'infographie avec calques, formes, charts, IA et exports HD." image="/og-tools/infographie-pro.jpg"/>
+      <style>{`@media(max-width:900px){.ip-grid{grid-template-columns:1fr!important}}`}</style>
+      <div style={{display:'flex',justifyContent:'flex-end',marginBottom:8}}><TokenCounter/></div>
+      <ToolInfoPanel toolName="Infographie Pro IA" icon="🎨" description="Studio visuel professionnel avec calques, formes, charts, alignement intelligent et génération IA. Export PNG, JPEG, SVG, PDF."
+        benefits={['Canvas interactif drag & drop + redimensionnement','14 formats sociaux & print','12 thèmes premium','13 types d\'éléments : textes, formes, icônes, images, charts, QR, badges','Génération IA de layouts complets','Export PNG HD, JPEG, SVG, PDF','Undo/Redo, grille, snap-to-grid, calques']}
+        howToUse={['Choisissez format et thème','Ajoutez éléments depuis la bibliothèque','Glissez-déposez et redimensionnez','Modifiez styles dans le panneau droit','Générez avec l\'IA puis affinez','Exportez en PNG HD / PDF']}
+        tips={['Ctrl+D dupliquer','Ctrl+Z undo / Ctrl+Shift+Z redo','Activez grille + snap pour alignements parfaits']}
       />
 
-      <section
-        style={{
-          border: '1px solid #1A2332',
-          borderRadius: 16,
-          padding: 16,
-          background: 'linear-gradient(135deg, rgba(56,189,248,0.12), rgba(2,6,23,0.9))',
-        }}
-      >
-        <div style={{ color: '#67E8F9', fontWeight: 800, fontSize: '0.76rem' }}>OUTILS ABAWI / INFOGRAPHIE PRO IA</div>
-        <h1 style={{ color: 'var(--text-primary)', marginTop: 10 }}>Infographie Pro IA</h1>
-        <p style={{ color: 'var(--text-muted)', maxWidth: 920 }}>
-          Aperçu « type Canva » avec formats fixes, thèmes, export PNG HD depuis le rendu, plus JSON / Markdown / HTML.
-          Pour un éditeur complet (calques, millions d’assets), il faudrait un moteur dédié (Polotno, Fabric, service
-          externe) — ici on vise des visuels pro rapides et exportables.
-        </p>
-      </section>
+      {/* Toolbar */}
+      <div style={{display:'flex',flexWrap:'wrap',gap:10,alignItems:'center',marginTop:20,marginBottom:14,padding:'12px 14px',background:'var(--bg-card)',borderRadius:14,border:'1px solid var(--border)'}}>
+        <select value={formatId} onChange={ev=>setFormatId(ev.target.value)} style={ss}>{FORMATS.map(f=><option key={f.id} value={f.id}>{f.label}</option>)}</select>
+        <select value={themeKey} onChange={ev=>setThemeKey(ev.target.value)} style={ss}>{Object.entries(THEMES).map(([k,v])=><option key={k} value={k}>{v.name}</option>)}</select>
+        <button onClick={()=>setGrid(v=>!v)} style={tb(grid)}>Grille</button>
+        <button onClick={()=>setSnapTo(v=>!v)} style={tb(snapTo)}>Snap</button>
+        <button onClick={undo} style={tb(false)} disabled={hIdx<=0}>↩ Undo</button>
+        <button onClick={redo} style={tb(false)} disabled={hIdx>=hist.length-1}>↪ Redo</button>
+        <div style={{marginLeft:'auto',display:'flex',gap:8,flexWrap:'wrap'}}>
+          {['png','jpeg','webp','svg','pdf'].map(t=><button key={t} onClick={()=>doExport(t)} disabled={!!exp} style={tb(false)}>{exp===t?'…':t.toUpperCase()}</button>)}
+        </div>
+      </div>
 
-      <section className="ip-workspace-grid" style={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.15fr)', gap: 14 }}>
-        <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 14, background: 'var(--bg-card)' }}>
-          <Label text="Format canvas (export PNG)" />
-          <select value={formatId} onChange={(e) => setFormatId(e.target.value)} style={field}>
-            {CANVAS_FORMATS.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-          <Label text="Thème visuel" />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
-            {Object.entries(VISUAL_THEMES).map(([k, v]) => (
-              <button key={k} type="button" onClick={() => setThemeKey(k)} style={btn(themeKey === k ? '#2563EB' : '#334155')}>
-                {v.name}
-              </button>
-            ))}
-          </div>
-          <Label text="Mode créatif" />
-          <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-            {['infographie', 'slides', 'animation'].map((m) => (
-              <button key={m} type="button" onClick={() => setMode(m)} style={btn(mode === m ? '#2563EB' : '#334155')}>
-                {m}
-              </button>
-            ))}
-          </div>
-          <Label text="Brief IA" />
-          <textarea
-            value={aiBrief}
-            onChange={(e) => setAiBrief(e.target.value)}
-            style={{ ...field, minHeight: 70, resize: 'vertical' }}
-            placeholder="Ex: campagne premium fintech Afrique, ton sobre, 4 piliers clés..."
-          />
-          <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-            <button type="button" onClick={generateWithAI} disabled={aiLoading || !aiBrief.trim()} style={btn('#0EA5E9')}>
-              {aiLoading ? 'Génération...' : '✨ Générer avec IA'}
-            </button>
-          </div>
-          {aiError && (
-            <p style={{ color: '#fca5a5', fontSize: '0.85rem', marginTop: 10 }} role="alert">
-              {aiError}
-            </p>
-          )}
-          <Label text="Titre" />
-          <input value={title} onChange={(e) => setTitle(e.target.value)} style={field} />
-          <Label text="Sous-titre" />
-          <input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} style={field} />
-          <Label text="Logo (URL — même origine ou CORS pour PNG)" />
-          <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} style={field} placeholder="https://..." />
-          <Label text="Entête" />
-          <input value={headerText} onChange={(e) => setHeaderText(e.target.value)} style={field} />
-          <Label text="Pied de page" />
-          <input value={footerText} onChange={(e) => setFooterText(e.target.value)} style={field} />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-            <button type="button" onClick={addItem} style={btn('#3B82F6')}>
-              Ajouter un bloc
-            </button>
-            <button type="button" onClick={exportPNG} disabled={pngLoading} style={btn('#EC4899')}>
-              {pngLoading ? 'Export PNG…' : `📷 PNG ${fmt.w}×${fmt.h}`}
-            </button>
-            <button type="button" onClick={exportJSON} style={btn('#14B8A6')}>
-              JSON
-            </button>
-            <button type="button" onClick={exportMarkdown} style={btn('#8B5CF6')}>
-              Markdown
-            </button>
-            <button type="button" onClick={exportHTML} style={btn('#F59E0B')}>
-              HTML
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                download(
-                  new Blob([JSON.stringify({ mode, slides: items, meta: { title, subtitle, headerText, footerText, formatId, themeKey } }, null, 2)], {
-                    type: 'application/json',
-                  }),
-                  `infographie-deck-${Date.now()}.json`,
-                )
-              }
-              style={btn('#7C3AED')}
-            >
-              Deck JSON
-            </button>
-            <label style={{ ...btn('#334155'), display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-              Importer JSON
-              <input type="file" accept=".json,application/json" onChange={importJSON} style={{ display: 'none' }} />
-            </label>
-          </div>
+      {/* Workspace */}
+      <div className="ip-grid" style={{display:'grid',gridTemplateColumns:'200px 1fr 250px',gap:14}}>
+        {/* Library */}
+        <div style={{background:'var(--bg-card)',borderRadius:14,border:'1px solid var(--border)',padding:12,display:'flex',flexDirection:'column',gap:6}}>
+          <div style={{fontSize:'0.7rem',fontWeight:800,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase'}}>Bibliothèque</div>
+          {TYPES.map(t=><button key={t.t} onClick={()=>add(t.t)} style={lb}>{t.l}</button>)}
+          <label style={{...lb,cursor:'pointer'}}>Image locale <input type="file" accept="image/*" onChange={addImg} style={{display:'none'}}/></label>
         </div>
 
-        <div style={{ border: '1px solid var(--border)', borderRadius: 14, padding: 14, background: 'var(--bg-card)', maxHeight: 720, overflow: 'auto' }}>
-          {items.map((it) => (
-            <div key={it.id} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 10, marginBottom: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8 }}>
-                <input value={it.label} onChange={(e) => updateItem(it.id, 'label', e.target.value)} style={field} />
-                <input value={it.value} onChange={(e) => updateItem(it.id, 'value', e.target.value)} style={field} />
-                <input
-                  type="color"
-                  value={it.color}
-                  onChange={(e) => updateItem(it.id, 'color', e.target.value)}
-                  style={{ width: 44, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)' }}
-                />
-              </div>
-              <button type="button" onClick={() => removeItem(it.id)} style={{ ...btn('#DC2626'), marginTop: 8 }}>
-                Supprimer
-              </button>
+        {/* Canvas */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+          <div style={{color:'var(--text-secondary)',fontSize:'0.82rem'}}>Aperçu — export à {fmt.w}×{fmt.h}px</div>
+          <div style={{width:Math.round(fmt.w*ds),height:Math.round(fmt.h*ds),margin:'0 auto',overflow:'hidden',borderRadius:12,boxShadow:'0 12px 40px rgba(0,0,0,0.45)',border:'1px solid #1e293b'}}>
+            <div ref={cv} onClick={onClickCanvas} data-bg="1" style={{width:fmt.w,height:fmt.h,transform:`scale(${ds})`,transformOrigin:'top left',background:theme.bg,position:'relative',overflow:'hidden'}}>
+              {renderGrid()}
+              {els.map(el=>renderEl(el))}
             </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ marginTop: 18 }}>
-        <div style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginBottom: 10 }}>
-          Aperçu rendu (échelle {Math.round(displayScale * 100)} % — export PNG à {fmt.w}×{fmt.h} px)
-        </div>
-        <div
-          style={{
-            width: scaledW,
-            height: scaledH,
-            margin: '0 auto',
-            overflow: 'hidden',
-            borderRadius: 12,
-            boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
-            border: '1px solid #1e293b',
-          }}
-        >
-          <div
-            ref={previewRef}
-            style={{
-              width: fmt.w,
-              height: fmt.h,
-              transform: `scale(${displayScale})`,
-              transformOrigin: 'top left',
-              background: theme.pageBg,
-              padding: Math.round(fmt.w * 0.055),
-              boxSizing: 'border-box',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: fmt.h > fmt.w ? 14 : 10,
-            }}
-          >
-            <div style={{ color: theme.header, fontSize: Math.max(18, fmt.w * 0.022), fontWeight: 600 }}>{headerText}</div>
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt=""
-                aria-hidden="true"
-                crossOrigin="anonymous"
-                style={{ height: Math.max(36, fmt.h * 0.06), width: 'auto', objectFit: 'contain', alignSelf: 'flex-start' }}
-              />
-            ) : null}
-            <h2 style={{ color: theme.title, margin: 0, fontSize: Math.max(28, fmt.w * 0.05), lineHeight: 1.12 }}>{title}</h2>
-            <p style={{ color: theme.subtitle, margin: 0, fontSize: Math.max(16, fmt.w * 0.026), lineHeight: 1.35 }}>{subtitle}</p>
-            <div
-              style={{
-                flex: 1,
-                display: 'grid',
-                gridTemplateColumns: `repeat(${items.length > 4 ? 2 : Math.min(items.length || 1, 2)}, minmax(0, 1fr))`,
-                gap: Math.max(10, fmt.w * 0.018),
-                alignContent: 'start',
-              }}
-            >
-              {items.map((it) => (
-                <article
-                  key={`preview-${it.id}`}
-                  style={{
-                    border: `2px solid ${theme.cardBorder(it.color)}`,
-                    borderRadius: Math.max(12, fmt.w * 0.02),
-                    padding: Math.max(12, fmt.w * 0.022),
-                    background: theme.cardInner(it.color),
-                    animation: mode === 'animation' ? 'infographiePulse 2.4s ease-in-out infinite' : 'none',
-                  }}
-                >
-                  <h3 style={{ color: it.color, margin: '0 0 8px', fontSize: Math.max(15, fmt.w * 0.024) }}>{it.label}</h3>
-                  <p style={{ color: theme.body, margin: 0, fontSize: Math.max(13, fmt.w * 0.021), lineHeight: 1.4 }}>{it.value}</p>
-                </article>
-              ))}
-            </div>
-            <div style={{ color: theme.footer, fontSize: Math.max(12, fmt.w * 0.018), marginTop: 'auto' }}>{footerText}</div>
           </div>
         </div>
-        <style>{`@keyframes infographiePulse {0%{transform:translateY(0);opacity:.92}50%{transform:translateY(-3px);opacity:1}100%{transform:translateY(0);opacity:.92}}`}</style>
-        {mode === 'slides' && (
-          <div style={{ marginTop: 10, color: '#60A5FA', fontSize: '0.78rem' }}>Mode slides : chaque bloc peut servir de slide ; exportez le PNG pour une image unique ou le deck JSON.</div>
-        )}
-      </section>
+
+        {/* Properties */}
+        <div style={{background:'var(--bg-card)',borderRadius:14,border:'1px solid var(--border)',padding:12,display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{display:'flex',gap:4,borderBottom:'1px solid var(--border)',paddingBottom:8}}>
+            {['library','props','ai'].map(t=><button key={t} onClick={()=>setTab(t)} style={{...tb(tab===t),flex:1,padding:'6px 0',fontSize:'0.78rem'}}>{t==='library'?'Lib':t==='props'?'Props':'IA'}</button>)}
+          </div>
+
+          {tab==='library'&&<div style={{display:'flex',flexDirection:'column',gap:6}}>{TYPES.map(t=><button key={t.t} onClick={()=>add(t.t)} style={lb}>{t.l}</button>)}</div>}
+
+          {tab==='props'&&e&&<div style={{display:'flex',flexDirection:'column',gap:8}}>
+            <div style={ph}>Position & Taille</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              <input type="number" value={e.x} onChange={ev=>patch({x:parseInt(ev.target.value)||0})} style={inp} placeholder="X"/>
+              <input type="number" value={e.y} onChange={ev=>patch({y:parseInt(ev.target.value)||0})} style={inp} placeholder="Y"/>
+              <input type="number" value={e.w} onChange={ev=>patch({w:parseInt(ev.target.value)||20})} style={inp} placeholder="W"/>
+              <input type="number" value={e.h} onChange={ev=>patch({h:parseInt(ev.target.value)||20})} style={inp} placeholder="H"/>
+            </div>
+            <input type="range" min="-180" max="180" value={e.r||0} onChange={ev=>patch({r:parseInt(ev.target.value)})} style={{width:'100%'}}/>{e.r||0}°
+            <div style={ph}>Contenu</div>
+            {e.t==='text'&&<textarea value={e.content} onChange={ev=>patch({content:ev.target.value})} style={{...inp,minHeight:60,resize:'vertical'}}/>}
+            {(e.t==='icon'||e.t==='badge'||e.t==='progress'||e.t==='qr'||e.t==='pie'||e.t==='bar')&&<input value={e.content} onChange={ev=>patch({content:ev.target.value})} style={inp}/>}
+            {e.t==='image'&&<><input value={e.content} onChange={ev=>patchS({content:ev.target.value})} style={inp} placeholder="URL image"/><label style={{...lb,cursor:'pointer'}}>Remplacer <input type="file" accept="image/*" onChange={replaceImg} style={{display:'none'}}/></label></>}
+            <div style={ph}>Style</div>
+            {e.s?.fontSize!==undefined&&<><label style={pl}>Taille police</label><input type="number" value={e.s.fontSize} onChange={ev=>patchS({fontSize:parseInt(ev.target.value)||12})} style={inp}/></>}
+            {e.s?.fontWeight!==undefined&&<><label style={pl}>Graisse</label><select value={e.s.fontWeight} onChange={ev=>patchS({fontWeight:parseInt(ev.target.value)})} style={ss}>{[300,400,500,600,700,800,900].map(w=><option key={w} value={w}>{w}</option>)}</select></>}
+            {e.s?.fontFamily!==undefined&&<><label style={pl}>Police</label><select value={e.s.fontFamily} onChange={ev=>patchS({fontFamily:ev.target.value})} style={ss}>{FONTS.map(f=><option key={f} value={f}>{f.split(',')[0]}</option>)}</select></>}
+            {e.s?.textAlign!==undefined&&<><label style={pl}>Alignement</label><select value={e.s.textAlign} onChange={ev=>patchS({textAlign:ev.target.value})} style={ss}>{['left','center','right'].map(a=><option key={a} value={a}>{a}</option>)}</select></>}
+            {e.s?.color!==undefined&&<><label style={pl}>Couleur texte</label><input type="color" value={e.s.color} onChange={ev=>patchS({color:ev.target.value})} style={{...inp,padding:2,height:32}}/></>}
+            {e.s?.fill!==undefined&&<><label style={pl}>Remplissage</label><input type="color" value={e.s.fill} onChange={ev=>patchS({fill:ev.target.value})} style={{...inp,padding:2,height:32}}/></>}
+            {e.s?.opacity!==undefined&&<><label style={pl}>Opacité {e.s.opacity}</label><input type="range" min="0" max="1" step="0.05" value={e.s.opacity} onChange={ev=>patchS({opacity:parseFloat(ev.target.value)})} style={{width:'100%'}}/></>}
+            {e.s?.borderRadius!==undefined&&<><label style={pl}>Arrondi</label><input type="number" value={e.s.borderRadius} onChange={ev=>patchS({borderRadius:parseInt(ev.target.value)||0})} style={inp}/></>}
+            {e.s?.borderWidth!==undefined&&<><label style={pl}>Bordure px</label><input type="number" value={e.s.borderWidth} onChange={ev=>patchS({borderWidth:parseInt(ev.target.value)||0})} style={inp}/></>}
+            {e.s?.borderColor!==undefined&&<><label style={pl}>Couleur bordure</label><input type="color" value={e.s.borderColor} onChange={ev=>patchS({borderColor:ev.target.value})} style={{...inp,padding:2,height:32}}/></>}
+            {e.s?.textShadow!==undefined&&<><label style={pl}>Ombre texte</label><input value={e.s.textShadow} onChange={ev=>patchS({textShadow:ev.target.value})} style={inp} placeholder="0 2px 4px rgba(0,0,0,0.3)"/></>}
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:6}}>
+              <button onClick={dup} style={tb(false)}>Dupliquer</button>
+              <button onClick={front} style={tb(false)}>Avancer</button>
+              <button onClick={back} style={tb(false)}>Reculer</button>
+              <button onClick={del} style={{...tb(false),background:'#ef4444'}}>Supprimer</button>
+            </div>
+          </div>}
+
+          {tab==='props'&&!e&&<div style={{color:'var(--text-muted)',fontSize:'0.85rem',textAlign:'center',padding:20}}>Sélectionnez un élément pour modifier ses propriétés</div>}
+
+          {tab==='ai'&&<div style={{display:'flex',flexDirection:'column',gap:10}}>
+            <div style={ph}>IA — Génération layout</div>
+            <textarea value={aiBrief} onChange={ev=>setAiBrief(ev.target.value)} style={{...inp,minHeight:80,resize:'vertical'}} placeholder="Décrivez votre visuel : campagne fintech Afrique, ton sobre, 4 piliers..."/>
+            <button onClick={genAI} disabled={aiLoad} style={{...tb(false),width:'100%',padding:10}}>{aiLoad?'Génération…':'✨ Générer avec IA'}</button>
+            {aiErr&&<div style={{color:'#fca5a5',fontSize:'0.82rem'}}>{aiErr}</div>}
+            <div style={{fontSize:'0.72rem',color:'var(--text-muted)',marginTop:4}}>L'IA génère un layout complet avec positions, tailles et couleurs.</div>
+          </div>}
+        </div>
+      </div>
     </main>
   )
 }
 
-function download(blob, filename) {
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(blob)
-  link.download = filename
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(link.href), 400)
-}
-
-function escapeHtml(value) {
-  return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
-
-function Label({ text }) {
-  return <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 8, marginBottom: 5 }}>{text}</label>
-}
-
-const field = { width: '100%', borderRadius: 9, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '9px 10px' }
-const btn = (color) => ({
-  borderRadius: 9,
-  border: 'none',
-  padding: '8px 10px',
-  color: '#fff',
-  background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-  fontWeight: 700,
-  cursor: 'pointer',
-})
+const ss={padding:'7px 10px',borderRadius:9,border:'1px solid var(--border)',background:'var(--bg-card)',color:'var(--text-primary)',fontSize:'0.82rem',fontFamily:'inherit'}
+const inp={width:'100%',padding:'7px 9px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-primary)',color:'var(--text-primary)',fontSize:'0.82rem',fontFamily:'inherit',boxSizing:'border-box'}
+const tb=(on)=>({padding:'6px 10px',borderRadius:8,border:'1px solid var(--border)',background:on?'rgba(59,130,246,0.15)':'var(--bg-card)',color:on?'#60a5fa':'var(--text-secondary)',fontWeight:700,fontSize:'0.78rem',cursor:'pointer',fontFamily:'inherit'})
+const lb={padding:'8px 10px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-primary)',color:'var(--text-secondary)',fontSize:'0.82rem',cursor:'pointer',textAlign:'left',fontFamily:'inherit'}
+const ph={fontSize:'0.72rem',fontWeight:800,color:'var(--text-muted)',letterSpacing:1,textTransform:'uppercase'}
+const pl={fontSize:'0.75rem',color:'var(--text-secondary)',marginBottom:2}

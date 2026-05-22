@@ -1,4 +1,5 @@
 import './Outils.css'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import ToolIcon from '../../components/ToolIcon'
 import SEO from '../../components/SEO'
@@ -7,6 +8,7 @@ import SectionReveal from '../../components/premium/SectionReveal'
 
 import { TOOLS_ESSENTIELS, TOOLS_ELITE, CREDIT_COSTS_DISPLAY, TOOL_ACCENT } from '../../data/tools'
 import EliteCard from '../../components/EliteCard'
+import ToolMockup from '../../components/ToolMockup'
 
 // Plans à mettre en avant (Starter / Pro / Elite)
 const PACKS_SPOTLIGHT = [
@@ -47,6 +49,58 @@ function ToolBadge({ tool }) {
   }
   // Fallback (ne devrait pas arriver)
   return <span className="outils-card-prix">{fmtFCFA(tool.prix)}</span>
+}
+
+function EssentielCard({ tool: t, t1, t2 }) {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <Link to={t.path} className="outils-card" style={{ '--t1': t1, '--t2': t2, display: 'flex', flexDirection: 'column' }}>
+      {t.mockup && (
+        <div style={{ pointerEvents: 'none', userSelect: 'none' }}>
+          <ToolMockup type={t.mockup} accent={t1} />
+        </div>
+      )}
+      <div className="outils-card__hd" style={{ paddingTop: t.mockup ? 12 : undefined }}>
+        <span className="outils-card-icon">
+          <ToolIcon name={t.iconKey} size={36} />
+        </span>
+        <div className="outils-card__hd-text">
+          <h3 className="outils-card-title">{t.title}</h3>
+          {t.badge && <span className="outils-card__badge">{t.badge}</span>}
+        </div>
+      </div>
+      <div className="outils-card__body" style={{ flex: 1 }}>
+        <p className="outils-card-desc">{t.desc}</p>
+        {t.features?.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={e => { e.preventDefault(); setExpanded(o => !o) }}
+              style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 600 }}
+            >
+              <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>{expanded ? '▲' : '▼'}</span>
+              {expanded ? 'Masquer' : 'En savoir plus'}
+            </button>
+            {expanded && (
+              <ul style={{ margin: '7px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}
+                  onClick={e => e.preventDefault()}
+              >
+                {t.features.map((f, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    <span style={{ color: t1, flexShrink: 0, marginTop: 2, fontSize: '0.55rem' }}>◆</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+        <div className="outils-card__footer" style={{ marginTop: 'auto', paddingTop: 8 }}>
+          <ToolBadge tool={t} />
+          <span className="outils-card-cta">Utiliser →</span>
+        </div>
+      </div>
+    </Link>
+  )
 }
 
 export default function Outils() {
@@ -110,24 +164,7 @@ export default function Outils() {
           {TOOLS_ESSENTIELS.map((t) => {
             const [t1, t2] = TOOL_ACCENT[t.id] ?? ['#334155', '#475569']
             return (
-              <Link key={t.id} to={t.path} className="outils-card" style={{ '--t1': t1, '--t2': t2 }}>
-                <div className="outils-card__hd">
-                  <span className="outils-card-icon">
-                    <ToolIcon name={t.iconKey} size={40} />
-                  </span>
-                  <div className="outils-card__hd-text">
-                    <h3 className="outils-card-title">{t.title}</h3>
-                    {t.badge && <span className="outils-card__badge">{t.badge}</span>}
-                  </div>
-                </div>
-                <div className="outils-card__body">
-                  <p className="outils-card-desc">{t.desc}</p>
-                  <div className="outils-card__footer">
-                    <ToolBadge tool={t} />
-                    <span className="outils-card-cta">Utiliser →</span>
-                  </div>
-                </div>
-              </Link>
+              <EssentielCard key={t.id} tool={t} t1={t1} t2={t2} />
             )
           })}
         </div>

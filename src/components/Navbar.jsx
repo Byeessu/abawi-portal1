@@ -316,6 +316,10 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Full-screen tools — hide navbar entirely so they get 100vh
+  const FULLSCREEN_TOOLS = ['/outils/studio-visuel-pro', '/outils/audio-studio']
+  if (FULLSCREEN_TOOLS.includes(pathname)) return null
+
   return (
     <>
       <div className="nav-shell">

@@ -22,6 +22,28 @@ function slugify(s) {
     .replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
 }
 
+// ── Supabase for store products ───────────────────────────────────────────────
+let storeProducts = []
+let abavieProducts = []
+
+try {
+  const { createClient } = await import('@supabase/supabase-js')
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
+  const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+    const [{ data: sp }, { data: ap }] = await Promise.all([
+      supabase.from('store_products').select('id,nom,updated_at').eq('actif', true).limit(300),
+      supabase.from('abavie_products').select('id,nom,updated_at').eq('actif', true).limit(300),
+    ])
+    storeProducts = sp || []
+    abavieProducts = ap || []
+    console.log(`📦 Store: ${storeProducts.length} produits tech, ${abavieProducts.length} produits santé`)
+  }
+} catch(e) {
+  console.warn('⚠ Supabase store fetch failed:', e.message?.slice(0,80))
+}
+
 let guides = [], allFascicules = [], podcasts = []
 
 try {
@@ -123,17 +145,39 @@ const podUrls = podcasts.map(p => urlEntry({ loc:`${BASE}/podcasts/${slugify(p.t
 fs.writeFileSync(path.join(DIST, 'sitemap-podcasts.xml'), urlsetOpen + podUrls.join('') + urlsetClose)
 console.log(`✓ sitemap-podcasts.xml — ${podcasts.length} podcasts`)
 
-// ── 5. sitemap.xml — index ────────────────────────────────────────────────────
+// ── 5. sitemap-store.xml ──────────────────────────────────────────────────────
+const storeUrls = storeProducts.map(p => urlEntry({
+  loc: `${BASE}/store/${p.id}`,
+  lastmod: (p.updated_at || TODAY).split('T')[0],
+  changefreq: 'weekly',
+  priority: '0.75',
+}))
+fs.writeFileSync(path.join(DIST, 'sitemap-store.xml'), urlsetOpen + storeUrls.join('') + urlsetClose)
+console.log(`✓ sitemap-store.xml — ${storeProducts.length} produits tech`)
+
+// ── 6. sitemap-abavie.xml ─────────────────────────────────────────────────────
+const abavieUrls = abavieProducts.map(p => urlEntry({
+  loc: `${BASE}/abavie/produit/${p.id}`,
+  lastmod: (p.updated_at || TODAY).split('T')[0],
+  changefreq: 'weekly',
+  priority: '0.75',
+}))
+fs.writeFileSync(path.join(DIST, 'sitemap-abavie.xml'), urlsetOpen + abavieUrls.join('') + urlsetClose)
+console.log(`✓ sitemap-abavie.xml — ${abavieProducts.length} produits santé`)
+
+// ── 7. sitemap.xml — index ────────────────────────────────────────────────────
 const sitemapIndex = indexOpen
   + smEntry(`${BASE}/sitemap-pages.xml`)
   + smEntry(`${BASE}/sitemap-digital.xml`)
   + smEntry(`${BASE}/sitemap-academy.xml`)
   + smEntry(`${BASE}/sitemap-podcasts.xml`)
+  + smEntry(`${BASE}/sitemap-store.xml`)
+  + smEntry(`${BASE}/sitemap-abavie.xml`)
   + smEntry(`${BASE}/.netlify/functions/sitemap-news`)
   + indexClose
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemapIndex)
 fs.writeFileSync(path.resolve('public/sitemap.xml'), sitemapIndex)
-console.log(`✓ sitemap.xml — index (5 sitemaps)`)
+console.log(`✓ sitemap.xml — index (7 sitemaps)`)
 
-const total = STATIC_PAGES.length + guides.length + allFascicules.length + podcasts.length
+const total = STATIC_PAGES.length + guides.length + allFascicules.length + podcasts.length + storeProducts.length + abavieProducts.length
 console.log(`\n✅ ${total} URLs statiques + articles Supabase dynamiques`)

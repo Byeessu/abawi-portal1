@@ -97,21 +97,15 @@ export function useToolGuard(toolKey, creditType) {
     // Récupérer config DB
     const cfg = await fetchQuotaConfig()
 
-    // Pas de config = illimité (juste crédits)
-    if (!cfg) {
-      setState({ allowed: true, loading: false, error: null, errorType: null, quota: null, cooldown: null, solde: access.solde || 0, cost, quotaConfig: null })
-      return
-    }
-
-    // Quota illimité (limit_count = 0)
-    if (cfg.limit_count === 0 && cfg.cooldown_min === 0) {
+    // Quota illimité explicite (limit_count = 0) ET pas de fallback hardcodé
+    if (cfg && cfg.limit_count === 0 && cfg.cooldown_min === 0) {
       setState({ allowed: true, loading: false, error: null, errorType: null, quota: null, cooldown: null, solde: access.solde || 0, cost: 0, quotaConfig: cfg })
       return
     }
 
-    // Vérifier cooldown
+    // Vérifier cooldown (DB uniquement)
     let cooldownInfo = null
-    if (cfg.cooldown_min > 0) {
+    if (cfg && cfg.cooldown_min > 0) {
       cooldownInfo = await checkCooldown(email, toolKey, cfg.cooldown_min)
       if (!cooldownInfo.ok) {
         setState({
@@ -129,7 +123,7 @@ export function useToolGuard(toolKey, creditType) {
       }
     }
 
-    // Vérifier quota
+    // Vérifier quota (DB ou fallback hardcodé DAILY_FREE_LIMITS)
     const quota = await checkQuota(email, toolKey, membre)
 
     if (!quota.ok) {
