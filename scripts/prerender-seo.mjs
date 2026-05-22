@@ -6,6 +6,7 @@
  * Usage: node scripts/prerender-seo.mjs
  * Les fichiers sont générés dans dist/
  */
+import 'dotenv/config'
 import fs from 'fs'
 import path from 'path'
 
