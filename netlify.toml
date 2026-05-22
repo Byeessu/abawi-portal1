@@ -305,6 +305,8 @@
   node_bundler = "esbuild"
   [functions.job-bot-scheduled]
     schedule = "0 */3 * * *"
+  [functions.job-notify-scheduled]
+    schedule = "*/30 * * * *"
   [functions.event-bot-scheduled]
     schedule = "0 */6 * * *"
 

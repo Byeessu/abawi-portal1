@@ -286,9 +286,28 @@ export default function RecruteMoiSN() {
     setSavedIds(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
   }
 
-  function addAlerte(alerte) {
-    setAlertes([{ id: newId('al'), ...alerte, date: new Date().toISOString() }, ...alertes]);
+  async function addAlerte(alerte) {
+    const newAlerte = { id: newId('al'), ...alerte, date: new Date().toISOString() };
+    setAlertes([newAlerte, ...alertes]);
     showNotif('Alerte emploi créée !');
+    // Persister dans Supabase pour que le bot puisse diffuser par email
+    if (alerte.email) {
+      try {
+        await supabase.from('rm_alertes').insert({
+          email: alerte.email,
+          prenom: membre?.prenom || '',
+          membre_id: membre?.id || null,
+          label: alerte.label,
+          secteur: alerte.secteur || 'Tous',
+          type_contrat: alerte.type || 'Tous',
+          ville: alerte.ville || 'Toutes',
+          keywords: alerte.keywords || '',
+          actif: true,
+        });
+      } catch (e) {
+        console.warn('[RecruteMoiSN] rm_alertes insert:', e.message);
+      }
+    }
   }
 
   const TABS = [
@@ -519,6 +538,7 @@ export default function RecruteMoiSN() {
             onDelete={id => setAlertes(alertes.filter(a => a.id !== id))}
             onAdd={addAlerte}
             onBack={() => setView('explorer')}
+            membre={membre}
           />
         )}
 
@@ -1093,13 +1113,13 @@ function SauvegardesView({ offres, savedIds, onToggleSave, onClick, onBack }) {
 }
 
 // ─── AlertesView ──────────────────────────────────────────────────────────────
-function AlertesView({ alertes, onDelete, onAdd, onBack }) {
-  const [form, setForm] = useState({ label: '', secteur: 'Tous', type: 'Tous', ville: 'Toutes', keywords: '' });
+function AlertesView({ alertes, onDelete, onAdd, onBack, membre }) {
+  const [form, setForm] = useState({ label: '', secteur: 'Tous', type: 'Tous', ville: 'Toutes', keywords: '', email: membre?.email || '' });
   function handleSubmit(e) {
     e.preventDefault();
     if (!form.label) { alert('Donnez un nom à l\'alerte.'); return; }
     onAdd(form);
-    setForm({ label: '', secteur: 'Tous', type: 'Tous', ville: 'Toutes', keywords: '' });
+    setForm({ label: '', secteur: 'Tous', type: 'Tous', ville: 'Toutes', keywords: '', email: membre?.email || '' });
   }
   return (
     <div className="rm-anim">
@@ -1116,6 +1136,10 @@ function AlertesView({ alertes, onDelete, onAdd, onBack }) {
             <select className="rm-select" value={form.ville} onChange={e => setForm(f => ({ ...f, ville: e.target.value }))}>{VILLES.map(v => <option key={v}>{v}</option>)}</select>
           </div>
           <input className="rm-input" placeholder="Mots-clés (ex: React, Python, Marketing Digital)" value={form.keywords} onChange={e => setForm(f => ({ ...f, keywords: e.target.value }))} />
+          <input className="rm-input" type="email" placeholder="📧 Email pour les notifications (recommandé)" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: -6 }}>
+            {form.email ? '✅ Vous recevrez les offres correspondantes par email' : '⚡ Sans email, les alertes restent locales à ce navigateur'}
+          </div>
           <button type="submit" className="rm-btn-blue" style={{ padding: '10px', alignSelf: 'flex-start' }}>🔔 Créer l'alerte</button>
         </form>
       </div>

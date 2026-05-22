@@ -7,8 +7,11 @@
  *   /sitemap-digital.xml   ← guides
  *   /sitemap-academy.xml   ← fascicules
  *   /sitemap-podcasts.xml  ← podcasts
+ *   /sitemap-store.xml     ← produits tech
+ *   /sitemap-abavie.xml    ← produits santé
  *   /.netlify/functions/sitemap-news ← articles Supabase (dynamique)
  */
+import 'dotenv/config'
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
