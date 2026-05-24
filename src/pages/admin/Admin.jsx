@@ -4288,21 +4288,38 @@ CREATE TABLE IF NOT EXISTS store_products (
   categorie TEXT DEFAULT 'Portables',
   description TEXT DEFAULT '',
   description_courte TEXT DEFAULT '',
+  description_longue TEXT DEFAULT '',
   prix INTEGER DEFAULT 0,
   prix_original INTEGER DEFAULT 0,
   image_url TEXT DEFAULT '',
   images TEXT[] DEFAULT '{}',
   specs TEXT[] DEFAULT '{}',
   specs_techniques JSONB DEFAULT '{}',
+  points_forts TEXT[] DEFAULT '{}',
+  cas_usage TEXT[] DEFAULT '{}',
+  meta_title TEXT DEFAULT '',
+  meta_description TEXT DEFAULT '',
+  seo_tags TEXT[] DEFAULT '{}',
   stock INTEGER DEFAULT 1,
   featured BOOLEAN DEFAULT false,
   actif BOOLEAN DEFAULT true,
+  enriched BOOLEAN DEFAULT false,
+  enriched_at TIMESTAMPTZ,
   marque TEXT DEFAULT '',
   modele TEXT DEFAULT '',
   garantie TEXT DEFAULT '12 mois',
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+-- Migration: add enrichment columns if table already exists
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS description_longue TEXT DEFAULT '';
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS points_forts TEXT[] DEFAULT '{}';
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS cas_usage TEXT[] DEFAULT '{}';
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS meta_title TEXT DEFAULT '';
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS meta_description TEXT DEFAULT '';
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS seo_tags TEXT[] DEFAULT '{}';
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS enriched BOOLEAN DEFAULT false;
+ALTER TABLE store_products ADD COLUMN IF NOT EXISTS enriched_at TIMESTAMPTZ;
 
 -- ── NEWS ─────────────────────────────────
 CREATE TABLE IF NOT EXISTS news (
