@@ -68,20 +68,21 @@ function extractTag(xml, tag) {
 }
 
 function stripHtml(raw) {
-  return raw
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    // Decode entities FIRST so encoded tags become real tags
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
-    // Remove <font> blocks entirely (Google News attribution noise)
-    .replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
-    // Extract anchor text, discard href
-    .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
-    // Strip all remaining tags
-    .replace(/<[^>]+>/g, ' ')
-    // Strip trailing "• Source Name" Google News pattern
-    .replace(/\s*•\s*[^•\n]{1,80}$/, '')
-    .replace(/\s+/g, ' ').trim()
+  if (!raw) return ''
+  let s = String(raw)
+  s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+  // Two passes: handles double-encoded HTML like &amp;lt;a href=...&amp;gt;
+  for (let pass = 0; pass < 2; pass++) {
+    s = s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    s = s.replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
+    s = s.replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+    s = s.replace(/<[^>]+>/g, ' ')
+  }
+  s = s.replace(/https?:\/\/\S+/g, '')
+  s = s.replace(/&[a-zA-Z0-9#]+;/g, ' ')
+  s = s.replace(/\s*•\s*[^•\n]{1,80}$/, '')
+  return s.replace(/\s+/g, ' ').trim()
 }
 
 function isUsableDesc(desc, title) {

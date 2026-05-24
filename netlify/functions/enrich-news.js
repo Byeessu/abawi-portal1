@@ -57,15 +57,19 @@ function isSleeping() {
 
 function stripHtml(raw) {
   if (!raw) return ''
-  return String(raw)
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
-    .replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
-    .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/https?:\/\/\S+/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+  let s = String(raw)
+  s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+  // Two passes: handles double-encoded HTML like &amp;lt;a href=...&amp;gt;
+  for (let pass = 0; pass < 2; pass++) {
+    s = s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    s = s.replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
+    s = s.replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+    s = s.replace(/<[^>]+>/g, ' ')
+  }
+  s = s.replace(/https?:\/\/\S+/g, '')
+  s = s.replace(/&[a-zA-Z0-9#]+;/g, ' ')
+  return s.replace(/\s+/g, ' ').trim()
 }
 
 function extractBdText(article) {

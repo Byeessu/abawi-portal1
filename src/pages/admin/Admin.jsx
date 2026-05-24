@@ -4186,10 +4186,10 @@ function StorePanel({ showToast }) {
 }
 
 // ─── Paramètres ───────────────────────────────────────────────────────────────
-const SQL_SCRIPT = `-- ═══════════════════════════════════════
--- ABAWI PORTAL — SETUP COMPLET SUPABASE
--- Exécuter dans Supabase Dashboard → SQL Editor
--- ═══════════════════════════════════════
+const SQL_SCRIPT = `-- ═══════════════════════════════════════════════════════════════
+-- ABAWI PORTAL — SETUP COMPLET SUPABASE (tables + bots + migrations)
+-- Exécuter une seule fois dans Supabase Dashboard → SQL Editor
+-- ═══════════════════════════════════════════════════════════════
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -4434,10 +4434,307 @@ BEGIN
   END LOOP;
 END $$;
 
--- ── VÉRIFICATION ─────────────────────────
+-- ── ARTICLES (auto-publish-news + enrich-news) ───────────────
+CREATE TABLE IF NOT EXISTS articles (
+  id BIGINT PRIMARY KEY,
+  s TEXT DEFAULT 'ma',
+  sc TEXT DEFAULT 'def',
+  pr BOOLEAN DEFAULT false,
+  tag TEXT DEFAULT 'ECONOMIE',
+  dt TEXT DEFAULT '',
+  tm TEXT DEFAULT '',
+  rt TEXT DEFAULT '3 min',
+  au TEXT DEFAULT 'ABAWI NEWS',
+  ti TEXT NOT NULL DEFAULT '',
+  su TEXT DEFAULT '',
+  bd TEXT DEFAULT '[]',
+  co TEXT DEFAULT '',
+  cover_url TEXT DEFAULT '',
+  enriched BOOLEAN DEFAULT false,
+  enriched_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS enriched BOOLEAN DEFAULT false;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS enriched_at TIMESTAMPTZ;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS cover_url TEXT DEFAULT '';
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+
+-- ── JOB OFFERS (job-bot + job-bot-scheduled) ─────────────────
+CREATE TABLE IF NOT EXISTS job_offers (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  title TEXT NOT NULL DEFAULT '',
+  description TEXT DEFAULT '',
+  company TEXT DEFAULT '',
+  location TEXT DEFAULT '',
+  contract_type TEXT DEFAULT '',
+  url TEXT DEFAULT '',
+  apply_url TEXT DEFAULT '',
+  contact_email TEXT DEFAULT '',
+  source TEXT DEFAULT 'job_bot',
+  source_id TEXT DEFAULT '',
+  summary TEXT DEFAULT '',
+  requirements TEXT[] DEFAULT '{}',
+  tags TEXT[] DEFAULT '{}',
+  secteur TEXT DEFAULT '',
+  niveau TEXT DEFAULT '',
+  salaire_indicatif TEXT DEFAULT '',
+  analyzed BOOLEAN DEFAULT false,
+  active BOOLEAN DEFAULT false,
+  notif_sent BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS summary TEXT DEFAULT '';
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS requirements TEXT[] DEFAULT '{}';
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS secteur TEXT DEFAULT '';
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS niveau TEXT DEFAULT '';
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS salaire_indicatif TEXT DEFAULT '';
+ALTER TABLE job_offers ADD COLUMN IF NOT EXISTS notif_sent BOOLEAN DEFAULT false;
+
+-- ── RM_OFFRES (RecruteMoiSN + job-bot-scheduled) ─────────────
+CREATE TABLE IF NOT EXISTS rm_offres (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  titre TEXT NOT NULL DEFAULT '',
+  description TEXT DEFAULT '',
+  entreprise TEXT DEFAULT '',
+  type_contrat TEXT DEFAULT '',
+  ville TEXT DEFAULT '',
+  secteur TEXT DEFAULT '',
+  niveau TEXT DEFAULT '',
+  salaire TEXT DEFAULT '',
+  source TEXT DEFAULT '',
+  source_id UUID,
+  lien_externe TEXT DEFAULT '',
+  contact_email TEXT DEFAULT '',
+  statut TEXT DEFAULT 'actif' CHECK (statut IN ('actif','inactif','archivé')),
+  notif_sent BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE rm_offres ADD COLUMN IF NOT EXISTS notif_sent BOOLEAN DEFAULT false;
+ALTER TABLE rm_offres ADD COLUMN IF NOT EXISTS source_id UUID;
+ALTER TABLE rm_offres ADD COLUMN IF NOT EXISTS lien_externe TEXT DEFAULT '';
+
+-- ── AI JOBS (logs bots) ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ai_jobs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  tool TEXT NOT NULL DEFAULT '',
+  job_type TEXT DEFAULT '',
+  payload JSONB DEFAULT '{}',
+  owner_email TEXT DEFAULT '',
+  status TEXT DEFAULT 'done',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── PUSH SUBSCRIPTIONS ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  endpoint TEXT UNIQUE NOT NULL,
+  keys JSONB DEFAULT '{}',
+  email TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── ADMIN MESSAGES ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS admin_messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  to_email TEXT NOT NULL,
+  subject TEXT DEFAULT '',
+  body TEXT DEFAULT '',
+  type TEXT DEFAULT 'info',
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SENTICKET ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS senticket_events (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  titre TEXT NOT NULL DEFAULT '',
+  description TEXT DEFAULT '',
+  categorie TEXT DEFAULT '',
+  ville TEXT DEFAULT '',
+  lieu TEXT DEFAULT '',
+  date DATE,
+  heure TEXT DEFAULT '',
+  cover_url TEXT DEFAULT '',
+  image TEXT DEFAULT '',
+  featured BOOLEAN DEFAULT false,
+  statut TEXT DEFAULT 'publié' CHECK (statut IN ('publié','brouillon','annulé')),
+  commission_rate NUMERIC DEFAULT 0.10,
+  organizer_id TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS senticket_tickets (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE CASCADE,
+  nom TEXT NOT NULL DEFAULT '',
+  prix INTEGER DEFAULT 0,
+  places INTEGER DEFAULT 100,
+  vendus INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS senticket_orders (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE SET NULL,
+  ticket_id UUID REFERENCES senticket_tickets(id) ON DELETE SET NULL,
+  user_id TEXT DEFAULT '',
+  acheteur JSONB DEFAULT '{}',
+  qty INTEGER DEFAULT 1,
+  prix_total INTEGER DEFAULT 0,
+  commission INTEGER DEFAULT 0,
+  discount INTEGER DEFAULT 0,
+  net_organisateur INTEGER DEFAULT 0,
+  payment_method TEXT DEFAULT '',
+  coupon_code TEXT DEFAULT '',
+  group_emails TEXT[] DEFAULT '{}',
+  statut TEXT DEFAULT 'pending' CHECK (statut IN ('pending','paid','failed','refunded')),
+  qr_data TEXT DEFAULT '',
+  scanned BOOLEAN DEFAULT false,
+  date_achat TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS senticket_favorites (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE CASCADE,
+  UNIQUE(user_id, event_id)
+);
+
+CREATE TABLE IF NOT EXISTS senticket_reviews (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL,
+  stars INTEGER DEFAULT 5 CHECK (stars BETWEEN 1 AND 5),
+  text TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS senticket_withdrawals (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE SET NULL,
+  organizer_id TEXT NOT NULL,
+  montant INTEGER DEFAULT 0,
+  methode TEXT DEFAULT '',
+  telephone TEXT DEFAULT '',
+  statut TEXT DEFAULT 'pending' CHECK (statut IN ('pending','done','rejected')),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS senticket_views (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  event_id UUID REFERENCES senticket_events(id) ON DELETE CASCADE,
+  ip_hash TEXT DEFAULT 'anon',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS senticket_bot_logs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  action TEXT DEFAULT '',
+  payload JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── RLS — tables bots ────────────────────────────────────────
+ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read articles" ON articles;
+DROP POLICY IF EXISTS "Admin all articles" ON articles;
+CREATE POLICY "Public read articles" ON articles FOR SELECT USING (pr = true);
+CREATE POLICY "Admin all articles" ON articles FOR ALL USING (true);
+
+ALTER TABLE job_offers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read jobs" ON job_offers;
+DROP POLICY IF EXISTS "Admin all jobs" ON job_offers;
+CREATE POLICY "Public read jobs" ON job_offers FOR SELECT USING (active = true);
+CREATE POLICY "Admin all jobs" ON job_offers FOR ALL USING (true);
+
+ALTER TABLE rm_offres ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read rm" ON rm_offres;
+DROP POLICY IF EXISTS "Admin all rm" ON rm_offres;
+CREATE POLICY "Public read rm" ON rm_offres FOR SELECT USING (statut = 'actif');
+CREATE POLICY "Admin all rm" ON rm_offres FOR ALL USING (true);
+
+ALTER TABLE ai_jobs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admin all ai_jobs" ON ai_jobs;
+CREATE POLICY "Admin all ai_jobs" ON ai_jobs FOR ALL USING (true);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admin all push" ON push_subscriptions;
+CREATE POLICY "Admin all push" ON push_subscriptions FOR ALL USING (true);
+
+ALTER TABLE admin_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admin all messages" ON admin_messages;
+CREATE POLICY "Admin all messages" ON admin_messages FOR ALL USING (true);
+
+ALTER TABLE senticket_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read senticket_events" ON senticket_events;
+DROP POLICY IF EXISTS "Admin all senticket_events" ON senticket_events;
+CREATE POLICY "Public read senticket_events" ON senticket_events FOR SELECT USING (statut = 'publié');
+CREATE POLICY "Admin all senticket_events" ON senticket_events FOR ALL USING (true);
+
+ALTER TABLE senticket_tickets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read senticket_tickets" ON senticket_tickets;
+DROP POLICY IF EXISTS "Admin all senticket_tickets" ON senticket_tickets;
+CREATE POLICY "Public read senticket_tickets" ON senticket_tickets FOR SELECT USING (true);
+CREATE POLICY "Admin all senticket_tickets" ON senticket_tickets FOR ALL USING (true);
+
+ALTER TABLE senticket_orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "User own senticket_orders" ON senticket_orders;
+DROP POLICY IF EXISTS "Admin all senticket_orders" ON senticket_orders;
+CREATE POLICY "User own senticket_orders" ON senticket_orders FOR SELECT USING (true);
+CREATE POLICY "Admin all senticket_orders" ON senticket_orders FOR ALL USING (true);
+
+ALTER TABLE senticket_favorites ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public senticket_favorites" ON senticket_favorites;
+CREATE POLICY "Public senticket_favorites" ON senticket_favorites FOR ALL USING (true);
+
+ALTER TABLE senticket_reviews ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public senticket_reviews" ON senticket_reviews;
+CREATE POLICY "Public senticket_reviews" ON senticket_reviews FOR ALL USING (true);
+
+ALTER TABLE senticket_withdrawals ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admin all senticket_withdrawals" ON senticket_withdrawals;
+CREATE POLICY "Admin all senticket_withdrawals" ON senticket_withdrawals FOR ALL USING (true);
+
+ALTER TABLE senticket_views ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public senticket_views" ON senticket_views;
+CREATE POLICY "Public senticket_views" ON senticket_views FOR ALL USING (true);
+
+ALTER TABLE senticket_bot_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admin all senticket_bot_logs" ON senticket_bot_logs;
+CREATE POLICY "Admin all senticket_bot_logs" ON senticket_bot_logs FOR ALL USING (true);
+
+-- ── FONCTION RPC (increment ticket sales) ────────────────────
+CREATE OR REPLACE FUNCTION increment_ticket_sales(ticket_id UUID, qty INTEGER)
+RETURNS void LANGUAGE plpgsql AS $$
+BEGIN
+  UPDATE senticket_tickets SET vendus = vendus + qty WHERE id = ticket_id;
+END;
+$$;
+
+-- ── RE-ENRICHISSEMENT (reset pour bots) ──────────────────────
+-- Pour forcer le re-enrichissement de tous les articles news :
+--   UPDATE articles SET enriched = false;
+-- Pour forcer le re-enrichissement de tous les produits store :
+--   UPDATE store_products SET enriched = false WHERE actif = true;
+-- Pour retraiter les offres emploi :
+--   UPDATE job_offers SET analyzed = false WHERE active = true;
+
+-- ── VÉRIFICATION ─────────────────────────────────────────────
 SELECT table_name FROM information_schema.tables WHERE table_schema='public'
-AND table_name IN ('membres','payments','guides','fascicules','podcasts_db','store_products','news','user_documents','site_content')
-ORDER BY table_name;
+AND table_name IN (
+  'membres','payments','guides','fascicules','podcasts_db',
+  'store_products','news','user_documents','site_content',
+  'articles','job_offers','rm_offres','ai_jobs',
+  'push_subscriptions','admin_messages',
+  'senticket_events','senticket_tickets','senticket_orders',
+  'senticket_favorites','senticket_reviews','senticket_withdrawals',
+  'senticket_views','senticket_bot_logs'
+) ORDER BY table_name;
 SELECT id, name, public FROM storage.buckets WHERE id IN ('covers','guides','podcasts','audio-summaries','images','store-images');`
 
 function ParametresPanel({ showToast }) {
