@@ -3,7 +3,7 @@ import { exportToPDF } from '../../lib/generatePDF';
 import { extractFilesText } from '../../lib/fileExtract';
 import { useBackgroundJob } from '../../hooks/useBackgroundJob';
 import { useDraftAutoSave } from '../../hooks/useDraftAutoSave';
-import { useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles } from '../../hooks/useThemedStyles';
 import { useToolAccess } from '../../hooks/useToolAccess'
 
 import { callGroq as groqCall } from '../../lib/groqClient'

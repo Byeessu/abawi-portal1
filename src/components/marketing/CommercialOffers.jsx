@@ -1,6 +1,6 @@
 import React from 'react';
 import './MarketingDesigns.css';
-import { useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles } from '../../hooks/useThemedStyles';
 
 const offers = [
   {

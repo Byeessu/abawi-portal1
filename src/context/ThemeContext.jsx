@@ -328,5 +328,6 @@ export function useTheme() {
 // eslint-disable-next-line react-refresh/only-export-components
 export const useThemeContext = useTheme
 
-// eslint-disable-next-line react-refresh/only-export-components
-export { useThemedStyles } from '../lib/theme';
+// Note: useThemedStyles is intentionally NOT re-exported here to avoid
+// the circular dependency ThemeContext → lib/theme → ThemeContext.
+// Import it directly: import { useThemedStyles } from '../hooks/useThemedStyles'

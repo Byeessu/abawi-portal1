@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { waLink } from '../data/products'
 import SEO from '../components/SEO'
+import ViewToggle, { useViewMode } from '../components/ViewToggle'
 import './Store.css'
 
 // ─── Category definitions ──────────────────────────────────────────────────
@@ -279,7 +280,7 @@ function Store() {
   const [activeCat, setActiveCat] = useState('Tous')
   const [query,     setQuery]     = useState('')
   const [sort,      setSort]      = useState('new')   // 'new' | 'prix_asc' | 'prix_desc' | 'name'
-  const [view,      setView]      = useState('grid')  // 'grid' | 'list'
+  const [viewMode, setViewMode] = useViewMode('store', 'medium')
 
   // ── Load products from Supabase ──────────────────────────────────────────
   const loadProducts = useCallback(async () => {
@@ -413,24 +414,7 @@ function Store() {
         </div>
 
         {/* View toggle */}
-        <div className="st-view-group">
-          <button
-            className={`st-view-btn${view === 'grid' ? ' active' : ''}`}
-            onClick={() => setView('grid')}
-            aria-label="Vue grille"
-            title="Vue grille"
-          >
-            ⊞
-          </button>
-          <button
-            className={`st-view-btn${view === 'list' ? ' active' : ''}`}
-            onClick={() => setView('list')}
-            aria-label="Vue liste"
-            title="Vue liste"
-          >
-            ☰
-          </button>
-        </div>
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
 
         {/* Sort */}
         <select
@@ -480,9 +464,9 @@ function Store() {
           <button className="st-retry-btn" onClick={loadProducts}>Réessayer</button>
         </div>
       ) : loading ? (
-        <div className={view === 'grid' ? 'st-grid' : 'st-list'}>
+        <div data-view={viewMode}><div className="st-grid">
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
-        </div>
+        </div></div>
       ) : displayed.length === 0 ? (
         <div className="st-empty">
           <div className="st-empty-icon">💻</div>
@@ -505,17 +489,7 @@ function Store() {
             </button>
           )}
         </div>
-      ) : view === 'grid' ? (
-        <div className="st-grid">
-          {displayed.map(p => (
-            <GridCard
-              key={p.id}
-              product={p}
-              onNavigate={() => navigate(`/store/${p.id}`)}
-            />
-          ))}
-        </div>
-      ) : (
+      ) : viewMode === 'list' ? (
         <div className="st-list">
           {displayed.map(p => (
             <ListCard
@@ -524,6 +498,18 @@ function Store() {
               onNavigate={() => navigate(`/store/${p.id}`)}
             />
           ))}
+        </div>
+      ) : (
+        <div data-view={viewMode}>
+          <div className="st-grid">
+            {displayed.map(p => (
+              <GridCard
+                key={p.id}
+                product={p}
+                onNavigate={() => navigate(`/store/${p.id}`)}
+              />
+            ))}
+          </div>
         </div>
       )}
 

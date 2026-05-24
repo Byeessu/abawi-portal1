@@ -23,8 +23,7 @@
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 400px);
   gap: clamp(32px, 5vw, 64px);
   align-items: center;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .ap-hero-eyebrow {
@@ -222,9 +221,7 @@
 .ap-quotes-grid,
 .ap-brands-grid,
 .ap-contact-grid {
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
 }
 
 .ap-section--dark {
@@ -239,9 +236,7 @@
 .ap-section--dark .ap-section-head,
 .ap-section--dark .ap-quotes-grid,
 .ap-section--dark .ap-effet-footer {
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
 }
 
 .ap-section--last {

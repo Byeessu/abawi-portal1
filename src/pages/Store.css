@@ -125,36 +125,6 @@
 .st-search-clear:hover {
   color: var(--text-primary);
 }
-.st-view-group {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md, 12px);
-  padding: 4px;
-}
-.st-view-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.15s;
-}
-.st-view-btn:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
-}
-.st-view-btn.active {
-  background: rgba(240, 180, 41, 0.12);
-  color: var(--gold, #F0B429);
-}
 .st-sort-select {
   background: var(--bg-card);
   border: 1px solid var(--border);

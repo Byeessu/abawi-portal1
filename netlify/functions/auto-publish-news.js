@@ -70,10 +70,26 @@ function extractTag(xml, tag) {
 function stripHtml(raw) {
   return raw
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/<[^>]+>/g, ' ')
+    // Decode entities FIRST so encoded tags become real tags
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    // Remove <font> blocks entirely (Google News attribution noise)
+    .replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
+    // Extract anchor text, discard href
+    .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+    // Strip all remaining tags
+    .replace(/<[^>]+>/g, ' ')
+    // Strip trailing "• Source Name" Google News pattern
+    .replace(/\s*•\s*[^•\n]{1,80}$/, '')
     .replace(/\s+/g, ' ').trim()
+}
+
+function isUsableDesc(desc, title) {
+  if (!desc || desc.length < 40) return false
+  // Reject if desc is essentially just the title echoed back
+  const d = desc.toLowerCase().slice(0, 60)
+  const t = (title || '').toLowerCase().slice(0, 60)
+  return !d.includes(t.slice(0, 30))
 }
 
 async function fetchRSS(source) {
@@ -93,7 +109,10 @@ async function fetchRSS(source) {
       const title = stripHtml(extractTag(block, 'title'))
       const desc  = stripHtml(extractTag(block, 'description'))
       const link  = stripHtml(extractTag(block, 'link') || extractTag(block, 'guid'))
-      if (title && title.length > 10) items.push({ title, desc, link, source: source.name })
+      const coverUrl = (block.match(/<media:content[^>]+url=["']([^"']+)["']/i) || [])[1]
+                    || (block.match(/<enclosure[^>]+url=["']([^"']+)["']/i) || [])[1]
+                    || ''
+      if (title && title.length > 10) items.push({ title, desc, link, coverUrl, source: source.name })
     }
     return items
   } catch {
@@ -168,16 +187,33 @@ async function rewriteWithGroq(item) {
   const key = process.env.VITE_GROQ_API_KEY || process.env.GROQ_API_KEY
   if (!key) return null
 
-  const prompt = `Tu es rédacteur en chef d'ABAWI NEWS, portail business premium africain.
-Réécris cet article en français professionnel adapté au contexte Afrique de l'Ouest.
-Donne des chiffres concrets (FCFA/USD), l'impact pour le Sénégal et la sous-région.
+  const hasContent = isUsableDesc(item.desc, item.title)
+  const contentBlock = hasContent
+    ? `Contenu disponible: ${item.desc.substring(0, 800)}`
+    : `[Aucun extrait disponible — génère un article complet et documenté à partir du titre et du contexte africain]`
+
+  const prompt = `Tu es le redacteur en chef d ABAWI NEWS, portail business premium specialise Afrique de l Ouest.
+
+MISSION: Redige un article journalistique complet et professionnel en francais de qualite.
+
+REGLES ABSOLUES:
+- Genere exactement 5 paragraphes substantiels de 80 a 120 mots chacun
+- Para 1: Accroche et faits cles avec chiffres concrets (montants FCFA/USD, pourcentages, dates)
+- Para 2: Acteurs cles et leurs roles (institutions, entreprises, gouvernements, dirigeants)
+- Para 3: Contexte et implications pour l Afrique de l Ouest (CEDEAO, UEMOA, BCEAO, marches regionaux)
+- Para 4: Enjeux economiques, geopolitiques et sociaux approfondis
+- Para 5: Perspectives et tendances a 12-24 mois, opportunites ou risques a surveiller
+- Sources fiables si pertinent: FMI, Banque Mondiale, BAD, BCEAO
+- JAMAIS de balises HTML ni URL dans le resultat
+- Caracteres autorises: lettres, chiffres et ponctuation simple (. , : ; - ! -)
+- PAS de: # * { } [ ] | ? \\ / _ \`
 
 Source: ${item.source}
 Titre: ${item.title}
-Contenu: ${item.desc?.substring(0, 800) || item.title}
+${contentBlock}
 
-Réponds UNIQUEMENT avec du JSON valide (pas de markdown, pas de \`\`\`):
-{"ti":"Titre accrocheur max 85 chars","su":"Résumé 150-200 chars","tag":"UN_TAG","bd":[{"t":"p","v":"Paragraphe 80-120 mots"},{"t":"p","v":"Paragraphe contexte africain 80-120 mots"},{"t":"p","v":"Impact et perspectives 60-100 mots"}]}
+Reponds UNIQUEMENT avec du JSON valide (pas de markdown, pas de backticks):
+{"ti":"Titre accrocheur 60-85 chars","su":"Resume 2 phrases 150-200 chars sans HTML","tag":"UN_TAG","bd":[{"t":"p","v":"Para 1 accroche et faits 80-120 mots"},{"t":"p","v":"Para 2 acteurs cles 80-120 mots"},{"t":"p","v":"Para 3 contexte Afrique 80-120 mots"},{"t":"p","v":"Para 4 enjeux approfondis 80-120 mots"},{"t":"p","v":"Para 5 perspectives 12-24 mois 80-120 mots"}]}
 
 Tags valides: ECONOMIE|DETTE & FINANCES|BRVM & MARCHES|ENERGIE|OR & MINES|BANQUE & CREDIT|COMMERCE|CHINE-AFRIQUE|GEOPOLITIQUE|TELECOM|IA & TECH|TECH & STARTUP|AUTOMOBILE|MATIERES PREMIERES|AGRICULTURE|POLITIQUE ECONOMIQUE`
 
@@ -188,10 +224,10 @@ Tags valides: ECONOMIE|DETTE & FINANCES|BRVM & MARCHES|ENERGIE|OR & MINES|BANQUE
       body: JSON.stringify({
         model: process.env.VITE_GROQ_MODEL || 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 900,
-        temperature: 0.7,
+        max_tokens: 2048,
+        temperature: 0.6,
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(25000),
     })
     if (!res.ok) return null
     const data = await res.json()
@@ -267,16 +303,18 @@ exports.handler = async function handler() {
 
     let rewritten = await rewriteWithGroq(item).catch(() => null)
 
-    // Fallback si l'IA échoue
+    // Fallback si l'IA échoue — n'utilise jamais item.desc s'il n'est pas exploitable
     if (!rewritten) {
-      const paras = (item.desc || item.title).split(/[.!?]\s+|\n\n/).filter(s => s.trim().length > 30)
+      const safeDesc = isUsableDesc(item.desc, item.title) ? item.desc : ''
+      const bodyText = safeDesc || item.title
+      const paras = bodyText.split(/[.!?]\s+|\n\n/).filter(s => s.trim().length > 30)
       rewritten = {
         ti: item.title,
-        su: (item.desc || item.title).substring(0, 200),
+        su: safeDesc ? safeDesc.substring(0, 200) : `Analyse de l'actualité économique africaine : ${item.title.substring(0, 120)}`,
         tag: guessTag(item.title),
         bd: paras.length >= 2
           ? [{ t: 'p', v: paras.slice(0, 3).join('. ') + '.' }]
-          : [{ t: 'p', v: item.desc || item.title }],
+          : [{ t: 'p', v: bodyText }],
       }
     }
 
@@ -296,6 +334,7 @@ exports.handler = async function handler() {
       ti: (rewritten.ti || item.title).substring(0, 200),
       su: (rewritten.su || item.desc || '').substring(0, 500),
       bd: JSON.stringify(rewritten.bd || [{ t: 'p', v: item.desc || item.title }]),
+      cover_url: item.coverUrl || null,
       created_at: now.toISOString(),
     }
 

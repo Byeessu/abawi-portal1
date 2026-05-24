@@ -344,9 +344,8 @@
 
 /* ─── Main Container ─── */
 .marketing-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  padding: 24px clamp(12px, 2vw, 24px);
 }
 
 /* ─── Header ─── */

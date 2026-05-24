@@ -9,6 +9,7 @@ import SectionReveal from '../../components/premium/SectionReveal'
 import { TOOLS_ESSENTIELS, TOOLS_ELITE, CREDIT_COSTS_DISPLAY, TOOL_ACCENT } from '../../data/tools'
 import EliteCard from '../../components/EliteCard'
 import ToolMockup from '../../components/ToolMockup'
+import ViewToggle, { useViewMode } from '../../components/ViewToggle'
 
 // Plans à mettre en avant (Starter / Pro / Elite)
 const PACKS_SPOTLIGHT = [
@@ -56,11 +57,11 @@ function EssentielCard({ tool: t, t1, t2 }) {
   return (
     <Link to={t.path} className="outils-card" style={{ '--t1': t1, '--t2': t2, display: 'flex', flexDirection: 'column' }}>
       {t.mockup && (
-        <div style={{ pointerEvents: 'none', userSelect: 'none' }}>
+        <div style={{ pointerEvents: 'none', userSelect: 'none', display: 'flex', justifyContent: 'center' }}>
           <ToolMockup type={t.mockup} accent={t1} />
         </div>
       )}
-      <div className="outils-card__hd" style={{ paddingTop: t.mockup ? 12 : undefined }}>
+      <div className="outils-card__hd">
         <span className="outils-card-icon">
           <ToolIcon name={t.iconKey} size={36} />
         </span>
@@ -104,6 +105,7 @@ function EssentielCard({ tool: t, t1, t2 }) {
 }
 
 export default function Outils() {
+  const [viewMode, setViewMode] = useViewMode('outils', 'medium')
   return (
     <main className="outils-page">
       <SEO
@@ -155,8 +157,13 @@ export default function Outils() {
         </SectionReveal>
       </section>
 
+      {/* ── Barre de contrôle ── */}
+      <div className="outils-controls">
+        <ViewToggle mode={viewMode} onChange={setViewMode} label="Affichage" />
+      </div>
+
       {/* ── Outils Essentiels ── */}
-      <section style={{ marginBottom: '3rem' }}>
+      <section style={{ marginBottom: '3rem' }} data-view={viewMode}>
         <SectionReveal as="h2" className="outils-section-title">
           <span>📄</span> Outils Essentiels
         </SectionReveal>
@@ -171,7 +178,7 @@ export default function Outils() {
       </section>
 
       {/* ── Outils Élite ── */}
-      <SectionReveal as="section" className="outils-elite-section" direction="up" distance={32}>
+      <SectionReveal as="section" className="outils-elite-section" direction="up" distance={32} data-view={viewMode}>
         <div className="outils-elite-section__header">
           <h2 className="outils-section-title outils-section-title--gold">
             <span>✨</span> Outils Élite — Analyse IA Avancée

@@ -183,6 +183,7 @@ function AnalyseCV() {
   const { themed } = useThemedStyles();
 
   const guard = useToolGuard('analyse_cv', 'analyse_cv')
+  const inputRef = useRef(null)
   const dropRef = useRef(null)
 
   function openFilePicker() {

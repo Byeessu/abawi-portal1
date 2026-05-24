@@ -615,9 +615,8 @@ html.light .stk-float__stats-bar,
 
 /* ── Layout ── */
 .stk-wrap {
-  max-width: min(1400px, 96vw);
-  margin: 0 auto;
-  padding: 28px 16px 100px;
+  width: 100%;
+  padding: 28px clamp(12px, 2vw, 24px) 100px;
 }
 
 /* ── Notification toast ── */

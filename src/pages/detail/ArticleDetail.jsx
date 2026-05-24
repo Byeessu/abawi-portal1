@@ -140,9 +140,14 @@ function escapeXml(value) {
 // Fonction de nettoyage complète pour les textes
 function fullCleanText(text) {
   if (!text) return ''
-  // Strip HTML tags and entities first
+  // Decode HTML entities first, THEN strip tags (order matters for &lt;a href...&gt; patterns)
   let cleaned = String(text)
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
+    .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
     .replace(/<[^>]+>/g, ' ')
+    .replace(/https?:\/\/\S+/g, '')
     .replace(/&[a-zA-Z]{1,8};|&#\d+;|&#x[\da-fA-F]+;/gi, ' ')
   cleaned = stripJsonArtifacts(cleaned)
     .replace(/[\u2800-\u28FF]/g, '')
@@ -234,6 +239,18 @@ function ArticleDetail() {
   const [similar, setSimilar] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [readProgress, setReadProgress] = useState(0)
+
+  useEffect(() => {
+    function onScroll() {
+      const el = document.documentElement
+      const scrolled = el.scrollTop || document.body.scrollTop
+      const total = el.scrollHeight - el.clientHeight
+      setReadProgress(total > 0 ? Math.min(100, Math.round((scrolled / total) * 100)) : 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -320,34 +337,46 @@ function ArticleDetail() {
   const safeSubtitle = fullCleanText(article?.su)
   const safeArticle = { ...article, ti: safeTitle, su: safeSubtitle }
 
-  // Parse content — handle both HTML and JSON blocks
+  // Parse content — handle HTML, JSON blocks, or legacy plain body field
   let htmlContent = ''
   if (article.co) {
-    // If it's HTML content (from the new editor)
     if (article.co.includes('<') || article.co.includes('&')) {
       htmlContent = sanitizeRenderedHtml(stripJsonArtifacts(article.co))
     } else {
       htmlContent = `<p>${escapeHtml(fullCleanText(article.co))}</p>`
     }
   } else if (article.bd) {
-    // Legacy JSON blocks
     let blocks = []
     try { blocks = typeof article.bd === 'string' ? JSON.parse(article.bd) : (article.bd || []) } catch { blocks = [] }
     htmlContent = blocks.map(block => {
-      if (block.t === 'p') return `<p>${escapeHtml(fullCleanText(block.v))}</p>`
+      const v = fullCleanText(block.v)
+      if (!v || v.length < 10) return ''
+      if (block.t === 'p') return `<p>${escapeHtml(v)}</p>`
       if (block.t === 'q') {
-        const main = escapeHtml(fullCleanText(block.v))
         const cite = block.sr ? `<cite>— ${escapeHtml(fullCleanText(block.sr))}</cite>` : ''
-        return `<blockquote>${main}${cite}</blockquote>`
+        return `<blockquote>${escapeHtml(v)}${cite}</blockquote>`
       }
-      if (block.t === 'v') return `<div class="article-highlight">${escapeHtml(fullCleanText(block.v))}</div>`
+      if (block.t === 'v') return `<div class="article-highlight">${escapeHtml(v)}</div>`
       if (block.t === 'd') {
-        const items = fullCleanText(block.v).split('|').map(s => s.trim()).filter(Boolean)
-        if (items.length < 2) return `<p>${escapeHtml(fullCleanText(block.v))}</p>`
+        const items = v.split('|').map(s => s.trim()).filter(Boolean)
+        if (items.length < 2) return `<p>${escapeHtml(v)}</p>`
         return `<div class="article-data">${items.map(it => `<span>${escapeHtml(it)}</span>`).join('')}</div>`
       }
-      return ''
+      return `<p>${escapeHtml(v)}</p>`
     }).join('')
+  } else if (article.body) {
+    // Backward compat: old enricher bot wrote plain text to `body` instead of `bd`
+    htmlContent = article.body.split(/\n\n+/)
+      .map(p => p.trim())
+      .filter(p => p.length > 20)
+      .map(p => `<p>${escapeHtml(fullCleanText(p))}</p>`)
+      .join('')
+    if (!htmlContent) htmlContent = `<p>${escapeHtml(fullCleanText(article.body))}</p>`
+  }
+
+  // Final fallback: show subtitle as readable content
+  if (!htmlContent && article.su) {
+    htmlContent = `<p>${escapeHtml(fullCleanText(article.su))}</p>`
   }
 
   htmlContent = sanitizeRenderedHtml(stripJsonArtifacts(htmlContent))
@@ -355,124 +384,189 @@ function ArticleDetail() {
   // Build excerpt from content
   const excerpt = article.su || (htmlContent ? htmlContent.replace(/<[^>]+>/g, '').slice(0, 160) : '')
 
+  // Estimate word count from content
+  const wordCount = htmlContent.replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length
+  const readTime = article.rt || (wordCount > 0 ? `${Math.max(2, Math.ceil(wordCount / 200))} min` : null)
+
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
+      {/* Reading progress bar */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999,
+        background: '#1A2332',
+      }}>
+        <div style={{
+          height: '100%', background: ts.bg,
+          width: `${readProgress}%`, transition: 'width 0.1s linear',
+        }} />
+      </div>
+
       <SEO
         title={`${safeTitle} — ABAWI News`}
         description={excerpt}
         keywords={`${article.tag}, actualité Afrique, business Afrique, ABAWI News`}
-        image={article.im || '/abawi-og-banner.jpg'}
+        image={article.cover_url || article.im || '/abawi-og-banner.jpg'}
         type="article"
       />
+
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '0 clamp(14px, 4vw, 24px) 80px' }}>
+
         {/* Breadcrumb */}
-        <div style={{ padding: '20px 0', fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: 8, alignItems: 'center' }}>
-          <Link to="/news" style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div style={{ padding: '24px 0 16px', fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: 8, alignItems: 'center' }}>
+          <Link to="/news" style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/>
             </svg>
             Actualités
           </Link>
-          <span>/</span>
-          <span style={{ color: ts.bg }}>{article.tag}</span>
+          <span style={{ opacity: 0.4 }}>/</span>
+          <span style={{ color: ts.bg, fontWeight: 600 }}>{article.tag}</span>
         </div>
 
-        {/* Article header */}
-        <div style={{
-          background: `linear-gradient(135deg, ${ts.bg}15, transparent)`,
-          border: `1px solid ${ts.bg}20`,
-          borderRadius: 20, padding: 'clamp(18px, 3vw, 32px)', marginBottom: 40,
-        }}>
+        {/* Cover image — full bleed, cinematic */}
+        <div style={{ position: 'relative', borderRadius: 20, overflow: 'hidden', marginBottom: 36, aspectRatio: '16/7' }}>
+          <img
+            src={makeDetailVisual(safeArticle)}
+            alt={safeTitle}
+            loading="eager"
+            decoding="async"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: `linear-gradient(to top, rgba(7,11,15,0.92) 0%, rgba(7,11,15,0.4) 50%, rgba(7,11,15,0.1) 100%)`,
+          }} />
+          {/* Category badge on image */}
           <span style={{
-            display: 'inline-block', padding: '4px 14px', borderRadius: 100,
+            position: 'absolute', top: 20, left: 20,
+            padding: '5px 16px', borderRadius: 100,
             background: ts.bg, color: ts.text,
-            fontSize: '0.72rem', fontWeight: 800, marginBottom: 16,
+            fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.5px',
           }}>{article.tag}</span>
-
-          <h1 style={{
-            fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', fontWeight: 900,
-            color: 'var(--text-primary)', lineHeight: 1.2, marginBottom: 16,
-          }}>{safeTitle}</h1>
-
-          {article.su && (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: article.dl ? 12 : 20 }}>{safeSubtitle}</p>
-          )}
-          {article.dl && (
-            <p style={{ color: 'var(--text-primary)', fontSize: '1.02rem', lineHeight: 1.75, marginBottom: 20, fontStyle: 'italic', borderLeft: `3px solid ${ts.bg}`, paddingLeft: 14, opacity: 0.9 }}>
-              {fullCleanText(article.dl)}
-            </p>
-          )}
-
-          <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Meta on image bottom */}
+          <div style={{
+            position: 'absolute', bottom: 20, left: 20, right: 20,
+            display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap',
+          }}>
             {(article.dt || article.created_at) && (
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                📅 {article.dt || new Date(article.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                {article.dt || new Date(article.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
               </span>
             )}
-            {article.rt && (
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>⏱ {article.rt} de lecture</span>
+            {readTime && (
+              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                {readTime} de lecture
+              </span>
             )}
             {article.au && (
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>✍️ {article.au}</span>
+              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.75)' }}>par {article.au}</span>
             )}
           </div>
         </div>
 
-        {/* Cover image */}
-        <img src={makeDetailVisual(safeArticle)} alt={safeTitle} width={800} height={420} loading="lazy" decoding="async" style={{
-          width: '100%', borderRadius: 16, marginBottom: 40,
-          maxHeight: 420, objectFit: 'cover', border: `1px solid ${ts.bg}30`,
-        }} />
+        {/* Article header */}
+        <div style={{ marginBottom: 36 }}>
+          <h1 style={{
+            fontSize: 'clamp(1.7rem, 4.5vw, 2.6rem)', fontWeight: 900,
+            color: 'var(--text-primary)', lineHeight: 1.15, marginBottom: 18,
+            letterSpacing: '-0.02em',
+          }}>{safeTitle}</h1>
+
+          {safeSubtitle && (
+            <p style={{
+              color: 'var(--text-secondary)', fontSize: '1.1rem', lineHeight: 1.65,
+              borderLeft: `4px solid ${ts.bg}`, paddingLeft: 18,
+              margin: '0 0 20px',
+            }}>{safeSubtitle}</p>
+          )}
+          {article.dl && (
+            <p style={{
+              color: 'var(--text-primary)', fontSize: '1rem', lineHeight: 1.75,
+              fontStyle: 'italic', opacity: 0.85,
+            }}>{fullCleanText(article.dl)}</p>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: `linear-gradient(to right, ${ts.bg}40, transparent)`, marginBottom: 36 }} />
 
         {/* Content */}
-        <div
-          className="article-content"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-          style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.9' }}
-        />
+        {htmlContent ? (
+          <div
+            className="article-content"
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            style={{ color: 'var(--text-secondary)', fontSize: '1.08rem', lineHeight: '1.95' }}
+          />
+        ) : (
+          <div style={{
+            textAlign: 'center', padding: '60px 20px',
+            color: 'var(--text-muted)', fontSize: '0.95rem',
+            border: `1px dashed ${ts.bg}30`, borderRadius: 16,
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: 12 }}>✍️</div>
+            <p style={{ margin: 0 }}>Contenu en cours d&apos;enrichissement par notre équipe éditoriale...</p>
+          </div>
+        )}
 
         <style>{`
-          .article-content h2 { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 32px 0 16px; }
-          .article-content h3 { font-size: 1.2rem; font-weight: 700; color: ${ts.bg}; margin: 24px 0 12px; }
-          .article-content p { margin-bottom: 20px; }
-          .article-content blockquote {
-            border-left: 4px solid ${ts.bg}; padding: 16px 24px;
-            background: ${ts.bg}0A; border-radius: 0 12px 12px 0;
-            margin: 24px 0; color: var(--text-primary); font-style: italic;
+          .article-content h2 { font-size: 1.45rem; font-weight: 800; color: var(--text-primary); margin: 36px 0 16px; border-left: 3px solid ${ts.bg}; padding-left: 14px; }
+          .article-content h3 { font-size: 1.15rem; font-weight: 700; color: ${ts.bg}; margin: 28px 0 12px; }
+          .article-content p { margin-bottom: 22px; }
+          .article-content p:first-child::first-letter {
+            font-size: 3.5em; font-weight: 900; float: left; line-height: 0.75;
+            margin: 4px 10px 0 0; color: ${ts.bg};
           }
-          .article-content blockquote cite { display: block; font-size: 0.82rem; color: var(--text-secondary); margin-top: 8px; font-style: normal; }
-          .article-content ul, .article-content ol { padding-left: 24px; margin-bottom: 20px; }
-          .article-content li { margin-bottom: 8px; color: var(--text-secondary); }
-          .article-content a { color: ${ts.bg}; text-decoration: underline; }
+          .article-content blockquote {
+            border-left: 4px solid ${ts.bg}; padding: 18px 24px;
+            background: ${ts.bg}0A; border-radius: 0 14px 14px 0;
+            margin: 28px 0; color: var(--text-primary); font-style: italic; font-size: 1.05rem;
+          }
+          .article-content blockquote cite { display: block; font-size: 0.82rem; color: var(--text-secondary); margin-top: 10px; font-style: normal; font-weight: 600; }
+          .article-content ul, .article-content ol { padding-left: 26px; margin-bottom: 22px; }
+          .article-content li { margin-bottom: 10px; color: var(--text-secondary); }
           .article-content strong { color: var(--text-primary); font-weight: 700; }
-          .article-content img { max-width: 100%; width: 100%; height: auto; border-radius: 12px; margin: 24px 0; display: block; object-fit: contain; }
+          .article-content img { max-width: 100%; width: 100%; height: auto; border-radius: 14px; margin: 28px 0; display: block; object-fit: contain; }
           .article-content .article-highlight {
-            background: ${ts.bg}10; border: 1px solid ${ts.bg}25;
-            border-radius: 12px; padding: 16px 20px; margin: 20px 0;
-            color: ${ts.bg}; font-weight: 600;
+            background: ${ts.bg}12; border: 1px solid ${ts.bg}30;
+            border-radius: 14px; padding: 18px 22px; margin: 24px 0;
+            color: ${ts.bg}; font-weight: 700; font-size: 1.05rem;
           }
           .article-content .article-data {
-            display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0;
-            padding: 14px 18px; background: ${ts.bg}08; border-radius: 12px;
+            display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0;
+            padding: 16px 20px; background: ${ts.bg}08; border-radius: 14px;
             border: 1px solid ${ts.bg}20;
           }
           .article-content .article-data span {
-            padding: 6px 14px; border-radius: 8px; background: ${ts.bg}15;
-            color: var(--text-primary); font-weight: 700; font-size: 0.9rem;
+            padding: 7px 16px; border-radius: 8px; background: ${ts.bg}18;
+            color: var(--text-primary); font-weight: 700; font-size: 0.88rem;
             border: 1px solid ${ts.bg}25;
+          }
+          @media (max-width: 600px) {
+            .article-content p:first-child::first-letter { font-size: 2.8em; }
           }
         `}</style>
 
-        {/* Share */}
-        <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid #1A2332' }}>
+        {/* Divider before share */}
+        <div style={{ height: 1, background: '#1A2332', margin: '48px 0 36px' }} />
+
+        {/* Tags + Share */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+          <span style={{
+            padding: '6px 18px', borderRadius: 100,
+            background: `${ts.bg}18`, color: ts.bg,
+            fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.5px',
+            border: `1px solid ${ts.bg}35`,
+          }}>{article.tag}</span>
           <ShareButtons titre={safeTitle} type="article" />
         </div>
 
-        {/* Articles similaires */}
+        {/* Similar articles */}
         {similar.length > 0 && (
           <div style={{ marginTop: 64, paddingTop: 40, borderTop: '1px solid var(--border)' }}>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 24 }}>
-              Articles similaires
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 24 }}>
+              Dans la même catégorie
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
               {similar.map(a => <NewsCardMini key={a.id} article={a} />)}

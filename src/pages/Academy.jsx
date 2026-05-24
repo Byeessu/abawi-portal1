@@ -11,6 +11,7 @@ import { CoverImage } from '../components/CoverImage'
 import { useProductAccess } from '../hooks/useProductAccess'
 import AccessBadge from '../components/AccessBadge'
 import SEO from '../components/SEO'
+import ViewToggle, { useViewMode } from '../components/ViewToggle'
 
 function FasciculeCardActions({ fascicule, setModal, toggleFav, isFav }) {
   const access = useProductAccess(fascicule, 'fascicule')
@@ -89,6 +90,7 @@ function Academy() {
   const [matiere, setMatiere] = useState('Toutes')
   const [modal, setModal] = useState(null)
   const { toggle: toggleFav, isFav } = useFav()
+  const [viewMode, setViewMode] = useViewMode('academy', 'medium')
 
   const filtered = allFascicules.filter((f) => {
     const matchSerie = serie === 'Toutes' || f.serie === serie
@@ -163,12 +165,16 @@ function Academy() {
             </button>
           ))}
         </div>
-        <div style={{ marginTop: 12, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          {filtered.length} fascicule{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+            {filtered.length} fascicule{filtered.length !== 1 ? 's' : ''} trouvé{filtered.length !== 1 ? 's' : ''}
+          </span>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
         </div>
       </SectionReveal>
 
       {/* GRILLE */}
+      <div data-view={viewMode}>
       <SectionReveal as="div" className="ac-grid" direction="up" distance={32}>
         {filtered.map((f) => (
           <div key={f.id} className="ac-card">
@@ -197,6 +203,7 @@ function Academy() {
           </p>
         )}
       </SectionReveal>
+      </div>
     </main>
   )
 }

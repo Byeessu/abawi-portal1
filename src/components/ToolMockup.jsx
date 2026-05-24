@@ -1,533 +1,330 @@
-/* ToolMockup — mini window preview for each tool type */
+/* ToolMockup — small circular illustration per tool, theme-aware */
 
-const W = (children, bg = '#0F172A') => (
-  <div style={{ width: '100%', height: 130, borderRadius: '10px 10px 0 0', overflow: 'hidden', background: bg, position: 'relative', flexShrink: 0 }}>
-    {/* Window chrome */}
-    <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 10px', background: 'rgba(0,0,0,0.25)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444', opacity: 0.8 }} />
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B', opacity: 0.8 }} />
-      <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', opacity: 0.8 }} />
-    </div>
-    <div style={{ padding: '8px 10px', height: 'calc(100% - 26px)', overflow: 'hidden', position: 'relative' }}>
-      {children}
-    </div>
+// Circle wrapper — uses CSS vars so it adapts to light/dark theme
+const C = ({ accent = '#6366F1', children }) => (
+  <div style={{
+    width: 76, height: 76, borderRadius: '50%',
+    background: `color-mix(in srgb, ${accent} 13%, var(--bg-card-hover, #131A23))`,
+    border: `1.5px solid color-mix(in srgb, ${accent} 30%, var(--border, #1A2332))`,
+    boxShadow: `0 0 0 4px color-mix(in srgb, ${accent} 6%, var(--bg-card, #0D1117))`,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    margin: '14px auto 6px',
+    flexShrink: 0,
+    overflow: 'hidden',
+    position: 'relative',
+  }}>
+    {children}
   </div>
 )
 
-const Line = ({ w = '80%', h = 6, color = 'rgba(255,255,255,0.12)', mt = 5, radius = 3 }) => (
-  <div style={{ width: w, height: h, background: color, borderRadius: radius, marginTop: mt }} />
+// Thin bar — uses accent or border var
+const B = ({ pct, color, delay = 0 }) => (
+  <div style={{ flex: 1, height: `${pct}%`, borderRadius: '2px 2px 0 0', background: color, alignSelf: 'flex-end' }} />
 )
 
-const Bar = ({ h, color, w = '18%' }) => (
-  <div style={{ width: w, height: h, background: color, borderRadius: '3px 3px 0 0', alignSelf: 'flex-end' }} />
-)
+export default function ToolMockup({ type, accent = '#6366F1' }) {
+  switch (type) {
 
-/* ── Mockup types ── */
+    case 'cv': return (
+      <C accent={accent}>
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+          <rect x="6" y="4" width="26" height="30" rx="3" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <circle cx="16" cy="13" r="4" fill={`${accent}66`}/>
+          <rect x="10" y="20" width="18" height="2.5" rx="1.2" fill={`${accent}44`}/>
+          <rect x="10" y="24.5" width="14" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="10" y="28.5" width="16" height="2" rx="1" fill={`${accent}33`}/>
+        </svg>
+      </C>
+    )
 
-function MockupCV() {
-  return W(
-    <div style={{ display: 'flex', gap: 8, height: '100%' }}>
-      <div style={{ width: 28, flexShrink: 0 }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: '1.5px solid rgba(255,255,255,0.2)' }} />
-        <Line w="100%" h={4} mt={6} />
-        <Line w="85%" h={4} mt={4} />
-        <Line w="90%" h={4} mt={4} />
-      </div>
-      <div style={{ flex: 1 }}>
-        <Line w="70%" h={7} color="rgba(255,255,255,0.25)" mt={0} />
-        <Line w="45%" h={5} mt={5} />
-        <div style={{ marginTop: 8, height: 1, background: 'rgba(255,255,255,0.08)' }} />
-        <Line w="90%" h={4} mt={6} />
-        <Line w="85%" h={4} mt={4} />
-        <Line w="75%" h={4} mt={4} />
-        <Line w="60%" h={4} mt={4} />
-      </div>
-    </div>,
-    '#F8FAFC'
-  )
-}
+    case 'score': return (
+      <C accent={accent}>
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <circle cx="22" cy="22" r="17" stroke={`${accent}22`} strokeWidth="4"/>
+          <circle cx="22" cy="22" r="17" stroke={accent} strokeWidth="4"
+            strokeDasharray={`${0.78 * 106.8} 106.8`} strokeDashoffset="26.7"
+            strokeLinecap="round" transform="rotate(-90 22 22)"/>
+          <text x="22" y="26" textAnchor="middle" fill={accent} fontSize="11" fontWeight="800">82</text>
+        </svg>
+      </C>
+    )
 
-function MockupChart({ accent = '#3B82F6' }) {
-  const bars = [
-    { h: 42, color: accent + 'AA', w: '18%' },
-    { h: 55, color: accent, w: '18%' },
-    { h: 38, color: accent + 'AA', w: '18%' },
-    { h: 65, color: accent, w: '18%' },
-    { h: 50, color: accent + 'AA', w: '18%' },
-  ]
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Line w="55%" h={5} color="rgba(255,255,255,0.18)" mt={0} />
-      <Line w="35%" h={4} mt={4} />
-      <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '3%', paddingBottom: 4, marginTop: 6 }}>
-        {bars.map((b, i) => <Bar key={i} {...b} />)}
-      </div>
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', marginTop: 2 }} />
-    </div>
-  )
-}
+    case 'chart': return (
+      <C accent={accent}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 38, padding: '0 4px' }}>
+          {[55, 75, 45, 85, 60].map((h, i) => (
+            <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: i % 2 === 0 ? `${accent}88` : accent }} />
+          ))}
+        </div>
+      </C>
+    )
 
-function MockupLineChart() {
-  const pts = [[0,60],[15,45],[30,50],[45,30],[60,35],[75,18],[90,25],[100,12]]
-  const pathD = pts.map((p, i) => (i === 0 ? 'M' : 'L') + `${p[0]} ${p[1]}`).join(' ')
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-        <Line w="30%" h={5} color="#F59E0B99" mt={0} />
-        <Line w="25%" h={5} color="#10B98199" mt={0} />
-        <Line w="20%" h={5} color="#EF444499" mt={0} />
-      </div>
-      <div style={{ flex: 1, position: 'relative' }}>
-        <svg width="100%" height="100%" viewBox="0 0 100 70" preserveAspectRatio="none">
+    case 'linechart': return (
+      <C accent={accent}>
+        <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
           <defs>
-            <linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+            <linearGradient id={`lc${accent.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={accent} stopOpacity="0.35"/>
+              <stop offset="100%" stopColor={accent} stopOpacity="0"/>
             </linearGradient>
           </defs>
-          <path d={pathD + ' L100 70 L0 70 Z'} fill="url(#lg1)" />
-          <path d={pathD} fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 28 L8 22 L15 24 L22 14 L29 16 L36 6 L40 8 L40 34 L2 34 Z" fill={`url(#lc${accent.replace('#','')})`}/>
+          <path d="M2 28 L8 22 L15 24 L22 14 L29 16 L36 6 L40 8" fill="none" stroke={accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      </div>
-    </div>
-  )
-}
+      </C>
+    )
 
-function MockupWaveform() {
-  const bars = [3,7,12,18,22,28,35,32,26,20,28,35,40,38,30,25,18,22,28,32,26,20,14,10,6,4]
-  const maxH = 40
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} />
-        <Line w="60%" h={4} color="rgba(255,255,255,0.15)" mt={0} />
-      </div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-        {bars.map((h, i) => (
-          <div key={i} style={{ flex: 1, height: `${(h / maxH) * 100}%`, background: i < 10 ? '#14B8A6' : 'rgba(255,255,255,0.2)', borderRadius: 2 }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: 6 }}>
-        <Line w="15%" h={4} color="#14B8A622" mt={0} />
-        <Line w="25%" h={4} color="rgba(255,255,255,0.1)" mt={0} />
-        <Line w="12%" h={4} color="rgba(255,255,255,0.1)" mt={0} />
-      </div>
-    </div>,
-    '#070D1A'
-  )
-}
-
-function MockupSlides() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 6 }}>
-      <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 8, border: '1px solid rgba(220,38,38,0.4)', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Line w="65%" h={6} color="rgba(255,255,255,0.3)" mt={0} />
-        <Line w="45%" h={4} mt={2} />
-        <Line w="80%" h={4} mt={6} />
-        <Line w="70%" h={4} mt={3} />
-        <Line w="55%" h={4} mt={3} />
-      </div>
-      <div style={{ width: 50, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {[1,2,3].map(i => (
-          <div key={i} style={{ flex: 1, background: i === 1 ? 'rgba(220,38,38,0.2)' : 'rgba(255,255,255,0.04)', borderRadius: 4, border: `1px solid ${i === 1 ? 'rgba(220,38,38,0.5)' : 'rgba(255,255,255,0.08)'}` }} />
-        ))}
-      </div>
-    </div>,
-    '#0A0A0A'
-  )
-}
-
-function MockupDoc({ light = false }) {
-  const bg = light ? '#F9FAFB' : '#0F172A'
-  const lineC = light ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'
-  const headC = light ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.25)'
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Line w="50%" h={7} color={headC} mt={0} />
-      <Line w="35%" h={5} mt={4} color={lineC} />
-      <div style={{ marginTop: 8, height: 1, background: lineC }} />
-      <Line w="90%" h={4} mt={6} color={lineC} />
-      <Line w="85%" h={4} mt={4} color={lineC} />
-      <Line w="75%" h={4} mt={4} color={lineC} />
-      <Line w="80%" h={4} mt={4} color={lineC} />
-      <Line w="60%" h={4} mt={4} color={lineC} />
-    </div>,
-    bg
-  )
-}
-
-function MockupTable({ light = false }) {
-  const bg = light ? '#FFFFFF' : '#0A1220'
-  const lineC = light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'
-  const rowBg = light ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)'
-  return W(
-    <div style={{ height: '100%' }}>
-      <div style={{ display: 'flex', gap: 4, padding: '0 0 4px', borderBottom: `1px solid ${lineC}` }}>
-        {['40%','30%','30%'].map((w, i) => (
-          <div key={i} style={{ width: w, height: 5, background: i === 0 ? 'rgba(255,255,255,0.2)' : lineC, borderRadius: 2 }} />
-        ))}
-      </div>
-      {[1,2,3,4].map(i => (
-        <div key={i} style={{ display: 'flex', gap: 4, padding: '4px 0', background: i % 2 === 0 ? rowBg : 'transparent', borderBottom: `1px solid ${lineC}` }}>
-          <div style={{ width: '40%', height: 4, background: lineC, borderRadius: 2 }} />
-          <div style={{ width: '30%', height: 4, background: 'rgba(16,185,129,0.4)', borderRadius: 2 }} />
-          <div style={{ width: '30%', height: 4, background: lineC, borderRadius: 2 }} />
-        </div>
-      ))}
-    </div>,
-    bg
-  )
-}
-
-function MockupSWOT() {
-  const labels = [['S','#10B981'],['W','#EF4444'],['O','#3B82F6'],['T','#F59E0B']]
-  return W(
-    <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 4 }}>
-      {labels.map(([l, c]) => (
-        <div key={l} style={{ background: `${c}18`, border: `1px solid ${c}44`, borderRadius: 6, display: 'flex', flexDirection: 'column', padding: '4px 6px', gap: 3 }}>
-          <div style={{ fontSize: 9, fontWeight: 800, color: c, lineHeight: 1 }}>{l}</div>
-          <div style={{ height: 3, background: `${c}55`, borderRadius: 2 }} />
-          <div style={{ height: 3, background: `${c}33`, borderRadius: 2, width: '70%' }} />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function MockupChat() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end' }}>
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(99,102,241,0.6)', flexShrink: 0 }} />
-        <div style={{ background: 'rgba(99,102,241,0.2)', borderRadius: '10px 10px 10px 2px', padding: '5px 8px', flex: 1 }}>
-          <Line w="90%" h={4} color="rgba(255,255,255,0.35)" mt={0} />
-          <Line w="70%" h={4} mt={3} color="rgba(255,255,255,0.25)" />
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '10px 10px 2px 10px', padding: '5px 8px', maxWidth: '75%' }}>
-          <Line w="80%" h={4} color="rgba(255,255,255,0.2)" mt={0} />
-        </div>
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
-      </div>
-      <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end' }}>
-        <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(99,102,241,0.6)', flexShrink: 0 }} />
-        <div style={{ background: 'rgba(99,102,241,0.2)', borderRadius: '10px 10px 10px 2px', padding: '5px 8px', flex: 1 }}>
-          <Line w="100%" h={4} color="rgba(255,255,255,0.35)" mt={0} />
-          <Line w="55%" h={4} mt={3} color="rgba(255,255,255,0.25)" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MockupMap() {
-  const dots = [[20,30],[45,50],[65,25],[30,65],[75,55],[55,75]]
-  return W(
-    <div style={{ height: '100%', position: 'relative', background: '#0F1A2E', borderRadius: 6, overflow: 'hidden' }}>
-      {/* Grid lines */}
-      {[20,40,60,80].map(y => <div key={y} style={{ position: 'absolute', top: `${y}%`, left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.04)' }} />)}
-      {[25,50,75].map(x => <div key={x} style={{ position: 'absolute', left: `${x}%`, top: 0, bottom: 0, width: 1, background: 'rgba(255,255,255,0.04)' }} />)}
-      {/* Dots */}
-      {dots.map(([x, y], i) => (
-        <div key={i} style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, width: i === 2 ? 12 : 8, height: i === 2 ? 12 : 8, borderRadius: '50%', background: i === 2 ? '#EF4444' : '#3B82F6', transform: 'translate(-50%,-50%)', opacity: 0.9, boxShadow: `0 0 ${i === 2 ? 8 : 4}px ${i === 2 ? '#EF444488' : '#3B82F688'}` }} />
-      ))}
-    </div>,
-    '#0F1A2E'
-  )
-}
-
-function MockupPhotoId() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center' }}>
-      {[0,1,2].map(i => (
-        <div key={i} style={{ width: 30, height: 38, borderRadius: 4, background: i === 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)', border: `1.5px solid ${i === 1 ? 'rgba(234,88,12,0.6)' : 'rgba(255,255,255,0.1)'}`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
-          <div style={{ position: 'absolute', bottom: 6, left: '10%', right: '10%', height: 8, background: 'rgba(255,255,255,0.15)', borderRadius: 2 }} />
-          {i === 1 && <>
-            <div style={{ position: 'absolute', top: 0, left: '50%', width: 1, height: '100%', background: 'rgba(234,88,12,0.3)' }} />
-            <div style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: 1, background: 'rgba(234,88,12,0.3)' }} />
-          </>}
-        </div>
-      ))}
-    </div>,
-    '#0A0F1A'
-  )
-}
-
-function MockupPhotoEditor() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 6 }}>
-      <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 6, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 8, borderRadius: 4, background: 'linear-gradient(135deg,rgba(99,102,241,0.3),rgba(236,72,153,0.2))' }} />
-        <div style={{ position: 'absolute', bottom: 8, left: 8, right: 8, height: 14, background: 'rgba(0,0,0,0.3)', borderRadius: 4, display: 'flex', alignItems: 'center', padding: '0 6px', gap: 4 }}>
-          {[1,2,3,4].map(i => <div key={i} style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.3)', borderRadius: 2 }} />)}
-        </div>
-      </div>
-      <div style={{ width: 28, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {[0.9,0.7,1,0.6,0.8].map((o, i) => (
-          <div key={i} style={{ height: 14, background: `rgba(99,102,241,${o * 0.4})`, borderRadius: 4, border: '1px solid rgba(99,102,241,0.3)' }} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MockupInvoice() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-        <div style={{ width: 30, height: 14, background: 'rgba(180,83,9,0.5)', borderRadius: 3 }} />
-        <Line w="35%" h={5} color="rgba(180,83,9,0.4)" mt={0} />
-      </div>
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 5 }} />
-      {[1,2,3].map(i => (
-        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-          <Line w="50%" h={4} mt={0} />
-          <Line w="20%" h={4} mt={0} color="rgba(180,83,9,0.4)" />
-        </div>
-      ))}
-      <div style={{ marginTop: 'auto', height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: 4 }} />
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <div style={{ background: 'rgba(180,83,9,0.25)', border: '1px solid rgba(180,83,9,0.4)', borderRadius: 4, padding: '2px 8px' }}>
-          <Line w="60px" h={5} color="rgba(180,83,9,0.6)" mt={0} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MockupScore() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-      <div style={{ position: 'relative', width: 52, height: 52 }}>
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle cx="26" cy="26" r="22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
-          <circle cx="26" cy="26" r="22" fill="none" stroke="#10B981" strokeWidth="4" strokeDasharray={`${0.82 * 138.2} ${138.2}`} strokeDashoffset="34.6" strokeLinecap="round" transform="rotate(-90 26 26)" />
-        </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#10B981' }}>82</div>
-      </div>
-      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {[['ATS', '88%','#10B981'],['Mots-clés','75%','#3B82F6'],['Format','90%','#10B981']].map(([l,v,c])=>(
-          <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.5)', width: 36 }}>{l}</div>
-            <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2, overflow: 'hidden' }}>
-              <div style={{ width: v, height: '100%', background: c, borderRadius: 2 }} />
+    case 'swot': return (
+      <C accent={accent}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, width: 44, height: 44 }}>
+          {[['#10B981','S'],['#EF4444','W'],['#3B82F6','O'],['#F59E0B','T']].map(([c, l]) => (
+            <div key={l} style={{ background: `${c}22`, border: `1px solid ${c}44`, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: c }}>{l}</span>
             </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MockupCard() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
-      <div style={{ border: '1.5px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <div style={{ width: 18, height: 12, background: 'rgba(212,175,55,0.5)', borderRadius: 2 }} />
-        <Line w="70%" h={6} color="rgba(255,255,255,0.25)" mt={0} />
-        <Line w="50%" h={4} mt={0} />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
-          <div style={{ width: 18, height: 12, borderRadius: '50%', background: 'rgba(212,175,55,0.3)', marginRight: -6 }} />
-          <div style={{ width: 18, height: 12, borderRadius: '50%', background: 'rgba(212,175,55,0.5)' }} />
+          ))}
         </div>
-      </div>
-    </div>
-  )
-}
+      </C>
+    )
 
-function MockupQR() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 10, alignItems: 'center' }}>
-      <div style={{ width: 72, height: 72, background: '#FFFFFF', borderRadius: 6, padding: 4, flexShrink: 0 }}>
-        <svg viewBox="0 0 21 21" width="100%" height="100%" style={{ display: 'block' }}>
-          {[[0,0],[0,1],[0,2],[1,0],[2,0],[1,2],[2,1],[2,2],[0,3],[0,4],[0,5],[1,5],[2,5],[2,4],[2,3],
-            [4,0],[5,0],[6,0],[4,1],[6,1],[4,2],[5,2],[6,2],[4,4],[5,4],[6,5],[4,5],[4,6],[5,5],[6,4],[6,6],
-            [8,0],[9,1],[10,2],[8,2],[9,0],[10,1],[8,4],[10,4],[9,5],[8,6],[10,6],
-            [12,1],[13,0],[14,0],[15,1],[14,2],[13,3],[15,3],[12,4],[14,4],[15,5],[13,5],[12,6],[14,6]
-          ].map(([x,y],i) => <rect key={i} x={x} y={y} width={1} height={1} fill="#111" />)}
+    case 'table': return (
+      <C accent={accent}>
+        <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
+          <rect x="2" y="2" width="38" height="8" rx="2" fill={`${accent}33`}/>
+          {[12,20,28].map(y => (
+            <rect key={y} x="2" y={y} width="38" height="6" rx="1.5" fill={`${accent}11`} stroke={`${accent}22`} strokeWidth="0.8"/>
+          ))}
+          {[14,28].map(x => (
+            <line key={x} x1={x} y1="2" x2={x} y2="34" stroke={`${accent}22`} strokeWidth="0.8"/>
+          ))}
         </svg>
-      </div>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Line w="85%" h={5} color="rgba(255,255,255,0.2)" mt={0} />
-        <Line w="65%" h={4} />
-        <Line w="75%" h={4} />
-        <div style={{ marginTop: 4, height: 18, background: 'rgba(21,128,61,0.3)', borderRadius: 4, border: '1px solid rgba(21,128,61,0.5)' }} />
-      </div>
-    </div>
-  )
-}
+      </C>
+    )
 
-function MockupDict() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <div style={{ background: 'rgba(99,102,241,0.15)', borderRadius: 6, padding: '4px 8px', border: '1px solid rgba(99,102,241,0.3)' }}>
-        <Line w="55%" h={6} color="rgba(99,102,241,0.6)" mt={0} />
-      </div>
-      <Line w="30%" h={4} color="rgba(255,255,255,0.15)" />
-      <Line w="90%" h={4} />
-      <Line w="85%" h={4} />
-      <Line w="70%" h={4} />
-      <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
-        {['syn','ant','etym'].map(t => (
-          <div key={t} style={{ padding: '2px 6px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 4, fontSize: 8, color: 'rgba(99,102,241,0.7)' }}>{t}</div>
-        ))}
-      </div>
-    </div>
-  )
-}
+    case 'doc': return (
+      <C accent={accent}>
+        <svg width="36" height="40" viewBox="0 0 36 40" fill="none">
+          <path d="M4 4 H24 L32 12 V36 A2 2 0 0 1 30 38 H6 A2 2 0 0 1 4 36 V6 A2 2 0 0 1 4 4Z" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <path d="M24 4 V12 H32" fill="none" stroke={`${accent}44`} strokeWidth="1.5"/>
+          <rect x="9" y="17" width="18" height="2.5" rx="1.2" fill={`${accent}55`}/>
+          <rect x="9" y="22" width="14" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="9" y="27" width="16" height="2" rx="1" fill={`${accent}33`}/>
+        </svg>
+      </C>
+    )
 
-function MockupTranslate() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 6 }}>
-      {['Français','Anglais'].map((lang, i) => (
-        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>{lang}</div>
-          <Line w="80%" h={4} color="rgba(255,255,255,0.15)" mt={0} />
-          <Line w="65%" h={4} />
-          <Line w="70%" h={4} />
-          <Line w="50%" h={4} />
+    case 'slides': return (
+      <C accent={accent}>
+        <svg width="44" height="36" viewBox="0 0 44 36" fill="none">
+          <rect x="2" y="4" width="30" height="28" rx="3" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <rect x="6" y="8" width="18" height="3" rx="1.5" fill={`${accent}66`}/>
+          <rect x="6" y="14" width="22" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="6" y="18" width="18" height="2" rx="1" fill={`${accent}25`}/>
+          <rect x="6" y="22" width="20" height="2" rx="1" fill={`${accent}25`}/>
+          <rect x="34" y="4" width="8" height="8" rx="1.5" fill={`${accent}33`} stroke={`${accent}55`} strokeWidth="1"/>
+          <rect x="34" y="14" width="8" height="8" rx="1.5" fill={`${accent}15`} stroke={`${accent}25`} strokeWidth="1"/>
+          <rect x="34" y="24" width="8" height="8" rx="1.5" fill={`${accent}15`} stroke={`${accent}25`} strokeWidth="1"/>
+        </svg>
+      </C>
+    )
+
+    case 'chat': return (
+      <C accent={accent}>
+        <svg width="44" height="40" viewBox="0 0 44 40" fill="none">
+          <rect x="2" y="2" width="28" height="18" rx="9" fill={`${accent}33`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <rect x="6" y="8" width="14" height="2.5" rx="1.2" fill={`${accent}88`}/>
+          <rect x="6" y="13" width="10" height="2" rx="1" fill={`${accent}55`}/>
+          <rect x="14" y="22" width="28" height="16" rx="8" fill={`${accent}18`} stroke={`${accent}33`} strokeWidth="1.5"/>
+          <rect x="18" y="27" width="12" height="2.5" rx="1.2" fill={`${accent}44`}/>
+          <rect x="18" y="32" width="8" height="2" rx="1" fill={`${accent}33`}/>
+        </svg>
+      </C>
+    )
+
+    case 'waveform': return (
+      <C accent={accent}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, height: 42, padding: '0 2px' }}>
+          {[20,35,55,70,85,100,90,75,60,80,95,70,50,35,20].map((h, i) => (
+            <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: 2, background: i < 8 ? accent : `${accent}44` }} />
+          ))}
         </div>
-      ))}
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={{ fontSize: 14, color: 'rgba(14,165,233,0.7)' }}>⇄</div>
-      </div>
-    </div>
-  )
-}
+      </C>
+    )
 
-function MockupConvert() {
-  const types = ['🖼','🎵','📹','📄','📊']
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', gap: 4 }}>
-        {types.map((t, i) => (
-          <div key={i} style={{ flex: 1, height: 22, background: i === 0 ? 'rgba(194,65,12,0.3)' : 'rgba(255,255,255,0.05)', borderRadius: 4, border: `1px solid ${i === 0 ? 'rgba(194,65,12,0.5)' : 'rgba(255,255,255,0.08)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>
-            {t}
-          </div>
-        ))}
-      </div>
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div style={{ flex: 1, height: 22, background: 'rgba(255,255,255,0.06)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
-          <Line w="70%" h={4} mt={0} />
-        </div>
-        <div style={{ fontSize: 14, color: 'rgba(194,65,12,0.7)' }}>→</div>
-        <div style={{ flex: 1, height: 22, background: 'rgba(194,65,12,0.1)', borderRadius: 4, border: '1px solid rgba(194,65,12,0.3)', display: 'flex', alignItems: 'center', padding: '0 6px' }}>
-          <Line w="60%" h={4} mt={0} color="rgba(194,65,12,0.5)" />
-        </div>
-      </div>
-    </div>
-  )
-}
+    case 'map': return (
+      <C accent={accent}>
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <rect x="4" y="4" width="36" height="36" rx="4" fill={`${accent}10`} stroke={`${accent}22`} strokeWidth="1"/>
+          {[[12,18],[22,12],[32,20],[18,28],[28,30],[22,36]].map(([x, y], i) => (
+            <circle key={i} cx={x} cy={y} r={i === 2 ? 4 : 3} fill={i === 2 ? '#EF4444' : accent} opacity={i === 2 ? 0.9 : 0.7}/>
+          ))}
+        </svg>
+      </C>
+    )
 
-function MockupAnalysis() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ display: 'flex', gap: 4 }}>
-        {['Origines','Contextes','Niveaux'].map((t, i) => (
-          <div key={i} style={{ flex: 1, height: 14, background: i === 0 ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.05)', borderRadius: 4, border: `1px solid ${i === 0 ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.08)'}`, display: 'flex', alignItems: 'center', padding: '0 4px' }}>
-            <div style={{ fontSize: 7, color: i === 0 ? 'rgba(196,181,253,0.9)' : 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap', overflow: 'hidden' }}>{t}</div>
-          </div>
-        ))}
-      </div>
-      <Line w="45%" h={5} color="rgba(168,85,247,0.5)" mt={0} />
-      <Line w="90%" h={4} color="rgba(255,255,255,0.12)" />
-      <Line w="80%" h={4} color="rgba(255,255,255,0.08)" />
-      <Line w="85%" h={4} color="rgba(255,255,255,0.08)" />
-      <div style={{ display: 'flex', gap: 3, marginTop: 2 }}>
-        <div style={{ flex: 1, height: 16, background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.2)', borderRadius: 4 }} />
-        <div style={{ flex: 1, height: 16, background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.2)', borderRadius: 4 }} />
-      </div>
-    </div>,
-    '#0D0D1A'
-  )
-}
+    case 'photo-id': return (
+      <C accent={accent}>
+        <svg width="42" height="44" viewBox="0 0 42 44" fill="none">
+          <rect x="4" y="4" width="34" height="36" rx="3" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <circle cx="21" cy="16" r="7" fill={`${accent}44`}/>
+          <path d="M8 38 Q14 28 21 28 Q28 28 34 38" fill={`${accent}33`}/>
+          <line x1="21" y1="4" x2="21" y2="40" stroke={`${accent}33`} strokeWidth="0.8" strokeDasharray="2 2"/>
+          <line x1="4" y1="22" x2="38" y2="22" stroke={`${accent}33`} strokeWidth="0.8" strokeDasharray="2 2"/>
+        </svg>
+      </C>
+    )
 
-function MockupForum() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 5 }}>
-      {[1,2,3].map(i => (
-        <div key={i} style={{ display: 'flex', gap: 5, alignItems: 'flex-start', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ width: 16, height: 16, borderRadius: '50%', background: ['rgba(99,102,241,0.5)','rgba(16,185,129,0.5)','rgba(245,158,11,0.5)'][i-1], flexShrink: 0, marginTop: 1 }} />
-          <div style={{ flex: 1 }}>
-            <Line w="80%" h={4} color="rgba(255,255,255,0.2)" mt={0} />
-            <Line w="60%" h={3} mt={3} />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
+    case 'photo-editor': return (
+      <C accent={accent}>
+        <svg width="44" height="40" viewBox="0 0 44 40" fill="none">
+          <rect x="2" y="4" width="30" height="32" rx="3" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <circle cx="10" cy="12" r="4" fill={`${accent}33`}/>
+          <path d="M2 28 L10 20 L16 24 L22 16 L32 28Z" fill={`${accent}33`}/>
+          <rect x="35" y="4" width="8" height="6" rx="1.5" fill={`${accent}44`}/>
+          <rect x="35" y="12" width="8" height="6" rx="1.5" fill={`${accent}33`}/>
+          <rect x="35" y="20" width="8" height="6" rx="1.5" fill={`${accent}22`}/>
+          <rect x="35" y="28" width="8" height="6" rx="1.5" fill={`${accent}22`}/>
+        </svg>
+      </C>
+    )
 
-function MockupTicket() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 6 }}>
-      <div style={{ flex: 1, background: 'linear-gradient(135deg,rgba(190,24,93,0.2),rgba(124,58,237,0.15))', borderRadius: 8, border: '1px solid rgba(190,24,93,0.3)', padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Line w="75%" h={5} color="rgba(255,255,255,0.3)" mt={0} />
-        <Line w="50%" h={4} color="rgba(255,255,255,0.15)" />
-        <div style={{ marginTop: 4, height: 1, borderTop: '1px dashed rgba(255,255,255,0.15)' }} />
-        <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
-          <div style={{ flex: 1, height: 20, background: 'rgba(255,255,255,0.05)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)' }} />
-          <div style={{ width: 20, height: 20, background: 'rgba(255,255,255,0.9)', borderRadius: 3 }}>
-            <svg viewBox="0 0 10 10" width="100%" height="100%">
-              {[[0,0],[0,1],[1,0],[2,1],[2,0],[1,2],[3,0],[4,0],[4,1],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[0,4],[2,4],[4,4]].map(([x,y],i) => (
-                <rect key={i} x={x*2} y={y*2} width={2} height={2} fill="#000" />
-              ))}
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+    case 'invoice': return (
+      <C accent={accent}>
+        <svg width="38" height="44" viewBox="0 0 38 44" fill="none">
+          <rect x="4" y="2" width="30" height="40" rx="3" fill={`${accent}15`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <rect x="8" y="8" width="12" height="3" rx="1.5" fill={`${accent}66`}/>
+          <line x1="8" y1="15" x2="30" y2="15" stroke={`${accent}33`} strokeWidth="1"/>
+          {[20,25,30].map(y => (
+            <g key={y}>
+              <rect x="8" y={y} width="14" height="2.5" rx="1" fill={`${accent}22`}/>
+              <rect x="24" y={y} width="6" height="2.5" rx="1" fill={`${accent}44`}/>
+            </g>
+          ))}
+          <line x1="8" y1="36" x2="30" y2="36" stroke={`${accent}44`} strokeWidth="1"/>
+          <rect x="20" y="38" width="10" height="3" rx="1.5" fill={`${accent}66`}/>
+        </svg>
+      </C>
+    )
 
-function MockupCanvas() {
-  return W(
-    <div style={{ height: '100%', display: 'flex', gap: 5 }}>
-      <div style={{ width: 35, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {['#6366F1','#EC4899','#10B981','#F59E0B'].map((c,i) => (
-          <div key={i} style={{ height: 16, background: `${c}33`, border: `1px solid ${c}55`, borderRadius: 4 }} />
-        ))}
-      </div>
-      <div style={{ flex: 1, position: 'relative', background: 'repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%) 0 0 / 10px 10px', borderRadius: 6, overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', width: 45, height: 35, background: 'linear-gradient(135deg,#6366F1,#EC4899)', borderRadius: 6, top: 10, left: 10 }} />
-        <div style={{ position: 'absolute', width: 30, height: 30, borderRadius: '50%', background: 'rgba(16,185,129,0.7)', top: 25, right: 15 }} />
-        <div style={{ position: 'absolute', bottom: 8, left: 10, right: 10, height: 8, background: 'rgba(245,158,11,0.5)', borderRadius: 3 }} />
-      </div>
-    </div>
-  )
-}
+    case 'card': return (
+      <C accent={accent}>
+        <svg width="48" height="34" viewBox="0 0 48 34" fill="none">
+          <rect x="2" y="4" width="44" height="26" rx="4" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <rect x="2" y="10" width="44" height="7" fill={`${accent}18`}/>
+          <rect x="8" y="21" width="10" height="5" rx="1.5" fill={`${accent}55`}/>
+          <circle cx="34" cy="24" r="5" fill={`${accent}33`}/>
+          <circle cx="39" cy="24" r="5" fill={`${accent}55`}/>
+        </svg>
+      </C>
+    )
 
-/* ── Main export ── */
-const MOCKUP_MAP = {
-  'cv':           () => <MockupCV />,
-  'chart':        (t) => <MockupChart accent={t || '#3B82F6'} />,
-  'linechart':    () => <MockupLineChart />,
-  'waveform':     () => <MockupWaveform />,
-  'slides':       () => <MockupSlides />,
-  'doc':          () => <MockupDoc />,
-  'table':        () => <MockupTable />,
-  'swot':         () => <MockupSWOT />,
-  'chat':         () => <MockupChat />,
-  'map':          () => <MockupMap />,
-  'photo-id':     () => <MockupPhotoId />,
-  'photo-editor': () => <MockupPhotoEditor />,
-  'invoice':      () => <MockupInvoice />,
-  'score':        () => <MockupScore />,
-  'card':         () => <MockupCard />,
-  'qr':           () => <MockupQR />,
-  'dict':         () => <MockupDict />,
-  'translate':    () => <MockupTranslate />,
-  'convert':      () => <MockupConvert />,
-  'analysis':     () => <MockupAnalysis />,
-  'forum':        () => <MockupForum />,
-  'ticket':       () => <MockupTicket />,
-  'canvas':       () => <MockupCanvas />,
-}
+    case 'qr': return (
+      <C accent={accent}>
+        <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+          <rect x="2" y="2" width="17" height="17" rx="2" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <rect x="5" y="5" width="11" height="11" rx="1" fill={`${accent}44`}/>
+          <rect x="23" y="2" width="17" height="17" rx="2" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <rect x="26" y="5" width="11" height="11" rx="1" fill={`${accent}44`}/>
+          <rect x="2" y="23" width="17" height="17" rx="2" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <rect x="5" y="26" width="11" height="11" rx="1" fill={`${accent}44`}/>
+          <rect x="25" y="25" width="5" height="5" rx="1" fill={`${accent}55`}/>
+          <rect x="33" y="25" width="5" height="5" rx="1" fill={`${accent}55`}/>
+          <rect x="25" y="33" width="5" height="5" rx="1" fill={`${accent}55`}/>
+          <rect x="33" y="33" width="5" height="5" rx="1" fill={`${accent}55`}/>
+        </svg>
+      </C>
+    )
 
-export default function ToolMockup({ type, accent }) {
-  const render = MOCKUP_MAP[type]
-  if (!render) return null
-  return render(accent)
+    case 'dict': return (
+      <C accent={accent}>
+        <svg width="42" height="40" viewBox="0 0 42 40" fill="none">
+          <rect x="4" y="4" width="28" height="32" rx="3" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <line x1="4" y1="12" x2="32" y2="12" stroke={`${accent}33`} strokeWidth="1"/>
+          <rect x="8" y="15" width="16" height="3" rx="1.5" fill={`${accent}66`}/>
+          <rect x="8" y="21" width="20" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="8" y="25" width="16" height="2" rx="1" fill={`${accent}25`}/>
+          <rect x="8" y="29" width="18" height="2" rx="1" fill={`${accent}25`}/>
+          <circle cx="34" cy="30" r="7" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <line x1="39" y1="35" x2="42" y2="38" stroke={accent} strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      </C>
+    )
+
+    case 'translate': return (
+      <C accent={accent}>
+        <svg width="46" height="36" viewBox="0 0 46 36" fill="none">
+          <rect x="2" y="2" width="18" height="28" rx="3" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <rect x="5" y="6" width="10" height="2.5" rx="1.2" fill={`${accent}66`}/>
+          <rect x="5" y="11" width="12" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="5" y="15" width="9" height="2" rx="1" fill={`${accent}25`}/>
+          <path d="M22 16 L24 13 L26 16" fill="none" stroke={accent} strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="24" y1="13" x2="24" y2="23" stroke={accent} strokeWidth="1.5" strokeLinecap="round"/>
+          <rect x="28" y="2" width="18" height="28" rx="3" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <rect x="31" y="6" width="10" height="2.5" rx="1.2" fill={`${accent}66`}/>
+          <rect x="31" y="11" width="12" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="31" y="15" width="9" height="2" rx="1" fill={`${accent}25`}/>
+        </svg>
+      </C>
+    )
+
+    case 'convert': return (
+      <C accent={accent}>
+        <svg width="44" height="38" viewBox="0 0 44 38" fill="none">
+          <rect x="2" y="8" width="14" height="16" rx="3" fill={`${accent}22`} stroke={`${accent}55`} strokeWidth="1.5"/>
+          <rect x="28" y="8" width="14" height="16" rx="3" fill={`${accent}44`} stroke={accent} strokeWidth="1.5"/>
+          <path d="M18 16 L26 13" stroke={accent} strokeWidth="2" strokeLinecap="round" markerEnd={`url(#arr${type})`}/>
+          <path d="M18 22 L26 25" stroke={`${accent}77`} strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 2"/>
+        </svg>
+      </C>
+    )
+
+    case 'analysis': return (
+      <C accent={accent}>
+        <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+          <circle cx="18" cy="18" r="14" fill={`${accent}15`} stroke={`${accent}44`} strokeWidth="2"/>
+          <rect x="10" y="14" width="14" height="2.5" rx="1.2" fill={`${accent}55`}/>
+          <rect x="10" y="19" width="10" height="2" rx="1" fill={`${accent}33`}/>
+          <rect x="10" y="24" width="12" height="2" rx="1" fill={`${accent}25`}/>
+          <line x1="28" y1="28" x2="40" y2="40" stroke={accent} strokeWidth="3" strokeLinecap="round"/>
+        </svg>
+      </C>
+    )
+
+    case 'forum': return (
+      <C accent={accent}>
+        <svg width="44" height="40" viewBox="0 0 44 40" fill="none">
+          <rect x="2" y="2" width="30" height="14" rx="6" fill={`${accent}22`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <rect x="6" y="7" width="14" height="2.5" rx="1.2" fill={`${accent}66`}/>
+          <rect x="12" y="20" width="30" height="14" rx="6" fill={`${accent}18`} stroke={`${accent}33`} strokeWidth="1.5"/>
+          <rect x="16" y="25" width="14" height="2.5" rx="1.2" fill={`${accent}44`}/>
+        </svg>
+      </C>
+    )
+
+    case 'ticket': return (
+      <C accent={accent}>
+        <svg width="46" height="30" viewBox="0 0 46 30" fill="none">
+          <path d="M2 8 Q2 2 8 2 H38 Q44 2 44 8 V22 Q44 28 38 28 H8 Q2 28 2 22 Z" fill={`${accent}18`} stroke={`${accent}44`} strokeWidth="1.5"/>
+          <line x1="16" y1="2" x2="16" y2="28" stroke={`${accent}33`} strokeWidth="1" strokeDasharray="3 3"/>
+          <rect x="5" y="10" width="7" height="10" rx="1.5" fill={`${accent}33`}/>
+          <rect x="20" y="9" width="20" height="3" rx="1.5" fill={`${accent}55`}/>
+          <rect x="20" y="15" width="14" height="2.5" rx="1.2" fill={`${accent}33`}/>
+          <rect x="20" y="20" width="10" height="2" rx="1" fill={`${accent}22`}/>
+        </svg>
+      </C>
+    )
+
+    case 'canvas': return (
+      <C accent={accent}>
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <rect x="4" y="4" width="36" height="36" rx="4" fill={`${accent}10`} stroke={`${accent}33`} strokeWidth="1.5"
+            style={{ fill: 'color-mix(in srgb, var(--bg-card-hover) 60%, transparent)' }}/>
+          <rect x="10" y="10" width="14" height="12" rx="3" fill={`${accent}44`}/>
+          <circle cx="30" cy="16" r="7" fill={`${accent}33`}/>
+          <rect x="10" y="26" width="24" height="10" rx="3" fill={`${accent}22`}/>
+        </svg>
+      </C>
+    )
+
+    default: return null
+  }
 }

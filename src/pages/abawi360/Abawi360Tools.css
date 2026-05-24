@@ -53,9 +53,8 @@ html.light .tools360-page {
 
 /* Layout */
 .tools360-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 24px 80px;
+  width: 100%;
+  padding: 40px clamp(12px, 2vw, 24px) 80px;
   background: var(--t360-bg-page);
   min-height: 100vh;
 }

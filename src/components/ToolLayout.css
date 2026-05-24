@@ -14,9 +14,8 @@
 }
 
 .tool-container {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: clamp(16px, 3vw, 32px);
+  width: 100%;
+  padding: clamp(12px, 2vw, 24px);
 }
 
 /* Hero Header */
@@ -420,8 +419,7 @@
 
 /* Elite Container */
 .elite-container {
-  max-width: min(1400px, 96vw);
-  margin: 0 auto;
+  width: 100%;
   padding: clamp(12px, 2vw, 20px);
 }
 

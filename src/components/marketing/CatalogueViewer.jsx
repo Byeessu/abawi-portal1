@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './MarketingDesigns.css';
-import { useThemedStyles } from '../../context/ThemeContext';
+import { useThemedStyles } from '../../hooks/useThemedStyles';
 
 const demoProducts = [
   { id: 1, name: 'Abawi 360° Pro', category: 'Digital', price: '89 000', img: '📦', desc: 'Présence digitale complète avec site, réseaux et analytics.' },

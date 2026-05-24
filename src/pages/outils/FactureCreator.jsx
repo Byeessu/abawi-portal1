@@ -428,7 +428,14 @@ const TEMPLATES = [
   },
 ]
 
+const HIST_KEY = 'abawi_facture_hist'
+const PROFILE_KEY = 'abawi_facture_profile'
+
 function loadSaved() { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null') } catch { return null } }
+function loadHist() { try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]') } catch { return [] } }
+function saveHist(h) { try { localStorage.setItem(HIST_KEY, JSON.stringify(h)) } catch {} }
+function loadProfile() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || 'null') } catch { return null } }
+function saveProfile(p) { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)) } catch {} }
 
 const DEFAULT = TEMPLATES[0]
 function makeDefault() {
@@ -472,9 +479,68 @@ export default function FactureCreator() {
 
   const [discount, setDiscount] = useState(0)
   const [showPreview, setShowPreview] = useState(false)
+  const [history, setHistory] = useState(loadHist)
+  const [savedProfile, setSavedProfile] = useState(loadProfile)
+  const [fcToast, setFcToast] = useState('')
 
   const { membre } = useAuth()
   const guard = useToolGuard('facture', 'facture')
+
+  function showToast(msg) { setFcToast(msg); setTimeout(() => setFcToast(''), 3000) }
+
+  function saveAsProfile() {
+    const profile = {
+      emetteur: meta.emetteur,
+      emetteur_detail: meta.emetteur_detail,
+      logoUrl: logoUrl.length < 80000 ? logoUrl : '',
+      useLogo,
+      theme,
+      currency,
+      useTVA,
+      tvaPct,
+      savedAt: new Date().toISOString(),
+    }
+    saveProfile(profile)
+    setSavedProfile(profile)
+    showToast('✅ Profil émetteur sauvegardé')
+  }
+
+  function applyProfile() {
+    if (!savedProfile) return
+    if (savedProfile.emetteur) updateMeta('emetteur', savedProfile.emetteur)
+    if (savedProfile.emetteur_detail) updateMeta('emetteur_detail', savedProfile.emetteur_detail)
+    if (savedProfile.logoUrl) { setLogoUrl(savedProfile.logoUrl); setUseLogo(true) }
+    if (savedProfile.theme) setTheme(savedProfile.theme)
+    if (savedProfile.currency) setCurrency(savedProfile.currency)
+    if (savedProfile.useTVA !== undefined) setUseTVA(savedProfile.useTVA)
+    if (savedProfile.tvaPct) setTvaPct(savedProfile.tvaPct)
+    showToast('✅ Profil appliqué')
+  }
+
+  function updateHistStatus(id, status) {
+    const newHist = history.map(h => h.id === id ? { ...h, status } : h)
+    saveHist(newHist)
+    setHistory(newHist)
+  }
+
+  function deleteHistItem(id) {
+    if (!confirm('Supprimer cet enregistrement ?')) return
+    const newHist = history.filter(h => h.id !== id)
+    saveHist(newHist)
+    setHistory(newHist)
+  }
+
+  function reuseFromHistory(record) {
+    updateMeta('emetteur', record.emetteur || '')
+    updateMeta('client', record.client || '')
+    setTheme(record.theme || 'corporate')
+    setCurrency(record.currency || 'FCFA')
+    updateMeta('type', record.type || 'facture')
+    updateMeta('numero', num(record.type?.toUpperCase?.() || 'FAC'))
+    updateMeta('date', today())
+    setStep('form')
+    showToast('✅ Modèle chargé — complétez les détails')
+  }
 
   useEffect(() => {
     try {
@@ -523,7 +589,27 @@ export default function FactureCreator() {
     const debitResult = await guard.checkAndDebit()
     if (!debitResult.ok) return
     await guard.recordUsage()
+
+    // Log in history
+    const record = {
+      id: Date.now(),
+      numero: meta.numero,
+      type: meta.type,
+      emetteur: meta.emetteur,
+      client: meta.client,
+      total: totalTTC,
+      currency,
+      date: meta.date,
+      theme,
+      status: 'emise',
+      createdAt: new Date().toISOString(),
+    }
+    const newHist = [record, ...loadHist()].slice(0, 200)
+    saveHist(newHist)
+    setHistory(newHist)
+
     exportToPDF('facture-export', meta.type + '-' + meta.numero, { includeHeader: false, includeFooter: false })
+    showToast('📥 PDF en cours de génération…')
   }
 
   /* ── Styles ── */
@@ -589,18 +675,26 @@ export default function FactureCreator() {
             <ToolGuardBadge guard={guard} />
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="fc-btn-ghost" onClick={() => setStep('history')} style={{ position: 'relative' }}>
+            📋 Historique
+            {history.length > 0 && (
+              <span style={{ marginLeft: 6, background: '#0EA5E9', color: '#fff', borderRadius: 20, padding: '1px 7px', fontSize: '.68rem', fontWeight: 800 }}>
+                {history.length}
+              </span>
+            )}
+          </button>
           {step === 'form' && (
             <>
               <button className="fc-btn-ghost" onClick={() => setStep('templates')}>← Modèles</button>
-              <button className="fc-btn-ghost" onClick={() => setShowPreview(p => !p)} style={{ display: 'none' }}>
-                {showPreview ? '✏️ Éditer' : '👁 Aperçu'}
-              </button>
               <button className="fc-btn-primary" onClick={exportPDF}
                 style={{ background: `linear-gradient(135deg,${t.headerBg},${t.accent}cc)`, color: t.text, border: `1.5px solid ${t.accent}` }}>
                 📥 Exporter PDF
               </button>
             </>
+          )}
+          {step === 'history' && (
+            <button className="fc-btn-ghost" onClick={() => setStep('templates')}>← Nouveau document</button>
           )}
         </div>
       </div>
@@ -614,6 +708,110 @@ export default function FactureCreator() {
           if (r.ok) { guard.closeUpsell(); exportPDF() }
         }}
       />
+
+      {/* ── Toast ── */}
+      {fcToast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#10B981', color: '#fff', padding: '10px 22px', borderRadius: 12,
+          fontWeight: 700, fontSize: '.86rem', zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,.3)',
+        }}>{fcToast}</div>
+      )}
+
+      {/* ── STEP: HISTORY ── */}
+      {step === 'history' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>📋 Historique des documents émis</h2>
+            {history.length > 0 && (
+              <button className="fc-btn-ghost" style={{ fontSize: '.72rem', color: '#EF4444', borderColor: '#EF4444' }}
+                onClick={() => { if (confirm('Vider tout l\'historique ?')) { saveHist([]); setHistory([]) } }}>
+                🗑 Vider l&apos;historique
+              </button>
+            )}
+          </div>
+
+          {history.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)', fontSize: '.95rem' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📂</div>
+              <p style={{ margin: 0 }}>Aucun document dans l&apos;historique.<br/>Exporter un PDF l&apos;enregistre ici automatiquement.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {history.map(record => {
+                const dt = DOC_TYPES[record.type] || DOC_TYPES.facture
+                const th = THEMES[record.theme] || THEMES.corporate
+                const statusColors = { emise: { bg: '#F59E0B20', color: '#F59E0B', label: 'Émise' }, payee: { bg: '#10B98120', color: '#10B981', label: 'Payée ✓' }, annulee: { bg: '#EF444420', color: '#EF4444', label: 'Annulée' } }
+                const sc = statusColors[record.status] || statusColors.emise
+                return (
+                  <div key={record.id} style={{
+                    background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14,
+                    padding: '14px 16px', display: 'grid',
+                    gridTemplateColumns: '8px 1fr auto', gap: '0 14px', alignItems: 'center',
+                  }}>
+                    {/* Color stripe */}
+                    <div style={{ height: '100%', minHeight: 56, background: th.headerBg, borderRadius: 4, gridRow: '1 / span 2' }} />
+
+                    {/* Info */}
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '.88rem' }}>{dt.icon} {record.numero}</span>
+                        <span style={{ fontSize: '.7rem', padding: '2px 8px', borderRadius: 20, background: dt.color + '18', color: dt.color, border: `1px solid ${dt.color}44` }}>{dt.label}</span>
+                        <span style={{ fontSize: '.7rem', padding: '2px 8px', borderRadius: 20, background: sc.bg, color: sc.color, fontWeight: 700, cursor: 'pointer', border: `1px solid ${sc.color}40` }}
+                          onClick={() => {
+                            const next = record.status === 'emise' ? 'payee' : record.status === 'payee' ? 'annulee' : 'emise'
+                            updateHistStatus(record.id, next)
+                          }} title="Cliquer pour changer le statut">
+                          {sc.label}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '.78rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                        <span>{record.emetteur || '—'}</span>
+                        {record.client && <span style={{ margin: '0 6px', opacity: .4 }}>→</span>}
+                        {record.client && <span>{record.client}</span>}
+                      </div>
+                      <div style={{ fontSize: '.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                        {record.date} · <strong style={{ color: 'var(--text-primary)' }}>{Math.round(record.total || 0).toLocaleString('fr-FR')} {record.currency}</strong>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <button className="fc-btn-ghost" style={{ padding: '5px 10px', fontSize: '.72rem' }}
+                        onClick={() => reuseFromHistory(record)} title="Créer un nouveau document avec ce modèle">
+                        ↻ Réutiliser
+                      </button>
+                      <button style={{ padding: '5px 8px', fontSize: '.72rem', background: 'transparent', border: '1px solid #EF444444', color: '#EF4444', borderRadius: 8, cursor: 'pointer' }}
+                        onClick={() => deleteHistItem(record.id)}>
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Saved profile summary */}
+          {savedProfile && (
+            <div style={{ marginTop: 28, padding: '14px 16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 14 }}>
+              <div style={{ fontWeight: 800, fontSize: '.82rem', color: 'var(--text-secondary)', marginBottom: 6 }}>💾 Profil émetteur sauvegardé</div>
+              <div style={{ fontSize: '.86rem', color: 'var(--text-primary)', fontWeight: 700 }}>{savedProfile.emetteur}</div>
+              <div style={{ fontSize: '.75rem', color: 'var(--text-muted)', marginTop: 2 }}>Thème : {THEMES[savedProfile.theme]?.label || savedProfile.theme} · {savedProfile.currency} · Sauvegardé le {new Date(savedProfile.savedAt).toLocaleDateString('fr-FR')}</div>
+              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                <button className="fc-btn-ghost" style={{ fontSize: '.75rem', padding: '5px 12px' }}
+                  onClick={() => { setStep('form'); setTimeout(applyProfile, 100) }}>
+                  ↩ Créer un document avec ce profil
+                </button>
+                <button style={{ fontSize: '.72rem', padding: '5px 10px', background: 'transparent', border: '1px solid #EF444444', color: '#EF4444', borderRadius: 8, cursor: 'pointer' }}
+                  onClick={() => { saveProfile(null); setSavedProfile(null); showToast('Profil supprimé') }}>
+                  🗑 Supprimer
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── STEP : TEMPLATES ── */}
       {step === 'templates' && (
@@ -730,7 +928,19 @@ export default function FactureCreator() {
 
             {/* Section: Parties */}
             <div className="fc-section">
-              <div className="fc-sec-title">🏢 Émetteur & Client</div>
+              <div className="fc-sec-title" style={{ justifyContent: 'space-between' }}>
+                <span>🏢 Émetteur & Client</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {savedProfile && (
+                    <button className="fc-btn-ghost" style={{ padding: '4px 10px', fontSize: '.7rem' }} onClick={applyProfile} title={`Profil: ${savedProfile.emetteur}`}>
+                      ↩ Utiliser mon profil
+                    </button>
+                  )}
+                  <button className="fc-btn-ghost" style={{ padding: '4px 10px', fontSize: '.7rem' }} onClick={saveAsProfile}>
+                    💾 Sauvegarder profil
+                  </button>
+                </div>
+              </div>
               <div style={{ display: 'grid', gap: 8, marginBottom: 14 }}>
                 <label className="fc-lbl">Émetteur (votre entreprise)</label>
                 <input className="fc-field" value={meta.emetteur} onChange={e => updateMeta('emetteur', e.target.value)} placeholder="Nom / Raison sociale" />

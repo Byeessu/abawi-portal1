@@ -1,7 +1,15 @@
 .outils-page {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 0 clamp(16px, 3vw, 32px) 80px;
+  width: 100%;
+  padding: 0 clamp(12px, 2vw, 24px) 80px;
+}
+
+.outils-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
 }
 
 /* ─────────── HERO ─────────── */
@@ -524,9 +532,9 @@
 
 /* ─────────── PACK SPOTLIGHT ─────────── */
 .outils-packs {
-  max-width: 1400px;
-  margin: 0 auto 2.5rem;
-  padding: 0 24px;
+  width: 100%;
+  margin-bottom: 2.5rem;
+  padding: 0;
 }
 .outils-packs__header {
   display: flex;

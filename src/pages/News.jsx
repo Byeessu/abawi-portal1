@@ -50,6 +50,17 @@ function News() {
           if (lastSpace > maxLen * 0.8) return truncated.slice(0, lastSpace) + '...'
           return truncated + '...'
         }
+        const stripHtmlText = (text) => {
+          if (!text) return ''
+          return text
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+            .replace(/<font\b[^>]*>[\s\S]*?<\/font>/gi, '')
+            .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, '$1')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/https?:\/\/\S+/g, '')
+            .replace(/\s+/g, ' ').trim()
+        }
         const normalize = (a) => {
           let base = a
           if (typeof a?.ti === 'string' && a.ti.trim().startsWith('{')) {
@@ -67,7 +78,7 @@ function News() {
               .replace(/\\t/g, ' ')
               .replace(/\\/g, '')
           }
-          const cleanTitle = stripJsonArtifacts(parseField(base?.ti, 'ti'))
+          const cleanTitle = stripHtmlText(stripJsonArtifacts(parseField(base?.ti, 'ti')))
             .replace(/[\u2800-\u28FF]/g, '')
             .replace(/[\u0300-\u036F\u1DC0-\u1DFF]/g, '')
             // eslint-disable-next-line no-control-regex
@@ -76,7 +87,7 @@ function News() {
             .replace(/["{}[\]]/g, '')
             .replace(/\s+/g, ' ')
             .trim()
-          const cleanSub = stripJsonArtifacts(parseField(base?.su, 'su'))
+          const cleanSub = stripHtmlText(stripJsonArtifacts(parseField(base?.su, 'su')))
             .replace(/[\u2800-\u28FF]/g, '')
             .replace(/[\u0300-\u036F\u1DC0-\u1DFF]/g, '')
             // eslint-disable-next-line no-control-regex

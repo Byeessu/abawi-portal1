@@ -13,6 +13,7 @@ import { generateDesc } from '../lib/groq';
 import { useProductAccess } from '../hooks/useProductAccess'
 import AccessBadge from '../components/AccessBadge'
 import { useNavigate } from 'react-router-dom'
+import ViewToggle, { useViewMode } from '../components/ViewToggle'
 import SEO from '../components/SEO'
 
 function VideoCardActions({ video, setModal }) {
@@ -153,6 +154,7 @@ function Digital() {
   const [adminMode, setAdminMode] = useState(false)
   const [aiDescs, setAiDescs] = useState({})
   const [aiLoading, setAiLoading] = useState(null)
+  const [viewMode, setViewMode] = useViewMode('digital', 'medium')
   const clickCount = useRef(0)
   const clickTimer = useRef(null)
 
@@ -310,10 +312,13 @@ function Digital() {
             </button>
           ))}
         </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+        </div>
       </SectionReveal>
 
       {/* GRID */}
-      <SectionReveal as="section" className="dg-products" direction="up" distance={32}>
+      <SectionReveal as="section" className="dg-products" direction="up" distance={32} data-view={viewMode}>
         <div className="dg-grid">
           {tab === 'guides' ? filtered.map((g, i) => (
             <article key={g.id} className="dg-card" style={{ animation: `slideUp 0.5s ease ${i * 0.05}s both` }}>

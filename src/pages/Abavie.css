@@ -3422,8 +3422,6 @@
 /* Health content wrapper */
 .abv-health {
   padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 40px);
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 }
@@ -3752,8 +3750,6 @@
 /* Map section */
 .abv-map-section {
   padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 40px);
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 }
