@@ -41,49 +41,114 @@ const PITCH_THEMES = [
 ];
 
 function PitchSlideCard({ slide, index, total, compact }) {
-  const t = slide.theme || PITCH_THEMES[0];
-  return (
-    <div style={{
-      background: t.grad,
-      borderRadius: compact ? 12 : 16,
-      padding: compact ? '20px 24px' : '36px 44px',
-      minHeight: compact ? 180 : 420,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-      border: `1px solid ${t.accent}30`,
-      boxShadow: `0 8px 32px ${t.accent}15`,
-    }}>
-      <div style={{ position: 'absolute', top: 14, right: 18, fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
-        {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-      </div>
-      <div style={{ fontSize: compact ? '1.1rem' : '1.7rem', fontWeight: 800, color: 'white', marginBottom: compact ? 6 : 12, lineHeight: 1.25 }}>
-        {slide.title}
-      </div>
-      {slide.subtitle && (
-        <div style={{ fontSize: compact ? '0.78rem' : '1rem', color: t.accent, fontWeight: 700, marginBottom: compact ? 8 : 14 }}>
-          {slide.subtitle}
+  const t = slide.theme || PITCH_THEMES[0]
+  const bullets = slide.bullets || []
+  const isCover = index === 0
+
+  if (compact) {
+    return (
+      <div style={{ background: t.grad, borderRadius: 12, padding: '14px 18px', minHeight: 130, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: `1px solid ${t.accent}20`, boxShadow: `0 4px 16px ${t.accent}10` }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: `linear-gradient(90deg, ${t.accent}, ${t.accent}30, transparent)` }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 9 }}>
+          <div style={{ background: `${t.accent}22`, border: `1px solid ${t.accent}38`, borderRadius: 6, padding: '2px 7px', fontSize: '0.56rem', fontWeight: 800, color: t.accent, letterSpacing: '1px' }}>{String(index + 1).padStart(2, '0')}</div>
+          <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', fontWeight: 600 }}>{t.icon}</div>
         </div>
-      )}
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: compact ? 4 : 8 }}>
-        {(slide.bullets || []).map((b, i) => (
-          <li key={i} style={{ fontSize: compact ? '0.75rem' : '0.92rem', color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, paddingLeft: 14, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 0, color: t.accent }}>◆</span>
-            {b}
-          </li>
-        ))}
-      </ul>
-      {slide.highlight && (
-        <div style={{ marginTop: 'auto', paddingTop: compact ? 10 : 18 }}>
-          <div style={{ display: 'inline-block', padding: '6px 14px', background: `${t.accent}20`, border: `1px solid ${t.accent}50`, borderRadius: 20, color: t.accent, fontSize: compact ? '0.75rem' : '0.88rem', fontWeight: 800 }}>
-            ★ {slide.highlight}
+        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#fff', lineHeight: 1.25, flex: 1, marginBottom: slide.subtitle ? 4 : 6 }}>{slide.title}</div>
+        {slide.subtitle && <div style={{ fontSize: '0.58rem', color: t.accent, fontWeight: 600, marginBottom: 6, opacity: 0.8 }}>{slide.subtitle}</div>}
+        {slide.highlight && (
+          <div style={{ padding: '2px 8px', background: `${t.accent}16`, border: `1px solid ${t.accent}35`, borderRadius: 10, fontSize: '0.54rem', color: t.accent, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 3, alignSelf: 'flex-start' }}>
+            ▲ {slide.highlight.slice(0, 28)}
           </div>
+        )}
+      </div>
+    )
+  }
+
+  if (isCover) {
+    return (
+      <div style={{ background: t.grad, borderRadius: 20, minHeight: 500, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: `1px solid ${t.accent}25`, boxShadow: `0 20px 80px ${t.accent}22` }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(${t.accent}06 1px,transparent 1px),linear-gradient(90deg,${t.accent}06 1px,transparent 1px)`, backgroundSize: '40px 40px', WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 10%,transparent 100%)', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 10%,transparent 100%)' }} />
+        <div style={{ position: 'absolute', top: -90, right: -60, width: 320, height: 320, borderRadius: '50%', background: `radial-gradient(circle,${t.accent}32 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -80, left: -60, width: 240, height: 240, borderRadius: '50%', background: `radial-gradient(circle,${t.accent}14 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <div style={{ padding: '22px 40px', borderBottom: `1px solid ${t.accent}10`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.accent, boxShadow: `0 0 8px ${t.accent}`, display: 'inline-block' }} />
+            <span style={{ fontSize: '0.58rem', color: t.accent, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase' }}>Pitch Deck · VC Grade</span>
+          </div>
+          <span style={{ fontSize: '0.56rem', color: 'rgba(255,255,255,0.18)', fontWeight: 700, letterSpacing: '1px' }}>01 / {String(total).padStart(2, '0')}</span>
         </div>
-      )}
+        <div style={{ flex: 1, padding: '44px 48px 32px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: '0.6rem', color: t.accent, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 20 }}>{t.icon} Présentation Investisseur · Africa-first</div>
+          <h1 style={{ color: '#fff', fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 900, lineHeight: 1.08, margin: '0 0 14px', letterSpacing: '-0.5px' }}>{slide.title}</h1>
+          {slide.subtitle && <div style={{ color: t.accent, fontSize: 'clamp(0.95rem,1.6vw,1.25rem)', fontWeight: 700, marginBottom: 30, opacity: 0.88 }}>{slide.subtitle}</div>}
+          {bullets.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 580 }}>
+              {bullets.slice(0, 4).map((b, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 18px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${t.accent}14`, borderRadius: 10 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: t.accent, flexShrink: 0, boxShadow: `0 0 7px ${t.accent}90` }} />
+                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.87rem', lineHeight: 1.45 }}>{b}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={{ padding: '18px 40px', borderTop: `1px solid ${t.accent}08`, position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {slide.highlight ? (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', background: `${t.accent}14`, border: `1px solid ${t.accent}38`, borderRadius: 20, color: t.accent, fontSize: '0.76rem', fontWeight: 800 }}>★ {slide.highlight}</div>
+          ) : <div />}
+          <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.16)', fontWeight: 600 }}>Confidentiel · Africa-first</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ background: t.grad, borderRadius: 20, minHeight: 480, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: `1px solid ${t.accent}20`, boxShadow: `0 12px 50px ${t.accent}14` }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${t.accent},${t.accent}45,transparent)` }} />
+      <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: `radial-gradient(circle,${t.accent}16 0%,transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 90, background: 'linear-gradient(to top,rgba(0,0,0,0.18),transparent)', pointerEvents: 'none' }} />
+      <div style={{ padding: '18px 36px', borderBottom: `1px solid ${t.accent}10`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ minWidth: 34, height: 34, borderRadius: 8, background: `${t.accent}16`, border: `1px solid ${t.accent}32`, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px', fontSize: '0.82rem', fontWeight: 900, color: t.accent, fontFamily: 'monospace' }}>
+            {String(index + 1).padStart(2, '0')}
+          </div>
+          {slide.subtitle && (
+            <div style={{ padding: '4px 12px', background: `${t.accent}10`, border: `1px solid ${t.accent}22`, borderRadius: 20, fontSize: '0.66rem', fontWeight: 700, color: t.accent, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {slide.subtitle}
+            </div>
+          )}
+        </div>
+        <span style={{ fontSize: '0.56rem', color: 'rgba(255,255,255,0.16)', fontWeight: 700, flexShrink: 0 }}>{index + 1} / {total}</span>
+      </div>
+      <div style={{ flex: 1, padding: '26px 36px 20px', position: 'relative', zIndex: 1 }}>
+        <h2 style={{ color: '#fff', fontSize: 'clamp(1.3rem,2.4vw,1.85rem)', fontWeight: 900, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '-0.25px' }}>{slide.title}</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: bullets.length > 3 ? 'repeat(2,1fr)' : '1fr', gap: '9px 14px' }}>
+          {bullets.slice(0, 6).map((b, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 15px', background: 'rgba(255,255,255,0.032)', border: `1px solid ${t.accent}12`, borderLeft: `3px solid ${t.accent}`, borderRadius: '0 10px 10px 0' }}>
+              <span style={{ color: t.accent, fontWeight: 900, fontSize: '0.68rem', flexShrink: 0, marginTop: 2, fontFamily: 'monospace', opacity: 0.65 }}>{String(i + 1).padStart(2, '0')}</span>
+              <span style={{ color: 'rgba(255,255,255,0.86)', fontSize: '0.83rem', lineHeight: 1.55 }}>{b}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: '12px 36px 16px', position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t.accent}08` }}>
+        {slide.highlight ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 3, height: 18, background: t.accent, borderRadius: 2, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: '0.52rem', color: 'rgba(255,255,255,0.22)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px' }}>KPI Clé</div>
+              <div style={{ fontSize: '0.86rem', color: t.accent, fontWeight: 800, marginTop: 1 }}>{slide.highlight}</div>
+            </div>
+          </div>
+        ) : <div />}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          {Array.from({ length: Math.min(total, 10) }).map((_, i) => (
+            <div key={i} style={{ width: i === index ? 18 : 5, height: 4, borderRadius: 2, background: i === index ? t.accent : 'rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }} />
+          ))}
+        </div>
+      </div>
     </div>
-  );
+  )
 }
 
 export default function PitchDeck() {
@@ -353,66 +418,78 @@ Format: [{"title":"","subtitle":"","bullets":["b1","b2","b3","b4"],"highlight":"
           </div>
         )}
 
-        {slides.length > 0 && !showAll && (
-          <div style={{ marginTop:20 }}>
-            <div style={{ fontSize:'0.7rem', color:'var(--text-muted)', fontWeight:700, marginBottom:10, textTransform:'uppercase', letterSpacing:1 }}>Naviguer entre les slides</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:6 }}>
-              {slides.map((s, i) => (
-                <button key={i} onClick={()=>setActiveSlide(i)} style={{
-                  padding:'8px 4px', borderRadius:8,
-                  border:`2px solid ${activeSlide===i ? s.theme.accent : 'var(--border)'}`,
-                  background: activeSlide===i ? `${s.theme.accent}18` : 'var(--bg-card)',
-                  cursor:'pointer', textAlign:'center', transition:'all 0.2s',
-                }}>
-                  <div style={{ fontSize:14, marginBottom:2 }}>{s.theme.icon}</div>
-                  <div style={{ fontSize:'0.55rem', color:activeSlide===i ? s.theme.accent : 'var(--text-muted)', fontWeight:700 }}>
-                    {String(i+1).padStart(2,'0')}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="cv-preview-wrap">
         {!slides.length ? (
-          <div className="cv-preview" style={{ minHeight:420, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, textAlign:'center', background:'linear-gradient(135deg,#0F172A,#1E3A5F)', borderRadius:16 }}>
-            <div style={{ fontSize:56, opacity:0.25 }}>🎯</div>
-            <div style={{ fontSize:'0.88rem', color:'rgba(255,255,255,0.4)', maxWidth:240, lineHeight:1.5 }}>
-              Complétez le formulaire et cliquez sur<br/><strong style={{ color:'rgba(255,255,255,0.6)' }}>"Générer mon Pitch Deck"</strong>
+          <div className="cv-preview" style={{ minHeight:440, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, textAlign:'center', background:'linear-gradient(135deg,#0F172A,#1E3A5F)', borderRadius:20, border:'1px solid rgba(139,92,246,0.15)' }}>
+            <div style={{ fontSize:60, opacity:0.2 }}>🎯</div>
+            <div style={{ fontSize:'0.9rem', color:'rgba(255,255,255,0.4)', maxWidth:260, lineHeight:1.6 }}>
+              Complétez le formulaire et cliquez sur<br/><strong style={{ color:'rgba(255,255,255,0.65)' }}>"Générer mon Pitch Deck"</strong>
             </div>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'center' }}>
+            <div style={{ display:'flex', gap:6, flexWrap:'wrap', justifyContent:'center', maxWidth:200 }}>
               {PITCH_THEMES.map((t,i) => (
-                <div key={i} style={{ width:28, height:28, borderRadius:'50%', background:t.grad, border:`1px solid ${t.accent}40`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12 }}>{t.icon}</div>
+                <div key={i} style={{ width:26, height:26, borderRadius:'50%', background:t.grad, border:`1px solid ${t.accent}38`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11 }}>{t.icon}</div>
               ))}
             </div>
           </div>
         ) : showAll ? (
-          <div id="pitch-deck-export" style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          <div id="pitch-deck-export" style={{ display:'flex', flexDirection:'column', gap:12 }}>
             {slides.map((s, i) => <PitchSlideCard key={i} slide={s} index={i} total={slides.length} compact={true} />)}
           </div>
         ) : (
-          <>
+          <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+            {/* Main slide */}
             <div id="pitch-deck-export">
               {active && <PitchSlideCard slide={active} index={activeSlide} total={slides.length} />}
             </div>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, marginTop:14 }}>
+
+            {/* Prev / Next */}
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, margin:'14px 2px 0' }}>
               <button onClick={()=>setActiveSlide(i=>Math.max(0,i-1))} disabled={activeSlide===0} style={{
-                padding:'9px 22px', borderRadius:8, border:'1px solid var(--border)',
-                background:'var(--bg-card)', color:'var(--text-primary)', cursor:'pointer', fontSize:'0.82rem', fontWeight:700,
-                opacity:activeSlide===0?0.35:1, transition:'opacity 0.2s',
+                display:'flex', alignItems:'center', gap:6,
+                padding:'9px 20px', borderRadius:10,
+                border:`1px solid ${activeSlide===0 ? 'var(--border)' : (active?.theme?.accent||'#a78bfa')}`,
+                background: activeSlide===0 ? 'transparent' : `${active?.theme?.accent||'#a78bfa'}14`,
+                color: activeSlide===0 ? 'var(--text-muted)' : (active?.theme?.accent||'#a78bfa'),
+                cursor: activeSlide===0 ? 'default' : 'pointer', fontWeight:800, fontSize:'0.82rem', transition:'all 0.2s',
               }}>← Précédente</button>
-              <span style={{ fontSize:'0.75rem', color:'var(--text-muted)', fontWeight:600 }}>
+              <span style={{ fontSize:'0.72rem', color:'var(--text-muted)', fontWeight:700, letterSpacing:'0.5px' }}>
                 {activeSlide+1} / {slides.length}
               </span>
               <button onClick={()=>setActiveSlide(i=>Math.min(slides.length-1,i+1))} disabled={activeSlide===slides.length-1} style={{
-                padding:'9px 22px', borderRadius:8, border:'1px solid var(--border)',
-                background:'var(--bg-card)', color:'var(--text-primary)', cursor:'pointer', fontSize:'0.82rem', fontWeight:700,
-                opacity:activeSlide===slides.length-1?0.35:1, transition:'opacity 0.2s',
+                display:'flex', alignItems:'center', gap:6,
+                padding:'9px 20px', borderRadius:10,
+                border:`1px solid ${activeSlide===slides.length-1 ? 'var(--border)' : (active?.theme?.accent||'#a78bfa')}`,
+                background: activeSlide===slides.length-1 ? 'transparent' : `${active?.theme?.accent||'#a78bfa'}14`,
+                color: activeSlide===slides.length-1 ? 'var(--text-muted)' : (active?.theme?.accent||'#a78bfa'),
+                cursor: activeSlide===slides.length-1 ? 'default' : 'pointer', fontWeight:800, fontSize:'0.82rem', transition:'all 0.2s',
               }}>Suivante →</button>
             </div>
-          </>
+
+            {/* Thumbnail strip — titles + number, horizontal scroll */}
+            <div style={{ marginTop:14, overflowX:'auto', paddingBottom:6, scrollbarWidth:'thin' }}>
+              <div style={{ display:'flex', gap:8, width:'max-content', padding:'2px 2px 0' }}>
+                {slides.map((s, i) => (
+                  <button key={i} onClick={()=>setActiveSlide(i)} style={{
+                    width:130, flexShrink:0, padding:'10px 12px', borderRadius:10, textAlign:'left',
+                    border:`2px solid ${i===activeSlide ? s.theme.accent : 'var(--border)'}`,
+                    background: i===activeSlide ? s.theme.grad : 'var(--bg-card)',
+                    cursor:'pointer', transition:'all 0.18s', position:'relative', overflow:'hidden',
+                  }}>
+                    {i===activeSlide && <div style={{ position:'absolute', top:0, left:0, right:0, height:2.5, background:`linear-gradient(90deg,${s.theme.accent},${s.theme.accent}50)` }} />}
+                    <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:5 }}>
+                      <span style={{ fontSize:'0.56rem', fontWeight:900, color: i===activeSlide ? s.theme.accent : 'var(--text-muted)', letterSpacing:'1.2px', fontFamily:'monospace' }}>{String(i+1).padStart(2,'0')}</span>
+                      <span style={{ fontSize:10 }}>{s.theme.icon}</span>
+                    </div>
+                    <div style={{ fontSize:'0.64rem', color: i===activeSlide ? '#fff' : 'var(--text-secondary)', fontWeight: i===activeSlide ? 700 : 500, lineHeight:1.3, overflow:'hidden', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical' }}>
+                      {s.title}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

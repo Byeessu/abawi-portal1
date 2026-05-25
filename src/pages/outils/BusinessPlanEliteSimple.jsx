@@ -110,29 +110,89 @@ function PremiumSlide({ slide, index, total, accent }) {
   const t = accent || '#3B82F6'
   const rawBullets = slide.points_cles || slide.bullets || slide.contenu_principal || []
   const arr = Array.isArray(rawBullets) ? rawBullets : typeof rawBullets === 'string' ? rawBullets.split(/[·•\n]+/).filter(Boolean) : []
-  return (
-    <div style={{ background: 'linear-gradient(135deg,#07091a 0%,#0d1b3e 55%,#0f2550 100%)', borderRadius: 16, padding: 'clamp(24px,4vw,44px) clamp(28px,5vw,56px)', minHeight: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', border: `1px solid ${t}28`, boxShadow: `0 8px 40px ${t}15` }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${t}, ${t}60)` }} />
-      <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: `radial-gradient(circle, ${t}12 0%, transparent 70%)`, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', top: 16, right: 22, fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)', fontWeight: 700 }}>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</div>
-      <div style={{ fontSize: '0.6rem', color: t, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 14, opacity: 0.85 }}>Slide {slide.numero || index + 1}</div>
-      <h2 style={{ color: '#fff', fontSize: 'clamp(1.1rem,2.2vw,1.6rem)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 12px', maxWidth: 620 }}>{slide.titre || `Section ${index + 1}`}</h2>
-      {slide.sous_titre && <div style={{ color: t, fontSize: '0.9rem', fontWeight: 700, marginBottom: 18, opacity: 0.88 }}>{slide.sous_titre}</div>}
-      {arr.length > 0 && (
-        <ul style={{ margin: '0 0 auto', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {arr.slice(0, 5).map((b, i) => (
-            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: 'rgba(255,255,255,0.82)', fontSize: '0.88rem', lineHeight: 1.5 }}>
-              <span style={{ color: t, fontWeight: 900, flexShrink: 0, marginTop: 2 }}>◆</span>
-              {typeof b === 'object' ? (b.point || b.v || JSON.stringify(b)) : String(b)}
-            </li>
-          ))}
-        </ul>
-      )}
-      {(slide.message_cle || slide.kpi_cle || slide.highlight) && (
-        <div style={{ marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', background: `${t}18`, border: `1px solid ${t}45`, borderRadius: 20, color: t, fontSize: '0.8rem', fontWeight: 800, alignSelf: 'flex-start' }}>
-          ★ {slide.message_cle || slide.kpi_cle || slide.highlight}
+  const highlight = slide.message_cle || slide.kpi_cle || slide.highlight
+  const isCover = index === 0
+
+  if (isCover) {
+    return (
+      <div style={{ background: 'linear-gradient(135deg,#030712 0%,#0b1838 42%,#1e3a8a 72%,#1d4ed8 100%)', borderRadius: 20, minHeight: 440, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: `1px solid ${t}22`, boxShadow: `0 16px 60px ${t}18` }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(${t}06 1px,transparent 1px),linear-gradient(90deg,${t}06 1px,transparent 1px)`, backgroundSize: '44px 44px', WebkitMaskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 10%,transparent 100%)', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%,black 10%,transparent 100%)' }} />
+        <div style={{ position: 'absolute', top: -80, right: -40, width: 300, height: 300, borderRadius: '50%', background: `radial-gradient(circle,${t}28 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <div style={{ padding: '20px 34px', borderBottom: `1px solid ${t}10`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: t, boxShadow: `0 0 8px ${t}`, display: 'inline-block' }} />
+            <span style={{ fontSize: '0.56rem', color: t, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase' }}>Business Plan · Slide {slide.numero || 1}</span>
+          </div>
+          <span style={{ fontSize: '0.56rem', color: 'rgba(255,255,255,0.18)', fontWeight: 700 }}>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
         </div>
-      )}
+        <div style={{ flex: 1, padding: '38px 42px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ fontSize: '0.56rem', color: t, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 16, opacity: 0.8 }}>📊 Présentation Stratégique</div>
+          <h1 style={{ color: '#fff', fontSize: 'clamp(1.8rem,3.5vw,2.8rem)', fontWeight: 900, lineHeight: 1.1, margin: '0 0 12px', letterSpacing: '-0.4px' }}>{slide.titre || `Section ${index + 1}`}</h1>
+          {slide.sous_titre && <div style={{ color: t, fontSize: 'clamp(0.88rem,1.5vw,1.12rem)', fontWeight: 700, marginBottom: 26, opacity: 0.88 }}>{slide.sous_titre}</div>}
+          {arr.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 540 }}>
+              {arr.slice(0, 4).map((b, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${t}14`, borderRadius: 10 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: t, flexShrink: 0, boxShadow: `0 0 6px ${t}` }} />
+                  <span style={{ color: 'rgba(255,255,255,0.84)', fontSize: '0.86rem', lineHeight: 1.45 }}>{typeof b === 'object' ? (b.point || b.v || String(b)) : String(b)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {highlight && (
+          <div style={{ padding: '14px 34px', borderTop: `1px solid ${t}08`, position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', background: `${t}14`, border: `1px solid ${t}38`, borderRadius: 20, color: t, fontSize: '0.76rem', fontWeight: 800 }}>★ {highlight}</div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ background: 'linear-gradient(135deg,#07091a 0%,#0d1b3e 55%,#0f2550 100%)', borderRadius: 18, minHeight: 400, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: `1px solid ${t}20`, boxShadow: `0 10px 44px ${t}12` }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${t},${t}45,transparent)` }} />
+      <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: `radial-gradient(circle,${t}14 0%,transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ padding: '18px 32px', borderBottom: `1px solid ${t}10`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: `${t}16`, border: `1px solid ${t}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 900, color: t, fontFamily: 'monospace' }}>
+            {String(slide.numero || index + 1).padStart(2, '0')}
+          </div>
+          {slide.sous_titre && (
+            <div style={{ padding: '4px 12px', background: `${t}10`, border: `1px solid ${t}22`, borderRadius: 20, fontSize: '0.64rem', fontWeight: 700, color: t, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{slide.sous_titre}</div>
+          )}
+        </div>
+        <span style={{ fontSize: '0.56rem', color: 'rgba(255,255,255,0.16)', fontWeight: 700 }}>{index + 1} / {total}</span>
+      </div>
+      <div style={{ flex: 1, padding: '24px 32px 20px', position: 'relative', zIndex: 1 }}>
+        <h2 style={{ color: '#fff', fontSize: 'clamp(1.2rem,2.3vw,1.75rem)', fontWeight: 900, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: '-0.2px' }}>{slide.titre || `Section ${index + 1}`}</h2>
+        {arr.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: arr.length > 3 ? 'repeat(2,1fr)' : '1fr', gap: '9px 12px' }}>
+            {arr.slice(0, 6).map((b, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 14px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${t}12`, borderLeft: `3px solid ${t}`, borderRadius: '0 10px 10px 0' }}>
+                <span style={{ color: t, fontWeight: 900, fontSize: '0.66rem', flexShrink: 0, marginTop: 2, fontFamily: 'monospace', opacity: 0.6 }}>{String(i + 1).padStart(2, '0')}</span>
+                <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.83rem', lineHeight: 1.55 }}>{typeof b === 'object' ? (b.point || b.v || String(b)) : String(b)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div style={{ padding: '11px 32px 15px', position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${t}07` }}>
+        {highlight ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 3, height: 18, background: t, borderRadius: 2, flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: '0.5rem', color: 'rgba(255,255,255,0.2)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px' }}>Point clé</div>
+              <div style={{ fontSize: '0.84rem', color: t, fontWeight: 800, marginTop: 1 }}>{highlight}</div>
+            </div>
+          </div>
+        ) : <div />}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+          {Array.from({ length: Math.min(total, 12) }).map((_, i) => (
+            <div key={i} style={{ width: i === index ? 16 : 4, height: 3, borderRadius: 2, background: i === index ? t : 'rgba(255,255,255,0.1)' }} />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -1047,29 +1107,57 @@ function RisksView({ data, accent, themed }) {
 function SlidesView({ data, accent, themed }) {
   const list = data.slides || []
   const [current, setCurrent] = useState(0)
-    if (!list.length) return <div style={themed({ color: 'text-muted' })}>Aucune slide générée.</div>
+  if (!list.length) return <div style={{ color: 'var(--text-muted)', padding: '24px', textAlign: 'center', fontSize: '0.88rem' }}>Aucune slide générée.</div>
+  const t = accent || 'var(--accent)'
   return (
-    <div>
-      <PremiumSlide slide={list[current]} index={current} total={list.length} accent={accent} />
-            <div style={themed({ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', margin: '16px 0' })}>
-                <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0}
-          style={themed({ padding: '10px 20px', borderRadius: '10px', border: 'none', background: current === 0 ? 'bg-secondary' : accent, color: current === 0 ? 'text-muted' : '#0a0a0a', cursor: current === 0 ? 'default' : 'pointer', fontWeight: 800 })}>← Précédent</button>
-                <span style={themed({ color: 'text-muted', fontSize: '0.85rem', minWidth: '70px', textAlign: 'center', fontWeight: 700 })}>{current + 1} / {list.length}</span>
-                <button onClick={() => setCurrent(c => Math.min(list.length - 1, c + 1))} disabled={current === list.length - 1}
-          style={themed({ padding: '10px 20px', borderRadius: '10px', border: 'none', background: current === list.length - 1 ? 'bg-secondary' : accent, color: current === list.length - 1 ? 'text-muted' : '#0a0a0a', cursor: current === list.length - 1 ? 'default' : 'pointer', fontWeight: 800 })}>Suivant →</button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      {/* Main slide */}
+      <PremiumSlide slide={list[current]} index={current} total={list.length} accent={t} />
+
+      {/* Prev / Next */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '14px 2px 0' }}>
+        <button onClick={() => setCurrent(c => Math.max(0, c - 1))} disabled={current === 0} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px', borderRadius: 10,
+          border: `1px solid ${current === 0 ? 'var(--border)' : t}`,
+          background: current === 0 ? 'transparent' : `${t}14`,
+          color: current === 0 ? 'var(--text-muted)' : t,
+          cursor: current === 0 ? 'default' : 'pointer', fontWeight: 800, fontSize: '0.82rem', transition: 'all 0.2s',
+        }}>← Précédent</button>
+        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.5px' }}>{current + 1} / {list.length}</span>
+        <button onClick={() => setCurrent(c => Math.min(list.length - 1, c + 1))} disabled={current === list.length - 1} style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px', borderRadius: 10,
+          border: `1px solid ${current === list.length - 1 ? 'var(--border)' : t}`,
+          background: current === list.length - 1 ? 'transparent' : `${t}14`,
+          color: current === list.length - 1 ? 'var(--text-muted)' : t,
+          cursor: current === list.length - 1 ? 'default' : 'pointer', fontWeight: 800, fontSize: '0.82rem', transition: 'all 0.2s',
+        }}>Suivant →</button>
       </div>
-            <div style={themed({ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' })}>
-        {list.map((sl, i) => (
-                    <div key={i} onClick={() => setCurrent(i)} style={themed({
-            padding: '12px 14px', borderRadius: '12px',
-            border: `2px solid ${i === current ? accent : 'var(--border)'}`,
-            background: i === current ? `linear-gradient(135deg, ${accent}20, ${accent}05)` : 'var(--bg-secondary)',
-            cursor: 'pointer', transition: 'all 0.2s'
-          })}>
-                        <div style={themed({ fontSize: '0.7rem', color: i === current ? accent : 'text-muted', fontWeight: 800, marginBottom: '6px', letterSpacing: '0.5px' })}>SLIDE #{sl.numero || i + 1}</div>
-                        <div style={themed({ fontSize: '0.82rem', color: i === current ? 'text-primary' : 'text-secondary', lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', fontWeight: i === current ? 700 : 500 })}>{stripMD(sl.titre)}</div>
-          </div>
-        ))}
+
+      {/* Thumbnail strip — title-first, horizontal scroll */}
+      <div style={{ marginTop: 14, overflowX: 'auto', paddingBottom: 6, scrollbarWidth: 'thin' }}>
+        <div style={{ display: 'flex', gap: 8, width: 'max-content', padding: '2px 2px 0' }}>
+          {list.map((sl, i) => (
+            <button key={i} onClick={() => setCurrent(i)} style={{
+              width: 136, flexShrink: 0, padding: '10px 12px', borderRadius: 10, textAlign: 'left',
+              border: `2px solid ${i === current ? t : 'var(--border)'}`,
+              background: i === current ? `${t}10` : 'var(--bg-secondary)',
+              cursor: 'pointer', transition: 'all 0.18s', position: 'relative', overflow: 'hidden',
+            }}>
+              {i === current && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2.5, background: `linear-gradient(90deg, ${t}, ${t}40)` }} />}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 5 }}>
+                <span style={{ fontSize: '0.55rem', fontWeight: 900, color: i === current ? t : 'var(--text-muted)', letterSpacing: '1.2px', fontFamily: 'monospace' }}>{String(sl.numero || i + 1).padStart(2, '0')}</span>
+              </div>
+              <div style={{ fontSize: '0.64rem', color: i === current ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: i === current ? 700 : 500, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                {stripMD(sl.titre)}
+              </div>
+              {sl.sous_titre && (
+                <div style={{ marginTop: 3, fontSize: '0.56rem', color: i === current ? t : 'var(--text-muted)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.75 }}>
+                  {stripMD(sl.sous_titre)}
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )
