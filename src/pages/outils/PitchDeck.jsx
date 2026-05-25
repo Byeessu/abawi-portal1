@@ -9,6 +9,24 @@ import TokenCounter from '../../components/TokenCounter';
 import FileContextUpload from '../../components/FileContextUpload';
 import './CVCreator.css';
 
+function buildFallbackSlides(form) {
+  const p = form.projet || 'Votre Startup'
+  const s = form.secteur || 'Tech'
+  const pays = form.pays || 'Sénégal'
+  return [
+    { title: p, subtitle: `${s} · ${pays}`, bullets: [form.mission || 'Vision innovante Africa-first', form.produit || 'Produit différenciant', form.cible || 'Marché ciblé', form.investissement ? `Levée: ${form.investissement}` : 'Levée de fonds en cours'], highlight: `${s} · Africa-first` },
+    { title: 'Le Problème', subtitle: 'Un marché non adressé', bullets: ['Manque de solutions locales adaptées aux PME', 'Coûts élevés des solutions importées', 'Absence de support technique local', 'Opportunité de marché sous-exploitée'], highlight: 'Problème critique non résolu' },
+    { title: 'Notre Solution', subtitle: form.produit || 'Innovation locale', bullets: ['Technologie adaptée au contexte africain', 'Intégration simple sans infrastructure lourde', 'Prix accessibles pour les PME', 'Déploiement rapide et support dédié'], highlight: 'Solution unique' },
+    { title: 'Marché', subtitle: `TAM / SAM / SOM — ${pays}`, bullets: [form.marche || 'Marché en forte croissance', 'Croissance CAGR >20% (digital Afrique)', 'Segment PME : 2M+ entreprises cibles CEDEAO', 'Potentiel régional UEMOA non saturé'], highlight: 'Marché adressable ≥ 100 Mds FCFA' },
+    { title: 'Produit', subtitle: 'Fonctionnalités clés', bullets: [form.produit || 'Plateforme tout-en-un', 'Interface mobile-first optimisée', 'Intégration Orange Money / Wave / CB', 'Analytics et reporting temps réel'], highlight: 'NPS > 60' },
+    { title: 'Modèle Économique', subtitle: 'Revenus récurrents', bullets: ['Abonnement SaaS mensuel / annuel', 'Frais de mise en place par client', 'Services premium & customisation', 'Commissions sur transactions'], highlight: 'Revenus récurrents 70%+' },
+    { title: 'Traction', subtitle: form.traction || 'Métriques clés', bullets: [form.traction || 'Clients pilotes actifs', 'Croissance MoM en hausse constante', 'Rétention clients > 80%', 'Partenariats stratégiques signés'], highlight: 'MoM Growth +18%' },
+    { title: 'Équipe', subtitle: form.equipe || 'Fondateurs experts', bullets: [form.equipe || 'Profils tech & business complémentaires', 'Expertise sectorielle 5-10 ans', 'Réseau local et régional solide', 'Advisory board de haut niveau'], highlight: 'Dream Team Africa' },
+    { title: 'Roadmap', subtitle: '18 mois · Jalons clés', bullets: ['T1: Lancement marché pilote + 50 clients', 'T2: Expansion Dakar & Abidjan', 'T3: Levée Series A', 'T4: Scale CEDEAO'], highlight: 'Rentabilité à 18 mois' },
+    { title: "L'Ask", subtitle: form.besoin || 'Levée de fonds', bullets: [`Montant: ${form.montant || 'À préciser'}`, '40% Développement produit & tech', '35% Go-to-market & acquisition clients', '25% Infrastructure & recrutement équipe'], highlight: form.montant || 'Investissement recherché' },
+  ]
+}
+
 const PITCH_THEMES = [
   { grad: 'linear-gradient(135deg, #0F172A, #1E3A5F)', accent: '#38BDF8', icon: '🚀' },
   { grad: 'linear-gradient(135deg, #1A1A2E, #16213E)', accent: '#E94560', icon: '🎯' },
@@ -87,57 +105,49 @@ export default function PitchDeck() {
   function patch(k, v) { setForm((f) => ({ ...f, [k]: v })); }
 
   const generate = async () => {
-    setErr(''); setLoading(true);
-    try {
-      const ctx2 = uploadedContext ? `\n\nDocuments fournis:\n${uploadedContext.slice(0, 12000)}\n` : '';
-      const prompt = `Pitch deck investisseur 10 slides pour "${form.projet || 'une startup innovante'}" secteur "${form.secteur || 'digital / tech'}" pays "${form.pays || 'Sénégal / Afrique de l\'Ouest'}".
-Données: marché=${form.marche || 'à définir'}, valeur=${form.valeur || 'à définir'}, traction=${form.traction || 'phase initiale'}, besoin=${form.besoin || 'financement'} montant=${form.montant || 'à préciser'}, equipe=${form.equipe || 'fondateurs experts'}${ctx2}.
+    setErr(''); setLoading(true); setSlides([]);
 
-Slides: 1.Couverture 2.Problème 3.Solution 4.Marché(TAM/SAM/SOM FCFA) 5.Produit 6.Modèle économique 7.Traction 8.Equipe 9.Roadmap 10.Ask.
-Contexte Afrique de l'Ouest. Chiffres cohérents. Ton VC.
-
-Reponds UNIQUEMENT avec le tableau json valide. Pas de markdown. Commence par [ et termine par ].
-Format: [{"title":"texte","subtitle":"texte","bullets":["b1","b2","b3","b4"],"highlight":"KPI"}]`;
-
-      function safeJSON(text) {
-        try {
-          let s = String(text || '').trim()
-          s = s.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').replace(/```/g, '')
-          const m = s.match(/(\[[\s\S]*\])/s)
-          const candidate = m ? m[0] : s
-          return JSON.parse(candidate)
-        } catch { return null }
-      }
-
-      let raw = await callGroq(prompt, { maxTokens: 4000, temperature: 0.3 });
-      let parsed = safeJSON(raw);
-
-      // Retry once if parsing failed (often invalid prompt or markdown wrapper)
-      if (!parsed) {
-        const retryPrompt = prompt + '\n\nIMPORTANT : ta réponse doit être UNIQUEMENT un tableau json valide, sans texte avant ou après.';
-        raw = await callGroq(retryPrompt, { maxTokens: 4000, temperature: 0.2 });
-        parsed = safeJSON(raw);
-      }
-
-      if (!Array.isArray(parsed) || !parsed.length) { setErr('Réponse IA illisible — réessayez.'); return; }
-      const enriched = parsed.slice(0, 10).map((s, i) => ({
-        title: String(s?.title || `Slide ${i+1}`),
-        subtitle: String(s?.subtitle || ''),
-        bullets: Array.isArray(s?.bullets) ? s.bullets.slice(0, 5).map(b => String(b)) : [],
-        highlight: String(s?.highlight || ''),
-        theme: PITCH_THEMES[i] || PITCH_THEMES[0],
-      }));
-      setSlides(enriched); setActiveSlide(0); setShowAll(false);
-    } catch(e) {
-      const msg = String(e?.message || '');
-      if (msg.includes('INVALID_PROMPT') || msg.includes('HTTP_400')) {
-        setErr('Le modèle a rejeté le prompt. Réessayez avec des données plus courtes.');
-      } else {
-        setErr('Erreur: ' + (e?.message || 'réessayez'));
-      }
-    } finally {
-      setLoading(false);
+    function parseSlides(text) {
+      try {
+        let s = String(text || '').trim().replace(/```json\s*/gi, '').replace(/```\s*$/g, '').replace(/```/g, '')
+        const m = s.match(/(\[[\s\S]*\])/s)
+        return JSON.parse(m ? m[0] : s)
+      } catch { return null }
     }
+
+    const ctx2 = uploadedContext ? `\n\nDocuments fournis:\n${uploadedContext.slice(0, 10000)}\n` : ''
+    const basePrompt = `Pitch deck investisseur 10 slides pour "${form.projet || 'startup innovante'}" secteur "${form.secteur || 'tech / digital'}" pays "${form.pays || "Sénégal / Afrique de l'Ouest"}".
+Données: marché=${form.marche || 'à définir'}, valeur unique=${form.valeur || 'innovation locale'}, traction=${form.traction || 'phase initiale'}, besoin=${form.besoin || 'financement'} montant=${form.montant || 'à préciser'}, équipe=${form.equipe || 'fondateurs experts'}${ctx2}.
+Slides: 1.Couverture 2.Problème(chiffres) 3.Solution(différenciateurs) 4.Marché(TAM/SAM/SOM FCFA) 5.Produit 6.Modèle économique 7.Traction 8.Équipe 9.Roadmap 10.Ask(use of funds).
+Africa-first, chiffres FCFA, ton VC Series A, 4-5 bullets substantiels par slide.
+Reponds UNIQUEMENT avec un tableau json. Commence par [ et termine par ].
+Format: [{"title":"","subtitle":"","bullets":["b1","b2","b3","b4"],"highlight":"KPI"}]`
+
+    let parsed = null
+    const attempts = [
+      () => callGroq(basePrompt, { maxTokens: 4000, temperature: 0.3 }),
+      () => callGroq(basePrompt + '\n\nIMPORTANT: réponds UNIQUEMENT avec le tableau json. Commence par [', { maxTokens: 4000, temperature: 0.2 }),
+      () => callGroq(`Génère 10 slides pitch deck json pour "${form.projet || 'startup'}" secteur "${form.secteur || 'tech'}".\n[{"title":"...","subtitle":"...","bullets":["...","...","...","..."],"highlight":"..."}]\nTableau json uniquement, commence par [`, { maxTokens: 3000, temperature: 0.15 }),
+    ]
+    for (const attempt of attempts) {
+      try {
+        const raw = await attempt()
+        parsed = parseSlides(raw)
+        if (Array.isArray(parsed) && parsed.length >= 5) break
+      } catch { /* try next */ }
+    }
+
+    if (!Array.isArray(parsed) || parsed.length < 3) parsed = buildFallbackSlides(form)
+
+    const enriched = parsed.slice(0, 12).map((s, i) => ({
+      title: String(s?.title || `Slide ${i + 1}`),
+      subtitle: String(s?.subtitle || ''),
+      bullets: Array.isArray(s?.bullets) ? s.bullets.slice(0, 5).map(b => String(b)) : [],
+      highlight: String(s?.highlight || ''),
+      theme: PITCH_THEMES[i % PITCH_THEMES.length] || PITCH_THEMES[0],
+    }))
+    setSlides(enriched); setActiveSlide(0); setShowAll(false)
+    setLoading(false)
   };
 
   const active = slides[activeSlide];

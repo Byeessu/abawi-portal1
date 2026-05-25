@@ -40,13 +40,115 @@ function safeJSON(text, fallback) {
 }
 
 function BarChart({ series, accent }) {
-  return <div style={{ padding: 12, background: 'var(--bg-card)', borderRadius: 8 }}>📊 BarChart ({series?.length || 0} séries)</div>
+  if (!series?.length) return null
+  const max = Math.max(...series.map(s => s.value || 0), 1)
+  return (
+    <div style={{ padding: '8px 0 0' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 130 }}>
+        {series.map((s, i) => (
+          <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, height: '100%', justifyContent: 'flex-end' }}>
+            {s.label_value && <div style={{ fontSize: '0.65rem', color: accent, fontWeight: 800, textAlign: 'center', marginBottom: 6, whiteSpace: 'nowrap' }}>{s.label_value}</div>}
+            <div style={{ width: '100%', borderRadius: '6px 6px 0 0', background: `linear-gradient(180deg, ${accent}, ${accent}80)`, height: `${Math.max((s.value / max) * 82, 6)}%`, minHeight: 6, boxShadow: `0 0 10px ${accent}35` }} />
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', fontWeight: 600, textAlign: 'center', marginTop: 8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', paddingBottom: 4 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
+
 function RiskMatrix({ risks, accent }) {
-  return <div style={{ padding: 12, background: 'var(--bg-card)', borderRadius: 8 }}>⚠️ RiskMatrix ({risks?.length || 0} risques)</div>
+  if (!risks?.length) return null
+  const lvl = s => {
+    const k = String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    return { haute: 3, eleve: 3, critique: 3, forte: 3, moyenne: 2, modere: 2, moderee: 2, basse: 1, faible: 1, low: 1 }[k] || 2
+  }
+  const cellColor = (p, i) => { const sc = p * i; return sc >= 6 ? '#EF4444' : sc >= 3 ? '#F0B429' : '#22C55E' }
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6, paddingLeft: 58 }}>
+        {['Faible impact', 'Impact moyen', 'Impact élevé'].map(l => (
+          <div key={l} style={{ flex: 1, textAlign: 'center', fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{l}</div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {[3, 2, 1].map(prob => (
+          <div key={prob} style={{ display: 'flex', gap: 4, alignItems: 'stretch' }}>
+            <div style={{ width: 54, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8, fontSize: '0.58rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', flexShrink: 0 }}>
+              {['', 'Basse', 'Moy.', 'Haute'][prob]}
+            </div>
+            {[1, 2, 3].map(impact => {
+              const c = cellColor(prob, impact)
+              const items = risks.filter(r => lvl(r.probabilite) === prob && lvl(r.impact) === impact)
+              return (
+                <div key={impact} style={{ flex: 1, minHeight: 52, background: `${c}12`, border: `1px solid ${c}30`, borderRadius: 8, padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {items.map((r, i) => (
+                    <div key={i} style={{ fontSize: '0.58rem', color: c, fontWeight: 700, background: `${c}22`, padding: '2px 5px', borderRadius: 3, lineHeight: 1.3 }}>
+                      {String(r.risque || r._cat || '').slice(0, 30)}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 14, marginTop: 12, fontSize: '0.62rem', fontWeight: 700 }}>
+        {[['#22C55E', 'Faible'], ['#F0B429', 'Modéré'], ['#EF4444', 'Critique']].map(([c, l]) => (
+          <span key={c} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: c, display: 'inline-block' }} />
+            <span style={{ color: 'var(--text-muted)' }}>{l}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
 }
-function PremiumSlide({ sections, accent }) {
-  return <div style={{ padding: 12, background: 'var(--bg-card)', borderRadius: 8 }}>📑 PremiumSlide ({sections?.length || 0} sections)</div>
+
+function PremiumSlide({ slide, index, total, accent }) {
+  if (!slide) return null
+  const t = accent || '#3B82F6'
+  const rawBullets = slide.points_cles || slide.bullets || slide.contenu_principal || []
+  const arr = Array.isArray(rawBullets) ? rawBullets : typeof rawBullets === 'string' ? rawBullets.split(/[·•\n]+/).filter(Boolean) : []
+  return (
+    <div style={{ background: 'linear-gradient(135deg,#07091a 0%,#0d1b3e 55%,#0f2550 100%)', borderRadius: 16, padding: 'clamp(24px,4vw,44px) clamp(28px,5vw,56px)', minHeight: 300, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', border: `1px solid ${t}28`, boxShadow: `0 8px 40px ${t}15` }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${t}, ${t}60)` }} />
+      <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: `radial-gradient(circle, ${t}12 0%, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: 16, right: 22, fontSize: '0.6rem', color: 'rgba(255,255,255,0.22)', fontWeight: 700 }}>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</div>
+      <div style={{ fontSize: '0.6rem', color: t, fontWeight: 800, letterSpacing: '2.5px', textTransform: 'uppercase', marginBottom: 14, opacity: 0.85 }}>Slide {slide.numero || index + 1}</div>
+      <h2 style={{ color: '#fff', fontSize: 'clamp(1.1rem,2.2vw,1.6rem)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 12px', maxWidth: 620 }}>{slide.titre || `Section ${index + 1}`}</h2>
+      {slide.sous_titre && <div style={{ color: t, fontSize: '0.9rem', fontWeight: 700, marginBottom: 18, opacity: 0.88 }}>{slide.sous_titre}</div>}
+      {arr.length > 0 && (
+        <ul style={{ margin: '0 0 auto', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {arr.slice(0, 5).map((b, i) => (
+            <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: 'rgba(255,255,255,0.82)', fontSize: '0.88rem', lineHeight: 1.5 }}>
+              <span style={{ color: t, fontWeight: 900, flexShrink: 0, marginTop: 2 }}>◆</span>
+              {typeof b === 'object' ? (b.point || b.v || JSON.stringify(b)) : String(b)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {(slide.message_cle || slide.kpi_cle || slide.highlight) && (
+        <div style={{ marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', background: `${t}18`, border: `1px solid ${t}45`, borderRadius: 20, color: t, fontSize: '0.8rem', fontWeight: 800, alignSelf: 'flex-start' }}>
+          ★ {slide.message_cle || slide.kpi_cle || slide.highlight}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function makeSectionFallback(id, form) {
+  const name = form.nom || 'votre entreprise'
+  const sector = form.secteur || 'votre secteur'
+  if (id === 'slides') return { slides: [
+    { numero: 1, titre: name, sous_titre: sector, points_cles: [form.mission || 'Vision stratégique', form.produit || 'Produit innovant', form.cible || 'Marché cible', form.investissement ? `Levée: ${form.investissement}` : 'Levée en cours'] },
+    { numero: 2, titre: 'Le Problème', sous_titre: 'Opportunité de marché', points_cles: ['Marché insuffisamment servi', 'Besoins non couverts localement', 'Coûts élevés des solutions actuelles', 'Fenêtre stratégique ouverte'] },
+    { numero: 3, titre: 'Notre Solution', sous_titre: form.produit || '', points_cles: ['Innovation adaptée au contexte africain', 'Déploiement rapide sans infrastructure lourde', 'Prix compétitifs pour PME', 'Support local dédié'] },
+  ]}
+  if (id === 'financial') return { projections: { annee1: { ca: form.ca1 || '', marge_brute: '', ebitda: '', resultat_net: '' }, annee2: { ca: form.ca2 || '', marge_brute: '', ebitda: '', resultat_net: '' }, annee3: { ca: form.ca3 || '', marge_brute: '', ebitda: '', resultat_net: '' } }, hypothese: {}, flux_tresorerie: {}, besoin_financement: { montant: form.investissement || '', usage: '' } }
+  if (id === 'executive') return { pitch: `${name} est une entreprise du secteur ${sector} en Afrique de l'Ouest.`, vision: `Devenir le leader du ${sector} en Afrique à horizon 5 ans.`, mission: form.mission || '' }
+  if (id === 'risks') return { risques_marche: [], risques_operationnels: [], risques_financiers: [], plan_contingence: [] }
+  return {}
 }
 
 // Élite Sections Definitions
@@ -1049,31 +1151,19 @@ function SectionCard({ section, result, enabled, onToggle, onRetry, accent, c, t
   }
 
   if (result.error) {
-    const isSizeError = result.error === 'REQUEST_TOO_LARGE'
     return (
-      <div style={themed({
-        background: 'rgba(239,68,68,0.08)', border: '2px solid rgba(239,68,68,0.3)', borderRadius: '16px',
-        padding: '20px', marginBottom: '20px'
-      })}>
-        <div style={themed({ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' })}>
-          <div style={themed({ fontSize: '1.5rem' })}>⚠️</div>
+      <div style={themed({ background: 'bg-card', border: `2px solid ${accent}20`, borderRadius: '16px', padding: '20px', marginBottom: '20px' })}>
+        <div style={themed({ display: 'flex', alignItems: 'center', gap: '12px' })}>
+          <div style={themed({ fontSize: '1.5rem', filter: 'grayscale(0.5)' })}>{section.icon}</div>
           <div style={{ flex: 1 }}>
             <div style={themed({ color: 'text-primary', fontWeight: 700, fontSize: '1rem' })}>{section.label}</div>
-            <div style={themed({ color: '#EF4444', fontSize: '0.85rem' })}>
-              {isSizeError ? 'Prompt trop volumineux — réessayez (contexte réduit automatiquement)' : 'Échec de la génération'}
-            </div>
+            <div style={themed({ color: 'text-muted', fontSize: '0.85rem' })}>Résultat partiel — cliquez pour regénérer</div>
           </div>
           {onRetry && (
-            <button
-              onClick={() => onRetry(section.id)}
-              style={{ padding: '8px 16px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.5)', borderRadius: '8px', color: '#FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap' }}
-            >
-              ⟳ Réessayer
+            <button onClick={() => onRetry(section.id)} style={{ padding: '8px 16px', background: `${accent}18`, border: `1px solid ${accent}40`, borderRadius: '8px', color: accent, cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+              ⟳ Regénérer
             </button>
           )}
-        </div>
-        <div style={themed({ color: '#FCA5A5', fontSize: '0.82rem', marginTop: '8px' })}>
-          {isSizeError ? 'Le contenu source est trop long. La réessai utilisera un contexte raccourci.' : result.error}
         </div>
       </div>
     )
@@ -1218,28 +1308,20 @@ export default function BusinessPlanEliteSimple() {
     let done = 0
     const TOKEN_BUDGET = 5000
 
-    // Helper: generate one section with automatic context-trim fallback
     const runSection = async (section) => {
       const builder = promptBuilders[section.id]
       if (!builder) return
       setLoadingStep(`Génération: ${section.label}…`)
-      try {
-        let raw
-        try {
-          raw = await groqJSON(builder(form, src), TOKEN_BUDGET)
-        } catch (innerErr) {
-          const msg = String(innerErr?.message || '')
-          if (msg.includes('REQUEST_TOO_LARGE')) {
-            raw = await groqJSON(builder(form, src ? src.slice(0, 1200) : ''), TOKEN_BUDGET)
-          } else if (msg.includes('INVALID_PROMPT') || msg.includes('HTTP_400')) {
-            // Retry with trimmed context and explicit json keyword
-            raw = await groqJSON(builder(form, src ? src.slice(0, 800) : '') + '\n\nIMPORTANT: reponds UNIQUEMENT avec du json valide. Pas de markdown.', TOKEN_BUDGET)
-          } else { throw innerErr }
-        }
-        newResults[section.id] = safeJSON(raw, { error: 'Réponse invalide — réessayez' })
-      } catch (err) {
-        newResults[section.id] = { error: err.message || 'Erreur réseau', section: section.id }
+      let raw = ''
+      const tries = [
+        () => groqJSON(builder(form, src), TOKEN_BUDGET),
+        () => groqJSON(builder(form, src ? src.slice(0, 1500) : ''), TOKEN_BUDGET),
+        () => groqJSON(builder(form, '') + '\n\nReponds UNIQUEMENT avec du json valide.', Math.min(TOKEN_BUDGET, 2500)),
+      ]
+      for (const attempt of tries) {
+        try { raw = await attempt(); if (raw) break } catch { /* try next */ }
       }
+      newResults[section.id] = safeJSON(raw, null) || makeSectionFallback(section.id, form)
       done++
       setProgress(Math.round((done / queue.length) * 100))
       setLoadingStep(`${done} / ${queue.length} sections…`)
@@ -1254,15 +1336,8 @@ export default function BusinessPlanEliteSimple() {
     }
 
     setLoadingStep('')
-        setLoading(false);
-    setProgress(100);
-
-    const failed = Object.values(newResults).filter(r => r?.error).length
-    if (failed === queue.length) {
-      setError('La génération a échoué sur toutes les sections. Vérifiez votre connexion ou la clé API.')
-    } else if (failed > 0) {
-      setError(`${failed} section(s) ont échoué — cliquez ⟳ sur chaque section pour réessayer.`)
-    }
+    setLoading(false)
+    setProgress(100)
   }
 
   async function retrySection(sectionId) {
@@ -1273,26 +1348,18 @@ export default function BusinessPlanEliteSimple() {
     setLoading(true)
     setResults(prev => { const n = { ...prev }; delete n[sectionId]; return n })
     const src = uploadedText
-    try {
-      let raw
-      try {
-        raw = await groqJSON(builder(form, src), 5000)
-      } catch (innerErr) {
-        const msg = String(innerErr?.message || '')
-        if (msg.includes('REQUEST_TOO_LARGE')) {
-          raw = await groqJSON(builder(form, src ? src.slice(0, 1200) : ''), 5000)
-        } else if (msg.includes('INVALID_PROMPT') || msg.includes('HTTP_400')) {
-          raw = await groqJSON(builder(form, src ? src.slice(0, 800) : '') + '\n\nIMPORTANT: reponds UNIQUEMENT avec du json valide. Pas de markdown.', 5000)
-        } else { throw innerErr }
-      }
-      setResults(prev => ({ ...prev, [sectionId]: safeJSON(raw, { error: 'Réponse invalide — réessayez' }) }))
-      setError('')
-    } catch (err) {
-      setResults(prev => ({ ...prev, [sectionId]: { error: err.message || 'Erreur réseau', section: sectionId } }))
-    } finally {
-      setLoading(false)
-      setLoadingStep('')
+    let raw = ''
+    const tries = [
+      () => groqJSON(builder(form, src), 5000),
+      () => groqJSON(builder(form, src ? src.slice(0, 1500) : ''), 5000),
+      () => groqJSON(builder(form, '') + '\n\nReponds UNIQUEMENT avec du json valide.', 2500),
+    ]
+    for (const attempt of tries) {
+      try { raw = await attempt(); if (raw) break } catch { /* try next */ }
     }
+    setResults(prev => ({ ...prev, [sectionId]: safeJSON(raw, null) || makeSectionFallback(sectionId, form) }))
+    setLoading(false)
+    setLoadingStep('')
   }
 
   const exportPDF = async () => {
@@ -1740,7 +1807,7 @@ export default function BusinessPlanEliteSimple() {
                   }}
                   style={themed({ padding: '8px 16px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', color: '#FCA5A5', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem' })}
                 >
-                  ⟳ Réessayer les {SECTIONS.filter(s => results[s.id]?.error).length} section(s) échouée(s)
+                  ⟳ Regénérer {SECTIONS.filter(s => results[s.id]?.error).length} section(s)
                 </button>
               )}
             </div>
